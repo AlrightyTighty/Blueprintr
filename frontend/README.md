@@ -1,0 +1,45 @@
+# Frontend
+
+React 19 single-page app built with Vite 8 and TypeScript.
+
+## Layout
+
+```
+index.html        Vite HTML entry
+.env.development  VITE_API_URL for local dev (points at localhost:3000)
+vite.config.ts    Vite config
+src/
+├── main.tsx      Mounts <App /> into #root
+├── App.tsx       Root component
+├── api.ts        Fetch helper: resolves the API URL, then calls the backend
+└── index.css     Global styles
+```
+
+## Scripts
+
+| Script              | What it does                                     |
+| ------------------- | ------------------------------------------------ |
+| `npm run dev`       | Vite dev server on http://localhost:5173         |
+| `npm run build`     | Type-checks, then builds to `dist/`              |
+| `npm run preview`   | Serves the production build locally              |
+| `npm run typecheck` | Type-checks without building                     |
+
+## Talking to the backend
+
+The app calls the API directly (no proxy). Use `apiGet('/hello')` from `src/api.ts`;
+it prefixes the API base URL, which comes from:
+
+- **Dev:** `VITE_API_URL` in `.env.development` (`http://localhost:3000`). Start the
+  backend too; `npm run dev` from the repo root runs both. To point at a deployed
+  API instead, override it in `frontend/.env.local`.
+- **Prod:** `VITE_API_URL` is unset, so it fetches `/config.json`, which `iac/`
+  writes into the bucket with the API Gateway URL. Swapping the API won't
+  need a frontend rebuild.
+
+Only variables prefixed with `VITE_` are exposed to client code.
+
+## Deployment
+
+`iac/` uploads `dist/` to S3 and serves it through CloudFront, so **build before
+deploying** (`npm run deploy` from the repo root does this for you). Unknown paths
+fall back to `index.html`, so client-side routing works if you add a router.

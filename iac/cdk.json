@@ -1,0 +1,11 @@
+{
+  "app": "npx tsx bin/app.ts",
+  "watch": {
+    "include": ["bin/**", "lib/**"],
+    "exclude": ["node_modules", "cdk.out"]
+  },
+  "context": {
+    "projectName": "orion",
+    "@aws-cdk/core:defaultCrossStackReferences": "strong"
+  }
+}

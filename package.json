@@ -1,0 +1,19 @@
+{
+  "name": "codered-orion",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "iac"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace backend & npm run dev --workspace frontend",
+    "build": "npm run build --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "deploy": "npm run build --workspace frontend && npm run deploy --workspace iac"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

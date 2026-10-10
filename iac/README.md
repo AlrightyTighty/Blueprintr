@@ -1,0 +1,83 @@
+# IaC
+
+AWS CDK v2 app (TypeScript) that deploys the whole project. It lives at the top level
+because it reaches into every other package: it bundles `backend/` source into a
+Lambda and uploads `frontend/dist` to S3.
+
+## Layout
+
+```
+cdk.json                 CDK config: how to run the app (`tsx bin/app.ts`) + context
+bin/app.ts               Entry: instantiates every stack
+lib/
+├── paths.ts             Absolute paths to the other packages in the repo
+└── stacks/
+    ├── backend-stack.ts   Lambda (Fastify) + API Gateway HTTP API
+    └── frontend-stack.ts  S3 bucket + CloudFront, plus config.json with the API URL
+```
+
+## Stacks
+
+| Stack            | Resources                                                     | Outputs   |
+| ---------------- | ------------------------------------------------------------- | --------- |
+| `orion-backend`  | `NodejsFunction` (Node latest, arm64) behind an HTTP API      | `ApiUrl`  |
+| `orion-frontend` | Private S3 bucket, CloudFront distribution, `BucketDeployment` | `SiteUrl` |
+
+The frontend stack takes the backend's API URL as a prop and writes it to
+`config.json` in the bucket. Because of that dependency, CDK deploys the backend first automatically.
+
+## Scripts
+
+| Script              | What it does                                  |
+| ------------------- | --------------------------------------------- |
+| `npm run synth`     | Synthesizes CloudFormation into `cdk.out/`    |
+| `npm run diff`      | Shows changes vs. what's deployed             |
+| `npm run deploy`    | Deploys all stacks                            |
+| `npm run destroy`   | Tears down all stacks                         |
+| `npm run cdk -- …`  | Any other CDK CLI command                     |
+
+## First-time setup
+
+```bash
+aws configure                 # or export AWS_PROFILE=...
+npx cdk bootstrap             # once per account/region
+```
+
+## Deploying
+
+From the repo root (builds the frontend first):
+
+```bash
+npm run deploy
+```
+
+Or from `iac/` if `frontend/dist` is already built: `npm run deploy`.
+
+The `SiteUrl` output is the app; `ApiUrl` is the API Gateway endpoint.
+
+## Custom domain (not wired up yet)
+
+When the domain is ready, the usual setup is:
+
+1. Look up (or create) the Route 53 hosted zone: `HostedZone.fromLookup(...)`.
+2. Issue ACM certificates with `Certificate` + `CertificateValidation.fromDns(zone)`:
+   - API (e.g. `api.example.com`): certificate in the **stack's region**.
+   - Site (e.g. `example.com`): certificate in **us-east-1** (CloudFront requirement).
+3. API: create an `apigatewayv2.DomainName` and pass it to `HttpApi` via
+   `defaultDomainMapping: { domainName }`. Then add a Route 53 `ARecord` targeting
+   `new ApiGatewayv2DomainProperties(...)`.
+4. Site: set `domainNames` + `certificate` on the `Distribution`, then add an `ARecord`
+   targeting `new CloudFrontTarget(distribution)`.
+5. Change the `apiUrl` passed to `FrontendStack` to `https://api.example.com`, and set
+   the backend's `CORS_ORIGIN` to the site's domain.
+
+## Notes
+
+- The stack name prefix comes from the `projectName` context value in `cdk.json`.
+- Account/region come from your AWS CLI profile (`CDK_DEFAULT_ACCOUNT/REGION`).
+- The S3 bucket uses `RemovalPolicy.DESTROY` + `autoDeleteObjects` so `destroy`
+  cleans up fully — fine for a hackathon, change it for anything long-lived.
+- Backend bundling uses the local `esbuild` dev dependency (no Docker needed).
+- Adding infra (DynamoDB, Cognito, etc.): create a new stack in `lib/stacks/` or add
+  constructs to an existing one, then wire it up in `bin/app.ts`. Pass resource
+  names/ARNs to the Lambda via `environment` and grant access with `table.grantReadWriteData(fn)`-style calls.
