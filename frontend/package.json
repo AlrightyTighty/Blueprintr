@@ -10,8 +10,13 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@dagrejs/dagre": "^3.1.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@xyflow/react": "^12.12.0",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "tailwindcss": "^4.3.3",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
