@@ -37,6 +37,10 @@ and on Lambda without changes.
 | GET    | `/health`    | Health check        |
 | GET    | `/hello`     | Example API route   |
 
+The full planned API contract is in [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1). The table above
+only lists routes that are implemented today. Validate the spec with
+`npx @redocly/cli lint openapi.yaml`.
+
 ## Adding a route
 
 For a handful of routes, add them directly in `app.ts`. When it grows, split into
