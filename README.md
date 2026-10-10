@@ -1,7 +1,4 @@
 # Orion
-
-Hackathon monorepo: **Fastify** API, **React** SPA, and an **AWS CDK** stack that deploys both. TypeScript everywhere (TS 7).
-
 ```
 .
 ├── backend/    Fastify API (runs locally as a server, deployed as a Lambda)
