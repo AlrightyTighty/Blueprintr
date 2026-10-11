@@ -148,8 +148,8 @@ Canonical events:
 | Project | `project.created`, `project.renamed`, `project.archived`, `project.restored`, `project.deleted`, `project.visibility_changed`, `project.share_link_rotated`, `project.ownership_transferred` |
 | Members | `member.added`, `member.role_changed`, `member.removed`, `member.left`, `invite.created`, `invite.accepted`, `invite.revoked` |
 | Repos | `repository.linked`, `repository.unlinked` |
-| Analysis | `analysis.started`, `analysis.succeeded`, `analysis.failed`, `analysis.deleted`, `plan.uploaded`, `plan.deleted`, `finding.dismissed`, `finding.restored` |
-| Account (`project_id` NULL) | `github.connected`, `github.disconnected`, `user.signed_in`, `user.password_changed` |
+| Analysis | `analysis.started`, `analysis.succeeded`, `analysis.failed`, `analysis.deleted`, `analysis.current_changed`, `plan.uploaded`, `plan.deleted`, `finding.dismissed`, `finding.restored` |
+| Account (`project_id` NULL) | `github.connected`, `github.disconnected`, `user.signed_in`, `user.password_changed`, `user.deleted` |
 
 Suggested `metadata`: `{"from":"viewer","to":"editor","user":"bob"}` for a role change,
 `{"commit_sha":"…","branch":"main"}` for an analysis.

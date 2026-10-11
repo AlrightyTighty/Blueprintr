@@ -28,9 +28,18 @@ info:
       matches the catalog in `database/README.md`.
     - **Analysis is server-side.** Starting a run returns `202`; poll the run until `status` is
       `succeeded` or `failed`. Every run is pinned to a commit SHA, and a project keeps many runs.
+    - **Edge direction.** An edge means *source depends on target*: a function reads a table, a Lambda
+      assumes a role, an API integration invokes a Lambda, a code file runs on a Lambda
+      (`runs_code`: the code is the source, the compute resource is the target). So "what breaks if I
+      change X" is the set of nodes that can reach X, which is what `dependents` walks.
     - **Confidence on every edge.** `GraphEdge.confidence` is determined by `linkMethod`:
       `declared_reference` is `certain`; `env_var` and `code_mapping` are `high`;
       `gemini_inference` is `inferred`.
+    - **Error codes.** `code` is stable and safe to branch on. Common ones: `validation_failed`,
+      `invalid_credentials`, `invalid_token`, `token_expired`, `username_taken`, `email_taken`,
+      `github_account_taken`, `github_token_invalid`, `already_member`, `owner_cannot_leave`,
+      `owns_projects`, `run_not_ready`, `run_is_current`, `run_in_progress`, `invite_unavailable`,
+      `repository_already_linked`, `integration_not_configured`, `rate_limited`.
     - **Never stored:** source code, GitHub tokens in the clear, and raw Terraform plan JSON.
       Uploaded plans are parsed in memory and discarded; only addresses, actions and attribute names
       are kept. Blueprint never runs `terraform apply` or any repository code.
@@ -196,6 +205,7 @@ paths:
           required: true
           schema: { type: string, enum: [login, signup, link] }
       responses:
+        '503': { $ref: '#/components/responses/NotConfigured' }
         '200':
           description: Where to send the browser.
           content:
@@ -238,6 +248,7 @@ paths:
                 code: { type: string }
                 state: { type: string }
       responses:
+        '503': { $ref: '#/components/responses/NotConfigured' }
         '200':
           description: Outcome of the flow.
           content:
@@ -1604,6 +1615,7 @@ paths:
           in: query
           schema: { type: boolean, default: false }
       responses:
+        '503': { $ref: '#/components/responses/NotConfigured' }
         '200':
           description: The briefing.
           content:
@@ -1639,6 +1651,7 @@ paths:
                   description: Run UUID or `current`.
                 planId: { type: string, format: uuid }
       responses:
+        '503': { $ref: '#/components/responses/NotConfigured' }
         '200':
           description: The answer.
           content:
@@ -1672,6 +1685,7 @@ paths:
                   description: Run UUID or `current`.
                 planId: { type: string, format: uuid }
       responses:
+        '503': { $ref: '#/components/responses/NotConfigured' }
         '201':
           description: Session details.
           content:
@@ -1696,6 +1710,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/GraphQueryRequest' }
       responses:
+        '503': { $ref: '#/components/responses/NotConfigured' }
         '200':
           description: Query result.
           content:
@@ -1833,6 +1848,11 @@ components:
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
+    NotConfigured:
+      description: The integration this needs (GitHub OAuth, Gemini, ElevenLabs, audio storage) is not configured on this server.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
     BadGateway:
       description: An upstream service (GitHub, Gemini, ElevenLabs) failed.
       content:
@@ -1903,6 +1923,12 @@ components:
     LinkMethod:
       type: string
       enum: [declared_reference, env_var, code_mapping, gemini_inference]
+      description: |
+        `declared_reference`: written in Terraform (certain). `env_var`: Terraform sets an environment
+        variable on a Lambda to a resource and the code reads it (high). `code_mapping`: a Lambda's
+        handler/source folder maps code to the resource that runs it, or a resource name written
+        literally in code matches (or doesn't match, see `unmanaged_resource`) a Terraform resource's
+        name (high). `gemini_inference`: Gemini picked the likely resource (inferred).
     Confidence:
       type: string
       enum: [certain, high, inferred]
@@ -2228,8 +2254,8 @@ components:
       required: [id, source, target, relation, linkMethod, confidence]
       properties:
         id: { type: string, format: uuid }
-        source: { type: string, format: uuid, description: Node id. }
-        target: { type: string, format: uuid, description: Node id. }
+        source: { type: string, format: uuid, description: Node id of the dependent (the node that depends on `target`). }
+        target: { type: string, format: uuid, description: Node id of the dependency. }
         relation: { $ref: '#/components/schemas/EdgeRelation' }
         linkMethod: { $ref: '#/components/schemas/LinkMethod' }
         confidence:

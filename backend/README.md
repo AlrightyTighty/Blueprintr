@@ -1,54 +1,94 @@
 # Backend
 
-Fastify 5 API written in TypeScript (ESM).
+Fastify 5 API written in TypeScript (ESM), backed by Postgres (`pg`). The contract is
+[`openapi.yaml`](openapi.yaml); a test fails if a route and the spec drift apart.
 
 ## Layout
 
 ```
 src/
-├── app.ts      Builds the Fastify instance: plugins + routes. Add new routes here.
-├── server.ts   Local entrypoint: calls app.listen() (used by `npm run dev`)
-└── lambda.ts   AWS Lambda entrypoint: wraps the app with @fastify/aws-lambda
+├── app.ts            Builds the Fastify instance: CORS, auth hook, error handler, route modules
+├── server.ts         Local entrypoint (npm run dev)
+├── lambda.ts         Lambda entrypoint: API Gateway requests + async analysis jobs
+├── config.ts         Environment, validated with zod
+├── routes/           HTTP handlers, one folder per API area (auth, projects, graph, ...)
+├── services/         Business rules and app logic (permissions, transactions, activity log)
+├── repositories/     Database access, one function per query pattern (SQL lives only here)
+├── core/             Pure analysis logic with no HTTP or database: Terraform + code scanning,
+│                     linking, findings, graph traversal, plan overlay
+├── integrations/     GitHub, Gemini, ElevenLabs, S3, job dispatch (swappable, see registry.ts)
+├── db/               Connection pool, transactions, cursor pagination helpers
+├── http/             Errors (RFC 9457), request context, zod validation helpers
+└── lib/              Crypto (scrypt, AES-GCM), JWT, mailer
+test/                 Unit tests, an OpenAPI conformance test, and an end-to-end test against Postgres
 ```
 
-`app.ts` is shared by both entrypoints, so whatever you register there works locally
-and on Lambda without changes.
+**Layering.** Routes parse input (zod) and call one service function. Services decide who may do
+what (`services/access.ts` is the single place project permissions live), open transactions, write the
+activity log row in the same transaction as the change, and call repositories. Repositories take a
+`Db` (the pool or a transaction client) as their first argument and return plain typed objects.
+`core/` never imports from routes, services or repositories (it only reuses their types), so the
+analysis can be tested without a server.
+
+## Running locally
+
+```bash
+cp .env.example .env            # fill in JWT_SECRET and TOKEN_ENCRYPTION_KEY at least
+DATABASE_URL=postgres://... ../database/migrate.sh
+npm run dev                     # http://localhost:3000
+```
+
+Only the database and the two secrets are required. GitHub OAuth, Gemini, ElevenLabs and audio
+storage are optional; the features that need one answer `503 integration_not_configured` until it is
+set. Plan explanations still work without Gemini (rule-based text).
 
 ## Scripts
 
 | Script              | What it does                                    |
 | ------------------- | ----------------------------------------------- |
-| `npm run dev`       | Runs `src/server.ts` with `tsx watch` (hot reload) |
+| `npm run dev`       | `tsx watch`, loads `.env` if present            |
 | `npm run build`     | Compiles to `dist/` with `tsc`                  |
 | `npm start`         | Runs the compiled server from `dist/`           |
 | `npm run typecheck` | Type-checks without emitting                    |
+| `npm test`          | Runs the test suite (see below)                 |
 
-## Environment variables
+## Tests
 
-| Name          | Default | Purpose                                  |
-| ------------- | ------- | ---------------------------------------- |
-| `PORT`        | `3000`  | Local server port                        |
-| `CORS_ORIGIN` | any     | Allowed CORS origin(s); the browser calls the API cross-origin |
+```bash
+npm test                                                                 # unit + OpenAPI conformance
+TEST_DATABASE_URL=postgres://postgres:test@localhost:5432/postgres npm test   # also runs the end-to-end suite
+```
 
-## Routes
+The end-to-end suite creates a scratch database on the server you point it at, applies the real
+migrations from `../database`, drives the whole API through `app.inject` with fake GitHub, Gemini,
+ElevenLabs and S3, and drops the database afterwards. A throwaway server:
 
-| Method | Path         | Description         |
-| ------ | ------------ | ------------------- |
-| GET    | `/health`    | Health check        |
-| GET    | `/hello`     | Example API route   |
+```bash
+docker run -d --name blueprint-pg -e POSTGRES_PASSWORD=test -p 5432:5432 postgres:16
+```
 
-The full planned API contract is in [`openapi.yaml`](openapi.yaml) (OpenAPI 3.1). The table above
-only lists routes that are implemented today. Validate the spec with
-`npx @redocly/cli lint openapi.yaml`.
+`test/fixtures/demo` is a small repo (Terraform + a Node Lambda + a Python Lambda) with planted
+traps: a permission gap, an over-broad role and an unmanaged bucket. The analysis tests assert each is found.
 
-## Adding a route
+## How analysis works
 
-For a handful of routes, add them directly in `app.ts`. When it grows, split into
-Fastify plugins (e.g. `src/routes/users.ts` exporting an async plugin) and
-`app.register()` them in `app.ts` with `{ prefix: '/users' }`.
+`POST /projects/{id}/runs` resolves the commit, records a run, and returns `202`. A dispatcher then
+runs it: in-process locally, or by the Lambda invoking itself asynchronously when deployed (a Lambda
+is frozen once it responds). The job downloads the commit's tarball from GitHub (never cloning or
+executing anything), and `core/analysis/pipeline.ts` does the rest:
+
+1. Parse `.tf` files with HashiCorp's HCL parser (`@cdktf/hcl2json`, WASM).
+2. Scan JavaScript/TypeScript and Python for env var reads and AWS SDK calls (regexes plus bracket matching).
+3. Link: declared references (certain) → Lambda handler/source folder to code (high) → env var bridge (high) → literal names (high).
+4. Gemini resolves calls static analysis could not (labelled `inferred`); skipped when not configured.
+5. Findings: permission gaps, over-broad IAM, unmanaged resources, unresolved references.
+
+Limits: modules, `count`/`for_each` expansion and Docker/compose mapping are out of scope; unresolved
+references show up as labelled nodes and findings instead of being guessed. Source file contents are
+never stored; only Gemini inference sees the few functions it is asked about.
 
 ## Deployment
 
-Deployed by `iac/` as a single Lambda (`NodejsFunction`, bundled with esbuild from
-`src/lambda.ts`) behind an API Gateway HTTP API. You don't need to build this
-package before deploying — CDK bundles straight from source.
+`iac/` bundles `src/lambda.ts` with esbuild into one Lambda behind an API Gateway HTTP API. The
+HCL parser's WASM file is installed next to the bundle rather than inlined. Settings are passed
+through from the shell running `cdk deploy` (see `iac/lib/stacks/backend-stack.ts`).

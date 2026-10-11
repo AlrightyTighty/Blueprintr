@@ -20,7 +20,7 @@ lib/
 
 | Stack            | Resources                                                     | Outputs   |
 | ---------------- | ------------------------------------------------------------- | --------- |
-| `orion-backend`  | `NodejsFunction` (Node latest, arm64) behind an HTTP API      | `ApiUrl`  |
+| `orion-backend`  | `NodejsFunction` (Node latest, arm64) behind an HTTP API, plus a private S3 bucket for voice briefing audio | `ApiUrl`  |
 | `orion-frontend` | Private S3 bucket, CloudFront distribution, `BucketDeployment` | `SiteUrl` |
 
 The frontend stack takes the backend's API URL as a prop and writes it to
@@ -81,3 +81,15 @@ When the domain is ready, the usual setup is:
 - Adding infra (DynamoDB, Cognito, etc.): create a new stack in `lib/stacks/` or add
   constructs to an existing one, then wire it up in `bin/app.ts`. Pass resource
   names/ARNs to the Lambda via `environment` and grant access with `table.grantReadWriteData(fn)`-style calls.
+
+## Backend configuration
+
+`cdk deploy` passes these variables from your shell into the Lambda (any that are unset are skipped):
+`DATABASE_URL`, `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `FRONTEND_URL`, `CORS_ORIGIN`, `GITHUB_CLIENT_ID`,
+`GITHUB_CLIENT_SECRET`, `GITHUB_REDIRECT_URI`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `ELEVENLABS_API_KEY`,
+`ELEVENLABS_VOICE_ID`, `ELEVENLABS_AGENT_ID`. See `backend/.env.example` for what each means. `AUDIO_BUCKET`
+is set by the stack. If `database/certs/global-bundle.pem` exists (see `database/README.md`), it is
+bundled into the Lambda and used to verify the RDS certificate.
+
+The function runs analyses by invoking itself asynchronously, so its role may invoke itself, and its timeout is
+5 minutes. Plain environment variables are fine for a hackathon; move the secrets to Secrets Manager for anything real.
