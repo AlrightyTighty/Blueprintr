@@ -61,9 +61,18 @@ const TOURS = [
 ];
 
 const PROMISES = [
-  { title: 'Static analysis only', body: 'We read files. We never run terraform apply or any code from your repo.' },
-  { title: 'Honest about guesses', body: 'Inferred links are labelled in the graph and out loud on the tour. Humans review every conclusion.' },
-  { title: 'The guide never invents', body: 'It only talks about things that exist in your graph, and points to the file and line.' },
+  {
+    title: 'Static analysis only',
+    body: 'We read files. We never run terraform apply or any code from your repo.',
+  },
+  {
+    title: 'Honest about guesses',
+    body: 'Inferred links are labelled in the graph and out loud on the tour. Humans review every conclusion.',
+  },
+  {
+    title: 'The guide never invents',
+    body: 'It only talks about things that exist in your graph, and points to the file and line.',
+  },
 ];
 
 /** A ripple spreading out from a failing resource through the things that depend on it. */
@@ -85,7 +94,12 @@ function RippleIllustration() {
   ];
 
   return (
-    <svg viewBox="0 0 400 290" role="img" aria-label="A failure rippling outward through connected cloud resources" className="w-full max-w-md">
+    <svg
+      viewBox="0 0 400 290"
+      role="img"
+      aria-label="A failure rippling outward through connected cloud resources"
+      className="w-full max-w-md"
+    >
       {[0, 1, 2].map((ring) => (
         <circle
           key={ring}
@@ -100,7 +114,15 @@ function RippleIllustration() {
         />
       ))}
       {links.map(([from, to]) => (
-        <line key={`${from}-${to}`} x1={nodes[from].x} y1={nodes[from].y} x2={nodes[to].x} y2={nodes[to].y} stroke="#475a85" strokeWidth="1.5" />
+        <line
+          key={`${from}-${to}`}
+          x1={nodes[from].x}
+          y1={nodes[from].y}
+          x2={nodes[to].x}
+          y2={nodes[to].y}
+          stroke="#475a85"
+          strokeWidth="1.5"
+        />
       ))}
       {nodes.map((node) => (
         <g key={node.label}>
@@ -161,8 +183,8 @@ export default function LandingPage() {
               A guided tour of your cloud, including the outage before it happens.
             </h1>
             <p className="mt-5 text-lg text-slate-300">
-              Ripplemap links your code to your Terraform and walks you through how requests really flow. Then it lets you
-              pull the plug on a resource and watch what ripples out, or preview a change before you apply it.
+              Ripplemap links your code to your Terraform and walks you through how requests really flow. Then it lets you pull the plug on
+              a resource and watch what ripples out, or preview a change before you apply it.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/demo" className={primaryButtonClass}>
@@ -179,25 +201,26 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-4 py-14">
-          <h2 className="text-2xl font-semibold">Why it helps</h2>
-          <p className="mt-4 max-w-3xl text-slate-300">
-            Cloud systems are split in two: the code says what happens, and the Terraform says where it runs. Nobody
-            sees both at once, so the answer to &ldquo;what breaks if I change this?&rdquo; lives in someone&rsquo;s
-            memory. Ripplemap connects the two from the repo alone, with nothing to install and nothing run, so
-            understanding the system stops depending on who happens to be around.
-          </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            {BENEFITS.map((benefit) => (
-              <div key={benefit.audience} className="rounded-lg border border-indigo-900 bg-indigo-950/40 p-5">
-                <h3 className="font-medium text-indigo-100">{benefit.audience}</h3>
-                <p className="mt-2 text-sm text-slate-400">{benefit.body}</p>
-              </div>
-            ))}
+        <section className="border-y border-indigo-900 bg-indigo-950/30">
+          <div className="mx-auto max-w-5xl px-4 py-14">
+            <h2 className="text-2xl font-semibold">Why it helps</h2>
+            <p className="mt-4 max-w-3xl text-slate-300">
+              Cloud systems are split in two: the code says what happens, and the Terraform says where it runs. Nobody sees both at once, so
+              the answer to &ldquo;what breaks if I change this?&rdquo; lives in someone&rsquo;s memory. Ripplemap connects the two from the
+              repo alone, with nothing to install and nothing run, so understanding the system stops depending on who happens to be around.
+            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {BENEFITS.map((benefit) => (
+                <div key={benefit.audience} className="rounded-lg border border-indigo-900 bg-indigo-950/40 p-5">
+                  <h3 className="font-medium text-indigo-100">{benefit.audience}</h3>
+                  <p className="mt-2 text-sm text-slate-400">{benefit.body}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
-        <section className="border-y border-indigo-900 bg-indigo-950/30">
+        <section>
           <div className="mx-auto max-w-5xl px-4 py-14">
             <h2 className="text-2xl font-semibold">How it works</h2>
             <ol className="mt-8 grid gap-6 md:grid-cols-3">
@@ -214,23 +237,25 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-5xl px-4 py-14">
-          <h2 className="text-2xl font-semibold">Four ways to take the tour</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            {TOURS.map((tour) => (
-              <div key={tour.name} className="rounded-lg border border-indigo-900 bg-indigo-950/40 p-5">
-                <h3 className={`font-medium ${tour.accent}`}>{tour.name}</h3>
-                <p className="mt-2 text-sm text-slate-400">{tour.body}</p>
-              </div>
-            ))}
+        <section className="border-y border-indigo-900 bg-indigo-950/30">
+          <div className="mx-auto max-w-5xl px-4 py-14">
+            <h2 className="text-2xl font-semibold">Four ways to take the tour</h2>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {TOURS.map((tour) => (
+                <div key={tour.name} className="rounded-lg border border-indigo-900 bg-indigo-950/40 p-5">
+                  <h3 className={`font-medium ${tour.accent}`}>{tour.name}</h3>
+                  <p className="mt-2 text-sm text-slate-400">{tour.body}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-6 text-slate-300">
+              Interrupt any time with a question. The guide answers from your graph, then picks the tour back up. Choose a calm docent or an
+              overexcited guide.
+            </p>
           </div>
-          <p className="mt-6 text-slate-300">
-            Interrupt any time with a question. The guide answers from your graph, then picks the tour back up. Choose a
-            calm docent or an overexcited guide.
-          </p>
         </section>
 
-        <section className="border-t border-indigo-900 bg-indigo-950/30">
+        <section>
           <div className="mx-auto max-w-5xl px-4 py-14">
             <h2 className="text-2xl font-semibold">Built to be trusted</h2>
             <div className="mt-8 grid gap-6 md:grid-cols-3">
@@ -241,9 +266,7 @@ export default function LandingPage() {
                 </div>
               ))}
             </div>
-            <p className="mt-6 text-sm text-slate-500">
-              For now: Terraform and AWS only; Python and JavaScript or TypeScript code.
-            </p>
+            <p className="mt-6 text-sm text-slate-500">For now: Terraform and AWS only; Python and JavaScript or TypeScript code.</p>
           </div>
         </section>
 
@@ -262,9 +285,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className="border-t border-indigo-900 px-4 py-6 text-center text-sm text-slate-500">
-        Ripplemap · ripplemap.wiki
-      </footer>
+      <footer className="border-t border-indigo-900 px-4 py-6 text-center text-sm text-slate-500">© {new Date().getFullYear()} Ripplemap. All rights reserved. · ripplemap.wiki</footer>
     </div>
   );
 }
