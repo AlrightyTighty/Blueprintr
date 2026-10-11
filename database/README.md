@@ -30,6 +30,7 @@ instance (tested on Postgres 16).
 | `004_analysis_graph.sql` | `analysis_runs`, `graph_nodes`, `graph_edges`, `findings` |
 | `005_plans.sql` | `plan_analyses`, `plan_changes` |
 | `006_activity_log.sql` | `activity_log` |
+| `007_resource_types_sns.sql` | adds the SNS topic to the resource catalog |
 | `migrate.sh` | applies unapplied files in order; tracks them in `schema_migrations` |
 | `smoke_test.sql` | assertions over the constraints; runs in a rolled-back transaction |
 
@@ -96,7 +97,7 @@ graph_nodes.terraform_type  ··>  resource_types.terraform_type   (name/icon lo
 Anyone holding a `link_view` share token can view, without an account.
 
 ### Resource catalog
-**resource_types**: display metadata for Terraform resource types: `display_name`, `service`,
+**resource_types**: display metadata for resource types, keyed by Terraform-style names (CloudFormation types are mapped onto them, e.g. `AWS::SQS::Queue` becomes `aws_sqs_queue`): `display_name`, `service`,
 `category`, `icon_key`, `color`. `icon_key` (e.g. `aws/lambda`) names an SVG shipped with the
 frontend. AWS only for now. Add a type with a plain `INSERT` (see below). Nodes whose type is not in
 the catalog still work; the frontend falls back to a generic icon.

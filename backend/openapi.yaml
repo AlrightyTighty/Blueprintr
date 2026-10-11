@@ -40,6 +40,11 @@ info:
       `github_account_taken`, `github_token_invalid`, `already_member`, `owner_cannot_leave`,
       `owns_projects`, `run_not_ready`, `run_is_current`, `run_in_progress`, `invite_unavailable`,
       `repository_already_linked`, `integration_not_configured`, `rate_limited`.
+    - **Terraform and CloudFormation share one graph.** CloudFormation resource types are mapped onto
+      Terraform-style names (`AWS::SQS::Queue` becomes `aws_sqs_queue`), so `terraformType` and the resource
+      catalog work for both. A node's `attributes` say where it came from (`iac: cloudformation`, `cfnType`,
+      `logicalId`), and CDK nodes are named after the construct path. Blueprint never runs `cdk synth`, so
+      CDK apps need their synthesized templates in the repository. Plan overlays are Terraform-only.
     - **Never stored:** source code, GitHub tokens in the clear, and raw Terraform plan JSON.
       Uploaded plans are parsed in memory and discarded; only addresses, actions and attribute names
       are kept. Ripplemap never runs `terraform apply` or any repository code.
@@ -114,7 +119,7 @@ paths:
     get:
       tags: [System]
       operationId: listResourceTypes
-      summary: Supported Terraform resource types
+      summary: Supported resource types
       description: Catalog of display metadata (name, icon, colour). Static; safe to cache.
       security: []
       responses:
@@ -1949,7 +1954,7 @@ components:
       type: string
       enum: [resource, code_file, code_function, unmanaged_resource, unresolved_ref]
       description: |
-        `resource` is a Terraform resource (Route 53 and CloudFront domain nodes included).
+        `resource` is a Terraform or CloudFormation resource (Route 53 and CloudFront domain nodes included).
         `unmanaged_resource` is something hardcoded in code that is not in Terraform (drift).
         `unresolved_ref` is a reference that could not be resolved (shown as a labelled node).
     EdgeRelation:
@@ -1962,7 +1967,7 @@ components:
         `declared_reference`: written in Terraform (certain). `env_var`: Terraform sets an environment
         variable on a Lambda to a resource and the code reads it (high). `code_mapping`: a Lambda's
         handler/source folder maps code to the resource that runs it, or a resource name written
-        literally in code matches (or doesn't match, see `unmanaged_resource`) a Terraform resource's
+        literally in code matches (or doesn't match, see `unmanaged_resource`) an infrastructure resource's
         name (high). `gemini_inference`: Gemini picked the likely resource (inferred).
     Confidence:
       type: string
@@ -2295,7 +2300,10 @@ components:
         kind: { $ref: '#/components/schemas/NodeKind' }
         address:
           type: string
-          description: Terraform address (`aws_dynamodb_table.orders`) or code location (`src/api.py::get_order`).
+          description: |
+            Resource address (`aws_dynamodb_table.orders`; for CloudFormation the logical id, e.g.
+            `aws_dynamodb_table.OrdersTable1A2B3C4D`, prefixed with the stack when several templates are analysed)
+            or code location (`src/api.py::get_order`).
         name: { type: string }
         terraformType: { type: [string, 'null'] }
         resourceType:

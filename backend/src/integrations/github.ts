@@ -51,12 +51,17 @@ export interface GithubClient {
 }
 
 const API = 'https://api.github.com';
-const SOURCE_EXTENSIONS = new Set(['.tf', '.py', '.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx']);
-const SKIPPED_FOLDERS = ['node_modules/', '.terraform/', 'dist/', 'build/', 'vendor/', 'venv/', '.venv/', 'site-packages/', '__pycache__/', '.git/'];
+// .yaml/.yml/.json are read only to find CloudFormation templates (see core/cloudformation).
+const SOURCE_EXTENSIONS = new Set(['.tf', '.py', '.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.yaml', '.yml', '.json']);
+const SKIPPED_FOLDERS = ['node_modules/', '.terraform/', 'dist/', 'build/', 'vendor/', 'venv/', '.venv/', 'site-packages/', '__pycache__/', '.git/', '.github/'];
+const LOCK_FILES = new Set(['package-lock.json', 'pnpm-lock.yaml', 'composer.lock']);
 
 export function isAnalyzablePath(path: string): boolean {
   if (SKIPPED_FOLDERS.some((folder) => path.startsWith(folder) || path.includes(`/${folder}`))) return false;
+  // `cdk synth` stages a copy of every Lambda's code under cdk.out/asset.*; the templates next to it are what we want.
+  if (/(^|\/)cdk\.out\/asset\./.test(path)) return false;
   const base = path.slice(path.lastIndexOf('/') + 1);
+  if (LOCK_FILES.has(base)) return false;
   if (base.endsWith('.min.js') || base.endsWith('.d.ts') || base.startsWith('._')) return false; // minified, typings, macOS AppleDouble
   const dot = base.lastIndexOf('.');
   return dot !== -1 && SOURCE_EXTENSIONS.has(base.slice(dot));

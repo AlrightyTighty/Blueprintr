@@ -1,0 +1,169 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: The orders platform, written by hand in CloudFormation YAML.
+
+Parameters:
+  Env:
+    Type: String
+    Default: prod
+  Domain:
+    Type: String
+    Default: whatbreaks.example.com
+
+Resources:
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub orders-${Env}
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+
+  UploadsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub blueprint-uploads-${Env}
+
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub blueprint-site-${Env}
+
+  JobsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join ['-', [jobs, !Ref Env]]
+
+  ApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: api-access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Planted trap: the code also calls dynamodb:DeleteItem, which is not allowed here.
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:Query]
+                Resource:
+                  - !GetAtt OrdersTable.Arn
+                  - !Sub '${OrdersTable.Arn}/index/*'
+              # Planted trap: s3:* on everything, while the code only writes one bucket.
+              - Effect: Allow
+                Action: s3:*
+                Resource: '*'
+              - Effect: Allow
+                Action: sqs:SendMessage
+                Resource: !GetAtt JobsQueue.Arn
+
+  WorkerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+
+  WorkerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: worker
+      Roles: [!Ref WorkerRole]
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: [sqs:ReceiveMessage, sqs:DeleteMessage]
+            Resource: !GetAtt JobsQueue.Arn
+          - Effect: Allow
+            Action: [dynamodb:PutItem, dynamodb:UpdateItem]
+            Resource: !GetAtt OrdersTable.Arn
+
+  ApiFunction:
+    Type: AWS::Lambda::Function
+    Metadata:
+      aws:asset:path: ../src/api
+    Properties:
+      FunctionName: !Sub api-${Env}
+      Runtime: nodejs20.x
+      Handler: app.handler
+      Role: !GetAtt ApiRole.Arn
+      Code:
+        S3Bucket: deploy-artifacts
+        S3Key: api.zip
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref OrdersTable
+          BUCKET: !Ref UploadsBucket
+          QUEUE_URL: !Ref JobsQueue
+
+  WorkerFunction:
+    Type: AWS::Lambda::Function
+    Metadata:
+      aws:asset:path: ../src/worker
+    Properties:
+      FunctionName: !Sub worker-${Env}
+      Runtime: python3.12
+      Handler: main.handler
+      Role: !GetAtt WorkerRole.Arn
+      Code:
+        S3Bucket: deploy-artifacts
+        S3Key: worker.zip
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref OrdersTable
+          QUEUE_URL: !Ref JobsQueue
+
+  JobsMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt JobsQueue.Arn
+      FunctionName: !Ref WorkerFunction
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: blueprint-http
+      ProtocolType: HTTP
+
+  ApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt ApiFunction.Arn
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Aliases: [!Ref Domain]
+        Origins:
+          - Id: site
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+
+  SiteRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z123
+      Name: !Ref Domain
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt Distribution.DomainName
+        HostedZoneId: Z2FDTNDATAQYW2
+
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com
