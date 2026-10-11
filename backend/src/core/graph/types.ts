@@ -12,7 +12,9 @@ export type EdgeRelation =
   | 'writes'
   | 'publishes'
   | 'invokes'
-  | 'routes_to';
+  | 'routes_to'
+  /** One function calls another (the caller depends on the callee). */
+  | 'calls';
 
 export type LinkMethod = 'declared_reference' | 'env_var' | 'code_mapping' | 'gemini_inference';
 export type Confidence = 'certain' | 'high' | 'inferred';

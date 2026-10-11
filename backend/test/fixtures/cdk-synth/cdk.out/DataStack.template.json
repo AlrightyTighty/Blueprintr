@@ -1,0 +1,32 @@
+{
+  "Resources": {
+    "OrdersTableABC12345": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "KeySchema": [{ "AttributeName": "id", "KeyType": "HASH" }],
+        "AttributeDefinitions": [{ "AttributeName": "id", "AttributeType": "S" }],
+        "BillingMode": "PAY_PER_REQUEST"
+      },
+      "UpdateReplacePolicy": "Retain",
+      "DeletionPolicy": "Retain",
+      "Metadata": { "aws:cdk:path": "DataStack/OrdersTable/Resource" }
+    },
+    "CDKMetadata": {
+      "Type": "AWS::CDK::Metadata",
+      "Properties": { "Analytics": "v2:deflate64:abc" }
+    }
+  },
+  "Outputs": {
+    "ExportsOutputRefOrdersTableABC12345": {
+      "Value": { "Ref": "OrdersTableABC12345" },
+      "Export": { "Name": "DataStack:ExportsOutputRefOrdersTableABC12345" }
+    },
+    "ExportsOutputFnGetAttOrdersTableABC12345Arn0A1B2C3D": {
+      "Value": { "Fn::GetAtt": ["OrdersTableABC12345", "Arn"] },
+      "Export": { "Name": "DataStack:ExportsOutputFnGetAttOrdersTableABC12345Arn0A1B2C3D" }
+    }
+  },
+  "Parameters": {
+    "BootstrapVersion": { "Type": "AWS::SSM::Parameter::Value<String>", "Default": "/cdk-bootstrap/hnb659fds/version" }
+  }
+}

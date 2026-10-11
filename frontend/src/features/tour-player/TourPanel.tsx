@@ -4,6 +4,7 @@ import type { Journey } from '../../core/journeys/types';
 import SoftBreak from '../../components/SoftBreak';
 import { primaryButtonClass, secondaryButtonClass } from '../../components/ui';
 import FindingsPanel from '../findings/FindingsPanel';
+import EndpointTour from './EndpointTour';
 import { useGraphStore } from '../graph-view/useGraphStore';
 import { useTourStore } from './useTourStore';
 
@@ -81,6 +82,8 @@ export default function TourPanel({ canUsePlans = true }: { canUsePlans?: boolea
               No tours yet: the graph has no domain, API gateway or function to start from.
             </p>
           )}
+
+          <EndpointTour />
 
           <section className="flex flex-col gap-2 rounded border border-indigo-900 p-3">
             <h3 className="font-medium text-rose-300">Disaster tour</h3>

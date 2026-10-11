@@ -7,6 +7,9 @@
 // Nothing here runs the demo repo's code or touches the network; it only reads files.
 import { analyze } from '../backend/src/core/analysis/pipeline.ts';
 import { loadFixture } from '../backend/test/helpers.ts';
+import { listEndpoints } from '../backend/src/core/endpoints/list.ts';
+import { traceRequest } from '../backend/src/core/endpoints/trace.ts';
+import { buildEndpointJourney } from '../frontend/src/core/journeys/endpointJourney.ts';
 import { extractJourneys } from '../frontend/src/core/journeys/extractJourneys.ts';
 import { buildDisasterJourney } from '../frontend/src/core/journeys/impactJourneys.ts';
 
@@ -28,7 +31,15 @@ const findings = analysis.findings.map((finding, index) => ({
   fingerprint: `finding-${index}`,
 })) as never;
 
-const journeys = extractJourneys(graph, findings);
+const baseJourneys = extractJourneys(graph, findings);
+
+// "Call" every endpoint the demo declares, with a sample path, and tour each request.
+const samplePath = (template: string) => template.replace(/\{([^}]+)\}/g, (_match, name: string) => (name === 'id' ? '123' : `example-${name}`));
+const endpointJourneys = listEndpoints(graph).flatMap((endpoint) => {
+  const outcome = traceRequest(graph, { method: endpoint.method === 'ANY' ? 'GET' : endpoint.method, path: samplePath(endpoint.path), endpointId: endpoint.id });
+  return outcome.found ? [buildEndpointJourney(graph, findings, outcome.trace)] : [];
+});
+const journeys = [...baseJourneys, ...endpointJourneys];
 const table = analysis.nodes.find((node) => node.address === 'aws_dynamodb_table.orders');
 const disaster = table ? buildDisasterJourney(graph, findings, table.id) : null;
 
@@ -57,11 +68,11 @@ const wantedOrderFlow = [
   'aws_lambda_function.worker',
   'aws_dynamodb_table.orders',
 ];
-const workerJourney = journeys.find((journey) => journey.id.endsWith(`:${analysis.nodes.find((n) => n.address === 'aws_lambda_function.worker')?.id}`));
+const workerJourney = baseJourneys.find((journey) => journey.id.endsWith(`:${analysis.nodes.find((n) => n.address === 'aws_lambda_function.worker')?.id}`));
 const workerFlow = workerJourney?.stops.map((stop) => addressOf(stop.nodeId)) ?? [];
 check('A request enters the API, reaches the queue, and the worker writes the orders table', JSON.stringify(workerFlow) === JSON.stringify(wantedOrderFlow), `got ${JSON.stringify(workerFlow)}`);
 
-const siteJourney = journeys.find((journey) => journey.kind === 'first_day' && addressOf(journey.stops[0].nodeId) === 'aws_route53_record.site');
+const siteJourney = baseJourneys.find((journey) => journey.kind === 'first_day' && addressOf(journey.stops[0].nodeId) === 'aws_route53_record.site');
 const siteFlow = siteJourney?.stops.map((stop) => addressOf(stop.nodeId)) ?? [];
 check(
   'The domain tour goes domain, CDN, bucket',
@@ -111,6 +122,49 @@ for (const wanted of ['aws_lambda_function.api', 'aws_lambda_function.worker', '
   check(`Losing the orders table takes down ${wanted}`, disasterAddresses.has(wanted));
 }
 check('Losing the orders table does not touch the unrelated site bucket', !disasterAddresses.has('aws_s3_bucket.site'));
+
+// 7. Endpoint tours follow one request, in order, and say what they can't know.
+const endpointFlow = (method: string, path: string) =>
+  endpointJourneys.find((journey) => journey.title === `Follow ${method} ${path}`)?.stops.map((stop) => addressOf(stop.nodeId)) ?? [];
+const inOrder = (flow: string[], wanted: string[]) => {
+  let at = -1;
+  return wanted.every((address) => (at = flow.indexOf(address, at + 1)) !== -1);
+};
+check(
+  'POST /orders goes API, route, integration, Lambda, handler, saveOrder, the queue, then on to the worker (and touches the table)',
+  inOrder(endpointFlow('POST', '/orders'), [
+    'aws_apigatewayv2_api.http',
+    'aws_apigatewayv2_route.post_order',
+    'aws_apigatewayv2_integration.api',
+    'aws_lambda_function.api',
+    'src/api/app.js::handler',
+    'src/api/app.js::saveOrder',
+    'aws_sqs_queue.jobs',
+    'aws_lambda_function.worker',
+    'src/worker/main.py::handler',
+    'src/worker/main.py::process',
+  ]),
+  `got ${JSON.stringify(endpointFlow('POST', '/orders'))}`,
+);
+const stopsFor = (method: string, path: string, address: string) =>
+  endpointJourneys.find((journey) => journey.title === `Follow ${method} ${path}`)?.stops.filter((stop) => addressOf(stop.nodeId) === address) ?? [];
+check('POST /orders touches the orders table', endpointFlow('POST', '/orders').includes('aws_dynamodb_table.orders'));
+check(
+  'DELETE /orders/123 warns on cancelOrder that DeleteItem is not allowed',
+  stopsFor('DELETE', '/orders/123', 'src/api/app.js::cancelOrder').some((stop) => /DeleteItem/.test(stop.warnings.join(' '))),
+);
+check(
+  'POST /reports warns on the unmanaged legacy-reports bucket',
+  stopsFor('POST', '/reports', 'unmanaged:s3:legacy-reports').some((stop) => /legacy-reports/.test(stop.warnings.join(' '))),
+);
+check(
+  'Every endpoint tour says the handler is shared, since five routes use one Lambda',
+  endpointJourneys.length === 5 && endpointJourneys.every((journey) => journey.stops.some((stop) => /serves 5 endpoints through one handler/.test(stop.script))),
+);
+check(
+  'Each endpoint tour opens by naming the call',
+  endpointJourneys.every((journey) => journey.stops[0].script.startsWith(`You call ${journey.title.replace('Follow ', '')}`)),
+);
 
 console.log(failures === 0 ? '\nAll checks passed.' : `\n${failures} check${failures === 1 ? '' : 's'} failed.`);
 process.exit(failures === 0 ? 0 : 1);

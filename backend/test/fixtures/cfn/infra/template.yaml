@@ -144,6 +144,41 @@ Resources:
       IntegrationType: AWS_PROXY
       IntegrationUri: !GetAtt ApiFunction.Arn
 
+  GetOrderRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: GET /orders/{id}
+      Target: !Join ['/', [integrations, !Ref ApiIntegration]]
+
+  PostOrderRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: POST /orders
+      Target: !Join ['/', [integrations, !Ref ApiIntegration]]
+
+  DeleteOrderRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: DELETE /orders/{id}
+      Target: !Join ['/', [integrations, !Ref ApiIntegration]]
+
+  PutUploadRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: PUT /uploads/{key}
+      Target: !Join ['/', [integrations, !Ref ApiIntegration]]
+
+  PostReportRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: POST /reports
+      Target: !Join ['/', [integrations, !Ref ApiIntegration]]
+
   Distribution:
     Type: AWS::CloudFront::Distribution
     Properties:

@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 import type { NewNode } from '../../repositories/graph.js';
-import type { CodeFacts, CodeFunction, SdkCall } from '../code/scan.js';
+import type { CodeCall, CodeFacts, CodeFunction, SdkCall } from '../code/scan.js';
+import { extractEndpoints } from '../endpoints/extract.js';
 import type { EdgeRelation } from '../graph/types.js';
 import { resourceDir, type TfModel, type TfResource } from '../terraform/model.js';
 import {
@@ -79,6 +80,8 @@ export interface LinkResult {
   unmanaged: UnmanagedUse[];
   /** Unresolvable Terraform references (modules, resources not found). */
   unresolvedRefs: { source: NewNode; target: NewNode; reason: string }[];
+  /** How many endpoints were found, and how many looked like endpoints but could not be resolved. */
+  endpoints: { found: number; unresolved: number };
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -107,6 +110,7 @@ const SAFE_ATTRIBUTES = new Set([
   'name', 'bucket', 'function_name', 'handler', 'runtime', 'hash_key', 'range_key', 'billing_mode', 'fifo_queue',
   'domain_name', 'type', 'protocol_type', 'stage_name', 'description', 'memory_size', 'timeout', 'architectures',
   'aliases', 'comment', 'zone_id', 'ttl', 'visibility_timeout_seconds', 'source_dir', 'path_part', 'route_key',
+  'http_method', 'authorization_type',
 ]);
 
 function identifierNames(resource: TfResource, scope: TfModel): string[] {
@@ -160,7 +164,7 @@ function relationFor(sourceType: string, targetType: string, path: string): Edge
   const attribute = path.split('.')[0]!;
   if (targetType === 'aws_iam_role' && !sourceType.startsWith('aws_iam_') && /(^|_)role(_arn)?$/.test(attribute)) return 'assumes_role';
   if (targetType === 'aws_lambda_function' && /^aws_(apigatewayv2|api_gateway)_integration$/.test(sourceType)) return 'invokes';
-  if (targetType === 'aws_lambda_function' && sourceType === 'aws_lambda_event_source_mapping') return 'invokes';
+  if (targetType === 'aws_lambda_function' && (sourceType === 'aws_lambda_event_source_mapping' || sourceType === 'aws_lambda_function_url')) return 'invokes';
   if (sourceType === 'aws_route53_record' && /^aws_(cloudfront_distribution|apigatewayv2_|api_gateway_|lb|alb)/.test(targetType)) return 'routes_to';
   if (sourceType === 'aws_cloudfront_distribution' && /^aws_(s3_bucket|apigatewayv2_|api_gateway_|lb|alb|lambda_function)/.test(targetType)) return 'routes_to';
   return 'references';
@@ -244,6 +248,7 @@ export function linkGraph(model: TfModel, facts: CodeFacts): LinkResult {
     missingEnv: [],
     unmanaged: [],
     unresolvedRefs: [],
+    endpoints: { found: 0, unresolved: 0 },
   };
 
   // 1. Resource nodes ---------------------------------------------------------------------------------------
@@ -464,6 +469,47 @@ export function linkGraph(model: TfModel, facts: CodeFacts): LinkResult {
       builder.addEdge(source, target, 'references', 'env_var', { file: read.file, line: read.line, envVar: read.name, note: 'env var read' });
     }
   }
+
+  // 5. Calls between functions ---------------------------------------------------------------------------------------
+  // A request enters at a Lambda's handler and often delegates (handler -> getOrder -> table). Only calls on a
+  // path from a handler to a function that touches a resource are kept, so helpers don't clutter the graph.
+  const handlerNames = [...result.lambdas.values()].flatMap((lambda) =>
+    lambda.handlerFile && lambda.handlerFunction && functionsByQualified.has(`${lambda.handlerFile}::${lambda.handlerFunction}`)
+      ? [`${lambda.handlerFile}::${lambda.handlerFunction}`]
+      : [],
+  );
+  const calledBy = new Map<string, CodeCall[]>();
+  const callersOf = new Map<string, string[]>();
+  for (const call of facts.calls) {
+    calledBy.set(call.caller, [...(calledBy.get(call.caller) ?? []), call]);
+    callersOf.set(call.callee, [...(callersOf.get(call.callee) ?? []), call.caller]);
+  }
+  const walk = (starts: string[], next: (name: string) => string[]): Set<string> => {
+    const seen = new Set(starts);
+    const queue = [...starts];
+    while (queue.length > 0) {
+      for (const name of next(queue.shift()!)) {
+        if (!seen.has(name)) {
+          seen.add(name);
+          queue.push(name);
+        }
+      }
+    }
+    return seen;
+  };
+  const reachableFromHandlers = walk(handlerNames, (name) => (calledBy.get(name) ?? []).map((call) => call.callee));
+  const touchesResources = [...builder.nodes.values()].filter((n) => n.kind === 'code_function').map((n) => n.address);
+  const leadsToResources = walk(touchesResources, (name) => callersOf.get(name) ?? []);
+  for (const call of facts.calls) {
+    if (!reachableFromHandlers.has(call.caller) || !leadsToResources.has(call.callee)) continue;
+    builder.addEdge(ensureFunction(call.caller), ensureFunction(call.callee), 'calls', 'code_mapping', {
+      file: call.file,
+      line: call.line,
+    });
+  }
+
+  // 6. Endpoints a caller can reach (API Gateway routes, REST methods, function URLs) -------------------------------
+  result.endpoints = extractEndpoints(result);
 
   return result;
 }

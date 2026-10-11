@@ -4,7 +4,7 @@
     "commitSha": null,
     "nodes": [
       {
-        "id": "d0c67dc0-faca-4b9f-bda5-77c14537cc49",
+        "id": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
         "kind": "resource",
         "address": "aws_apigatewayv2_api.http",
         "name": "http",
@@ -28,7 +28,7 @@
         }
       },
       {
-        "id": "60959840-3413-488c-afb1-31df2805fd76",
+        "id": "f85c8379-2718-4c70-bc65-5f6335bef186",
         "kind": "resource",
         "address": "aws_apigatewayv2_integration.api",
         "name": "api",
@@ -49,14 +49,154 @@
         }
       },
       {
-        "id": "ad588ca3-a29f-4460-b907-dd40fe86b66f",
+        "id": "edee504c-da13-4162-9e38-89ad7b9a7d21",
+        "kind": "resource",
+        "address": "aws_apigatewayv2_route.delete_order",
+        "name": "delete_order",
+        "terraformType": "aws_apigatewayv2_route",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 167,
+        "lineEnd": null,
+        "attributes": {
+          "route_key": "DELETE /orders/{id}",
+          "endpoint": {
+            "kind": "http_api",
+            "method": "DELETE",
+            "path": "/orders/{id}"
+          }
+        },
+        "resourceType": {
+          "terraformType": "aws_apigatewayv2_route",
+          "provider": "aws",
+          "service": "API Gateway",
+          "displayName": "API Route",
+          "category": "network",
+          "iconKey": "aws/api-gateway",
+          "color": "#8C4FFF"
+        }
+      },
+      {
+        "id": "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c",
+        "kind": "resource",
+        "address": "aws_apigatewayv2_route.get_order",
+        "name": "get_order",
+        "terraformType": "aws_apigatewayv2_route",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 155,
+        "lineEnd": null,
+        "attributes": {
+          "route_key": "GET /orders/{id}",
+          "endpoint": {
+            "kind": "http_api",
+            "method": "GET",
+            "path": "/orders/{id}"
+          }
+        },
+        "resourceType": {
+          "terraformType": "aws_apigatewayv2_route",
+          "provider": "aws",
+          "service": "API Gateway",
+          "displayName": "API Route",
+          "category": "network",
+          "iconKey": "aws/api-gateway",
+          "color": "#8C4FFF"
+        }
+      },
+      {
+        "id": "edc7946a-88d4-46a1-bd05-4c7287c17305",
+        "kind": "resource",
+        "address": "aws_apigatewayv2_route.post_order",
+        "name": "post_order",
+        "terraformType": "aws_apigatewayv2_route",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 161,
+        "lineEnd": null,
+        "attributes": {
+          "route_key": "POST /orders",
+          "endpoint": {
+            "kind": "http_api",
+            "method": "POST",
+            "path": "/orders"
+          }
+        },
+        "resourceType": {
+          "terraformType": "aws_apigatewayv2_route",
+          "provider": "aws",
+          "service": "API Gateway",
+          "displayName": "API Route",
+          "category": "network",
+          "iconKey": "aws/api-gateway",
+          "color": "#8C4FFF"
+        }
+      },
+      {
+        "id": "a168f7f5-98d7-4210-a2ec-1d02f080c735",
+        "kind": "resource",
+        "address": "aws_apigatewayv2_route.post_report",
+        "name": "post_report",
+        "terraformType": "aws_apigatewayv2_route",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 179,
+        "lineEnd": null,
+        "attributes": {
+          "route_key": "POST /reports",
+          "endpoint": {
+            "kind": "http_api",
+            "method": "POST",
+            "path": "/reports"
+          }
+        },
+        "resourceType": {
+          "terraformType": "aws_apigatewayv2_route",
+          "provider": "aws",
+          "service": "API Gateway",
+          "displayName": "API Route",
+          "category": "network",
+          "iconKey": "aws/api-gateway",
+          "color": "#8C4FFF"
+        }
+      },
+      {
+        "id": "b0377450-3545-4b90-845c-364f38aae961",
+        "kind": "resource",
+        "address": "aws_apigatewayv2_route.put_upload",
+        "name": "put_upload",
+        "terraformType": "aws_apigatewayv2_route",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 173,
+        "lineEnd": null,
+        "attributes": {
+          "route_key": "PUT /uploads/{key}",
+          "endpoint": {
+            "kind": "http_api",
+            "method": "PUT",
+            "path": "/uploads/{key}"
+          }
+        },
+        "resourceType": {
+          "terraformType": "aws_apigatewayv2_route",
+          "provider": "aws",
+          "service": "API Gateway",
+          "displayName": "API Route",
+          "category": "network",
+          "iconKey": "aws/api-gateway",
+          "color": "#8C4FFF"
+        }
+      },
+      {
+        "id": "7b4176f3-c09a-4c54-b704-a9ccca457397",
         "kind": "resource",
         "address": "aws_cloudfront_distribution.site",
         "name": "site",
         "terraformType": "aws_cloudfront_distribution",
         "parentId": null,
         "filePath": "infra/main.tf",
-        "lineStart": 155,
+        "lineStart": 185,
         "lineEnd": null,
         "attributes": {
           "aliases": [
@@ -74,7 +214,7 @@
         }
       },
       {
-        "id": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "kind": "resource",
         "address": "aws_dynamodb_table.orders",
         "name": "orders",
@@ -99,7 +239,7 @@
         }
       },
       {
-        "id": "1c823f5e-0a97-4b96-be0e-9a99e889223a",
+        "id": "d720b5e6-3a44-4437-903c-a71b3f7e80a9",
         "kind": "resource",
         "address": "aws_iam_policy.worker",
         "name": "worker",
@@ -122,7 +262,7 @@
         }
       },
       {
-        "id": "e978f221-1a76-468f-81b6-29dfac55124a",
+        "id": "9fad9b63-7225-455e-bf3a-6451d1ac5501",
         "kind": "resource",
         "address": "aws_iam_role.api_role",
         "name": "api_role",
@@ -145,7 +285,7 @@
         }
       },
       {
-        "id": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
+        "id": "830d31b9-4fc2-4a61-954b-876666ed92bb",
         "kind": "resource",
         "address": "aws_iam_role.worker_role",
         "name": "worker_role",
@@ -168,7 +308,7 @@
         }
       },
       {
-        "id": "5d2aa9a7-25a7-42c2-aad3-2110b37f9078",
+        "id": "fb8cd3db-ae47-4b80-82df-3a06ee6465e5",
         "kind": "resource",
         "address": "aws_iam_role_policy.api_access",
         "name": "api_access",
@@ -191,7 +331,7 @@
         }
       },
       {
-        "id": "902e466d-0b82-41c2-949f-ace05bdf8f7b",
+        "id": "92f72aa7-c42d-4d88-888d-8edf5c5a6fa6",
         "kind": "resource",
         "address": "aws_iam_role_policy_attachment.worker",
         "name": "worker",
@@ -212,7 +352,7 @@
         }
       },
       {
-        "id": "988444b6-1c3f-46b7-998d-e9f0f5886328",
+        "id": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
         "kind": "resource",
         "address": "aws_lambda_event_source_mapping.jobs",
         "name": "jobs",
@@ -233,7 +373,7 @@
         }
       },
       {
-        "id": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "id": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
         "kind": "resource",
         "address": "aws_lambda_function.api",
         "name": "api",
@@ -263,7 +403,7 @@
         }
       },
       {
-        "id": "fe709eee-cc5a-45c5-be76-dd007e20518b",
+        "id": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
         "kind": "resource",
         "address": "aws_lambda_function.worker",
         "name": "worker",
@@ -292,14 +432,14 @@
         }
       },
       {
-        "id": "b838f423-a3d7-4b40-aeee-aa47cb6e5cf7",
+        "id": "8e3c4967-c57c-410d-8c9e-2cb3b4d849f6",
         "kind": "resource",
         "address": "aws_route53_record.site",
         "name": "site",
         "terraformType": "aws_route53_record",
         "parentId": null,
         "filePath": "infra/main.tf",
-        "lineStart": 165,
+        "lineStart": 195,
         "lineEnd": null,
         "attributes": {
           "name": "demo.ripplemap.wiki",
@@ -317,7 +457,7 @@
         }
       },
       {
-        "id": "4ff6e537-bbca-449c-a3f6-3a7f6657dc38",
+        "id": "857d747b-ab79-43e3-9032-edfc56600e7a",
         "kind": "resource",
         "address": "aws_s3_bucket.site",
         "name": "site",
@@ -340,7 +480,7 @@
         }
       },
       {
-        "id": "5d528e00-d1b6-4eb6-aede-76192b48c7cc",
+        "id": "87530dc4-a645-4495-bd08-aecd8747b055",
         "kind": "resource",
         "address": "aws_s3_bucket.uploads",
         "name": "uploads",
@@ -363,7 +503,7 @@
         }
       },
       {
-        "id": "3ca9c399-2f68-40a2-b820-29a77d36e867",
+        "id": "56c83c6b-8366-4170-b6f2-a55661eb273c",
         "kind": "resource",
         "address": "aws_sqs_queue.jobs",
         "name": "jobs",
@@ -386,7 +526,7 @@
         }
       },
       {
-        "id": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
+        "id": "27ee6701-fcea-4e00-a465-f9cf6c722f4e",
         "kind": "code_file",
         "address": "src/api/app.js",
         "name": "app.js",
@@ -399,20 +539,20 @@
         "resourceType": null
       },
       {
-        "id": "795b0535-be60-4761-86f2-44183e214a55",
+        "id": "57689533-7cd5-4c37-b686-094d198fc369",
         "kind": "code_function",
         "address": "src/api/app.js::handler",
         "name": "handler",
         "terraformType": null,
-        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
+        "parentId": "27ee6701-fcea-4e00-a465-f9cf6c722f4e",
         "filePath": "src/api/app.js",
         "lineStart": 35,
-        "lineEnd": 38,
+        "lineEnd": 42,
         "attributes": {},
         "resourceType": null
       },
       {
-        "id": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
+        "id": "7c73062a-366c-4c83-84c1-feed4d566a4e",
         "kind": "code_file",
         "address": "src/worker/main.py",
         "name": "main.py",
@@ -425,12 +565,12 @@
         "resourceType": null
       },
       {
-        "id": "f2fc138d-e56a-4161-91d2-3532a2a49fcd",
+        "id": "d71236c5-6fe7-40bd-9e48-32518c025875",
         "kind": "code_function",
         "address": "src/worker/main.py::handler",
         "name": "handler",
         "terraformType": null,
-        "parentId": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
+        "parentId": "7c73062a-366c-4c83-84c1-feed4d566a4e",
         "filePath": "src/worker/main.py",
         "lineStart": 16,
         "lineEnd": 19,
@@ -438,12 +578,12 @@
         "resourceType": null
       },
       {
-        "id": "ea18d596-2e18-49aa-9cbb-cda82d94a28e",
+        "id": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
         "kind": "code_function",
         "address": "src/api/app.js::getOrder",
         "name": "getOrder",
         "terraformType": null,
-        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
+        "parentId": "27ee6701-fcea-4e00-a465-f9cf6c722f4e",
         "filePath": "src/api/app.js",
         "lineStart": 11,
         "lineEnd": 14,
@@ -451,12 +591,12 @@
         "resourceType": null
       },
       {
-        "id": "f4a77830-3223-4115-86cb-e3ab8c33342e",
+        "id": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
         "kind": "code_function",
         "address": "src/api/app.js::saveOrder",
         "name": "saveOrder",
         "terraformType": null,
-        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
+        "parentId": "27ee6701-fcea-4e00-a465-f9cf6c722f4e",
         "filePath": "src/api/app.js",
         "lineStart": 16,
         "lineEnd": 19,
@@ -464,12 +604,12 @@
         "resourceType": null
       },
       {
-        "id": "19df2589-cfbc-47c8-aa0f-3cbe15cc379e",
+        "id": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
         "kind": "code_function",
         "address": "src/api/app.js::cancelOrder",
         "name": "cancelOrder",
         "terraformType": null,
-        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
+        "parentId": "27ee6701-fcea-4e00-a465-f9cf6c722f4e",
         "filePath": "src/api/app.js",
         "lineStart": 22,
         "lineEnd": 24,
@@ -477,12 +617,12 @@
         "resourceType": null
       },
       {
-        "id": "643da6d8-398b-4d79-ae15-1b606e24614f",
+        "id": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
         "kind": "code_function",
         "address": "src/api/app.js::archiveReport",
         "name": "archiveReport",
         "terraformType": null,
-        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
+        "parentId": "27ee6701-fcea-4e00-a465-f9cf6c722f4e",
         "filePath": "src/api/app.js",
         "lineStart": 26,
         "lineEnd": 29,
@@ -490,7 +630,7 @@
         "resourceType": null
       },
       {
-        "id": "de9469ea-1c85-4f13-abe5-4cac3b24d283",
+        "id": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
         "kind": "unmanaged_resource",
         "address": "unmanaged:s3:legacy-reports",
         "name": "legacy-reports",
@@ -501,7 +641,7 @@
         "lineEnd": null,
         "attributes": {
           "service": "s3",
-          "reason": "Named in code but not managed by Terraform."
+          "reason": "Named in code but not defined in the analyzed infrastructure code."
         },
         "resourceType": {
           "terraformType": "aws_s3_bucket",
@@ -514,12 +654,12 @@
         }
       },
       {
-        "id": "f5b35466-34b7-4678-9e0b-8982c4a0e637",
+        "id": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
         "kind": "code_function",
         "address": "src/api/app.js::storeUpload",
         "name": "storeUpload",
         "terraformType": null,
-        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
+        "parentId": "27ee6701-fcea-4e00-a465-f9cf6c722f4e",
         "filePath": "src/api/app.js",
         "lineStart": 31,
         "lineEnd": 33,
@@ -527,12 +667,12 @@
         "resourceType": null
       },
       {
-        "id": "191915ce-87f2-4b6e-9b6b-a606ae8a1338",
+        "id": "45cbd264-c5b3-4c85-996c-bbe165033ade",
         "kind": "code_function",
         "address": "src/worker/main.py::process",
         "name": "process",
         "terraformType": null,
-        "parentId": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
+        "parentId": "7c73062a-366c-4c83-84c1-feed4d566a4e",
         "filePath": "src/worker/main.py",
         "lineStart": 11,
         "lineEnd": 13,
@@ -542,9 +682,9 @@
     ],
     "edges": [
       {
-        "id": "4bb36c41-1fcb-4316-9566-27f52ce4caa6",
-        "source": "60959840-3413-488c-afb1-31df2805fd76",
-        "target": "d0c67dc0-faca-4b9f-bda5-77c14537cc49",
+        "id": "0733fac1-e3c6-4145-ab72-d2e7d81d4635",
+        "source": "f85c8379-2718-4c70-bc65-5f6335bef186",
+        "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -555,9 +695,9 @@
         "explanation": null
       },
       {
-        "id": "44441249-0c15-447f-bdec-d8837f2f7791",
-        "source": "60959840-3413-488c-afb1-31df2805fd76",
-        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "id": "17e08568-f26a-4f80-be3c-90b9144ed972",
+        "source": "f85c8379-2718-4c70-bc65-5f6335bef186",
+        "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
         "relation": "invokes",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -568,9 +708,139 @@
         "explanation": null
       },
       {
-        "id": "bc0b0feb-b832-4340-bfd2-67b687fe6514",
-        "source": "ad588ca3-a29f-4460-b907-dd40fe86b66f",
-        "target": "4ff6e537-bbca-449c-a3f6-3a7f6657dc38",
+        "id": "bdc49d5b-6a98-4ba3-bfdb-5c5f850ab126",
+        "source": "edee504c-da13-4162-9e38-89ad7b9a7d21",
+        "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "api_id",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "354bb0b4-d2a7-4c61-9397-ab69178596f6",
+        "source": "edee504c-da13-4162-9e38-89ad7b9a7d21",
+        "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "target",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "a24ce868-a7fb-46ed-8215-5b2854dd5fb1",
+        "source": "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c",
+        "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "api_id",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "255edff0-4708-438c-b2bc-7397d2f0b5df",
+        "source": "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c",
+        "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "target",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "6fc6f980-00f3-47e8-bdf5-63117a1f7f7c",
+        "source": "edc7946a-88d4-46a1-bd05-4c7287c17305",
+        "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "api_id",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "e58d2fa2-c2ea-46ab-8cfa-3a937c2f8975",
+        "source": "edc7946a-88d4-46a1-bd05-4c7287c17305",
+        "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "target",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "2e8f51f1-81bb-43cd-bb06-b3cb415bec26",
+        "source": "a168f7f5-98d7-4210-a2ec-1d02f080c735",
+        "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "api_id",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "1a7bdf07-a0f6-437a-b123-838259a524da",
+        "source": "a168f7f5-98d7-4210-a2ec-1d02f080c735",
+        "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "target",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "a594cc68-77c8-486b-a47f-54561513d773",
+        "source": "b0377450-3545-4b90-845c-364f38aae961",
+        "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "api_id",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "ec384825-1f53-4528-8a55-cddd2c987d2d",
+        "source": "b0377450-3545-4b90-845c-364f38aae961",
+        "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "target",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "a4a6e3e6-739f-4ea1-b496-e9a3feea863d",
+        "source": "7b4176f3-c09a-4c54-b704-a9ccca457397",
+        "target": "857d747b-ab79-43e3-9032-edfc56600e7a",
         "relation": "routes_to",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -581,9 +851,9 @@
         "explanation": null
       },
       {
-        "id": "a7d5edd7-b0e4-4381-95e7-95d4fd525101",
-        "source": "5d2aa9a7-25a7-42c2-aad3-2110b37f9078",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "3dd2544c-dc66-4dcf-9553-9c68023442af",
+        "source": "fb8cd3db-ae47-4b80-82df-3a06ee6465e5",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -594,9 +864,9 @@
         "explanation": null
       },
       {
-        "id": "8ae4d565-c9bb-45f2-8905-fa77b560e279",
-        "source": "5d2aa9a7-25a7-42c2-aad3-2110b37f9078",
-        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
+        "id": "5641423f-276c-4268-93aa-38f85ee56e46",
+        "source": "fb8cd3db-ae47-4b80-82df-3a06ee6465e5",
+        "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -607,9 +877,9 @@
         "explanation": null
       },
       {
-        "id": "6a73ca9f-a399-405c-b5fd-ec04d4dc238e",
-        "source": "5d2aa9a7-25a7-42c2-aad3-2110b37f9078",
-        "target": "e978f221-1a76-468f-81b6-29dfac55124a",
+        "id": "90f85e00-cb51-46c1-9b5a-e4eba56bda71",
+        "source": "fb8cd3db-ae47-4b80-82df-3a06ee6465e5",
+        "target": "9fad9b63-7225-455e-bf3a-6451d1ac5501",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -620,9 +890,9 @@
         "explanation": null
       },
       {
-        "id": "64fb8021-868b-447e-8557-29d175f27005",
-        "source": "902e466d-0b82-41c2-949f-ace05bdf8f7b",
-        "target": "1c823f5e-0a97-4b96-be0e-9a99e889223a",
+        "id": "9b77e5ea-87f7-4b12-9a0a-1f4549dfaee4",
+        "source": "92f72aa7-c42d-4d88-888d-8edf5c5a6fa6",
+        "target": "d720b5e6-3a44-4437-903c-a71b3f7e80a9",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -633,9 +903,9 @@
         "explanation": null
       },
       {
-        "id": "5ccadf20-fb29-4d36-a810-986523b16389",
-        "source": "902e466d-0b82-41c2-949f-ace05bdf8f7b",
-        "target": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
+        "id": "43b084cb-5d1f-4846-bc4a-bd8191c70108",
+        "source": "92f72aa7-c42d-4d88-888d-8edf5c5a6fa6",
+        "target": "830d31b9-4fc2-4a61-954b-876666ed92bb",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -646,9 +916,9 @@
         "explanation": null
       },
       {
-        "id": "056fb474-d196-432f-b426-151dc5503140",
-        "source": "988444b6-1c3f-46b7-998d-e9f0f5886328",
-        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
+        "id": "93bfd283-7f16-4757-9b12-8a396b1c1770",
+        "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+        "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -659,9 +929,9 @@
         "explanation": null
       },
       {
-        "id": "e795c620-771b-4eef-a831-6ba8ac545c14",
-        "source": "988444b6-1c3f-46b7-998d-e9f0f5886328",
-        "target": "fe709eee-cc5a-45c5-be76-dd007e20518b",
+        "id": "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb",
+        "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+        "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
         "relation": "invokes",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -672,9 +942,9 @@
         "explanation": null
       },
       {
-        "id": "c2e6dace-49b8-46f3-a811-a9e901598ac8",
-        "source": "4a851773-a913-4ca4-803d-42e45e71f2e4",
-        "target": "5d528e00-d1b6-4eb6-aede-76192b48c7cc",
+        "id": "b82e2448-1433-45eb-bd3b-2d1acb1a222c",
+        "source": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+        "target": "87530dc4-a645-4495-bd08-aecd8747b055",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -685,9 +955,9 @@
         "explanation": null
       },
       {
-        "id": "4ec1b823-1bdf-4d96-a408-bb9897f9b003",
-        "source": "4a851773-a913-4ca4-803d-42e45e71f2e4",
-        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
+        "id": "c2529f31-b1a9-49d0-a5b1-6ed4f9c6570c",
+        "source": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+        "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -698,9 +968,9 @@
         "explanation": null
       },
       {
-        "id": "f487f225-d034-414b-9d41-c8c77928118c",
-        "source": "4a851773-a913-4ca4-803d-42e45e71f2e4",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "028577ec-7c08-4f84-a7b9-1d8252165d4a",
+        "source": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -711,9 +981,9 @@
         "explanation": null
       },
       {
-        "id": "3b449240-414a-4fa9-af0e-05d8c9a723d4",
-        "source": "4a851773-a913-4ca4-803d-42e45e71f2e4",
-        "target": "e978f221-1a76-468f-81b6-29dfac55124a",
+        "id": "09f667d2-30df-4404-8330-b414a4472d79",
+        "source": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+        "target": "9fad9b63-7225-455e-bf3a-6451d1ac5501",
         "relation": "assumes_role",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -724,9 +994,9 @@
         "explanation": null
       },
       {
-        "id": "7cd266ba-242c-43dc-88a1-c7dbf754ed93",
-        "source": "fe709eee-cc5a-45c5-be76-dd007e20518b",
-        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
+        "id": "b908c9e0-5bc4-4350-ade0-12ad822cd27d",
+        "source": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+        "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -737,9 +1007,9 @@
         "explanation": null
       },
       {
-        "id": "42196754-0237-4e90-ad17-089a30f84f7f",
-        "source": "fe709eee-cc5a-45c5-be76-dd007e20518b",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "fef61144-e1ea-4c52-a807-3c13172b677e",
+        "source": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -750,9 +1020,9 @@
         "explanation": null
       },
       {
-        "id": "e2a19174-04f3-409b-8a07-ff61cd79875f",
-        "source": "fe709eee-cc5a-45c5-be76-dd007e20518b",
-        "target": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
+        "id": "45499a0f-e4ee-4723-a5a4-5ca7fa1f5cad",
+        "source": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+        "target": "830d31b9-4fc2-4a61-954b-876666ed92bb",
         "relation": "assumes_role",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -763,9 +1033,9 @@
         "explanation": null
       },
       {
-        "id": "125392fe-c4df-48dc-b445-e89fff696efb",
-        "source": "b838f423-a3d7-4b40-aeee-aa47cb6e5cf7",
-        "target": "ad588ca3-a29f-4460-b907-dd40fe86b66f",
+        "id": "bb98b624-5ac0-4d9e-b824-ddbf9af33cda",
+        "source": "8e3c4967-c57c-410d-8c9e-2cb3b4d849f6",
+        "target": "7b4176f3-c09a-4c54-b704-a9ccca457397",
         "relation": "routes_to",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -776,9 +1046,9 @@
         "explanation": null
       },
       {
-        "id": "d13b94cc-e090-49cc-b060-a2f4e3839230",
-        "source": "e978f221-1a76-468f-81b6-29dfac55124a",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "2fb34dc5-455b-4b59-ad0e-ce7bf7b4fb43",
+        "source": "9fad9b63-7225-455e-bf3a-6451d1ac5501",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "grants_access",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -793,9 +1063,9 @@
         "explanation": null
       },
       {
-        "id": "24a40720-6715-436d-a98e-ce1b7ad463f7",
-        "source": "e978f221-1a76-468f-81b6-29dfac55124a",
-        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
+        "id": "f2abe3f2-10d6-46fc-a653-df7fa6559d50",
+        "source": "9fad9b63-7225-455e-bf3a-6451d1ac5501",
+        "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
         "relation": "grants_access",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -808,9 +1078,9 @@
         "explanation": null
       },
       {
-        "id": "2996b9a3-dec2-4f94-9d8e-c4d8f4e0e121",
-        "source": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
-        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
+        "id": "692306b0-41c0-42c6-a92f-e692b4594717",
+        "source": "830d31b9-4fc2-4a61-954b-876666ed92bb",
+        "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
         "relation": "grants_access",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -824,9 +1094,9 @@
         "explanation": null
       },
       {
-        "id": "8c71a924-047e-4fe6-830d-52b886ee5010",
-        "source": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "0e63ebdf-1f5a-44bf-90ec-90b87a240b29",
+        "source": "830d31b9-4fc2-4a61-954b-876666ed92bb",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "grants_access",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -840,9 +1110,9 @@
         "explanation": null
       },
       {
-        "id": "35b712ba-cf77-43d5-8e89-8358829e5f14",
-        "source": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
-        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "id": "302f4a95-5b24-4d2d-a1f2-b6a265789921",
+        "source": "27ee6701-fcea-4e00-a465-f9cf6c722f4e",
+        "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -853,9 +1123,9 @@
         "explanation": null
       },
       {
-        "id": "c6b97f47-3162-4210-be17-2c5e4acb2dec",
-        "source": "795b0535-be60-4761-86f2-44183e214a55",
-        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "id": "246fe760-d91d-43e4-9ae4-b4d9e18d68d6",
+        "source": "57689533-7cd5-4c37-b686-094d198fc369",
+        "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -866,9 +1136,9 @@
         "explanation": null
       },
       {
-        "id": "75750fc2-69f4-459f-85d1-bbe775fd49a2",
-        "source": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
-        "target": "fe709eee-cc5a-45c5-be76-dd007e20518b",
+        "id": "254a73cd-b44c-427e-80e7-0263f72ad87d",
+        "source": "7c73062a-366c-4c83-84c1-feed4d566a4e",
+        "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -879,9 +1149,9 @@
         "explanation": null
       },
       {
-        "id": "f8308288-7363-47ef-94ca-f973115b4f4c",
-        "source": "f2fc138d-e56a-4161-91d2-3532a2a49fcd",
-        "target": "fe709eee-cc5a-45c5-be76-dd007e20518b",
+        "id": "d406cb64-6555-48d7-8dd6-6f76db254bab",
+        "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+        "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -892,9 +1162,9 @@
         "explanation": null
       },
       {
-        "id": "3271d058-879a-45de-bb1b-e3fb735bb51b",
-        "source": "ea18d596-2e18-49aa-9cbb-cda82d94a28e",
-        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "id": "bd0b4194-dab5-4f10-ba63-956d0fa9c3db",
+        "source": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+        "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -905,9 +1175,9 @@
         "explanation": null
       },
       {
-        "id": "8acbe604-de2e-475e-8c69-4d695825aaa6",
-        "source": "ea18d596-2e18-49aa-9cbb-cda82d94a28e",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "a3358206-d4d5-4904-980b-ebc29f5368ca",
+        "source": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "reads",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -925,9 +1195,9 @@
         "explanation": null
       },
       {
-        "id": "689596f8-695a-4ce2-952a-21524e6a2b5c",
-        "source": "f4a77830-3223-4115-86cb-e3ab8c33342e",
-        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "id": "750264ae-c907-44fc-b849-3c728fcbb224",
+        "source": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+        "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -938,9 +1208,9 @@
         "explanation": null
       },
       {
-        "id": "f1c7ed2c-16d5-450b-b697-6a3308675a7a",
-        "source": "f4a77830-3223-4115-86cb-e3ab8c33342e",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "2cefdaf5-eaba-4a9d-8bbc-7861c8c95371",
+        "source": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "writes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -958,9 +1228,9 @@
         "explanation": null
       },
       {
-        "id": "633601a4-cc1b-403f-9606-44cdf16d0b28",
-        "source": "f4a77830-3223-4115-86cb-e3ab8c33342e",
-        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
+        "id": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+        "source": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+        "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
         "relation": "publishes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -978,9 +1248,9 @@
         "explanation": null
       },
       {
-        "id": "2d90aa22-4934-4e43-9ba1-0cc8b5d8d1d2",
-        "source": "19df2589-cfbc-47c8-aa0f-3cbe15cc379e",
-        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "id": "cd467b9d-8615-4ade-b1c3-0e2f33a7824a",
+        "source": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+        "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -991,9 +1261,9 @@
         "explanation": null
       },
       {
-        "id": "d5a52070-ea1b-4966-b17a-9de9ad13a66b",
-        "source": "19df2589-cfbc-47c8-aa0f-3cbe15cc379e",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+        "source": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "writes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -1011,9 +1281,9 @@
         "explanation": null
       },
       {
-        "id": "f5d00b5d-02e6-4cc8-ac38-2f7f02eb7643",
-        "source": "643da6d8-398b-4d79-ae15-1b606e24614f",
-        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "id": "6fcd83fb-9796-4db9-a9af-da07d81db1e8",
+        "source": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+        "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -1024,9 +1294,9 @@
         "explanation": null
       },
       {
-        "id": "ac6f6d50-7fd7-4ece-8b6f-f5e3c3d7ba2c",
-        "source": "643da6d8-398b-4d79-ae15-1b606e24614f",
-        "target": "de9469ea-1c85-4f13-abe5-4cac3b24d283",
+        "id": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+        "source": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+        "target": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
         "relation": "writes",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -1045,9 +1315,9 @@
         "explanation": null
       },
       {
-        "id": "d12dce12-93d1-4c9d-87f0-d9425ce2192f",
-        "source": "f5b35466-34b7-4678-9e0b-8982c4a0e637",
-        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "id": "335edd82-11b9-4cd3-82d7-87c9f7702dbc",
+        "source": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+        "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -1058,9 +1328,9 @@
         "explanation": null
       },
       {
-        "id": "b562f7db-12e4-4006-9fd5-4af81b556c47",
-        "source": "f5b35466-34b7-4678-9e0b-8982c4a0e637",
-        "target": "5d528e00-d1b6-4eb6-aede-76192b48c7cc",
+        "id": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+        "source": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+        "target": "87530dc4-a645-4495-bd08-aecd8747b055",
         "relation": "writes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -1078,9 +1348,9 @@
         "explanation": null
       },
       {
-        "id": "48ebe0de-1ae3-4cab-8f57-27adef516154",
-        "source": "191915ce-87f2-4b6e-9b6b-a606ae8a1338",
-        "target": "fe709eee-cc5a-45c5-be76-dd007e20518b",
+        "id": "eca74ab2-6a8e-4fd3-8e4a-a0b4699b60c3",
+        "source": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+        "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -1091,9 +1361,9 @@
         "explanation": null
       },
       {
-        "id": "af66c51f-6520-4931-bf62-33fd2e475a9f",
-        "source": "191915ce-87f2-4b6e-9b6b-a606ae8a1338",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "e06ae556-108e-4799-bd00-1821672e54ca",
+        "source": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "writes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -1111,9 +1381,9 @@
         "explanation": null
       },
       {
-        "id": "90e34cf4-137b-4d4f-8120-9e1f172ed8ae",
-        "source": "f2fc138d-e56a-4161-91d2-3532a2a49fcd",
-        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
+        "id": "a172be56-9d6e-4340-8f80-a6fac662033e",
+        "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+        "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
         "relation": "reads",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -1131,9 +1401,9 @@
         "explanation": null
       },
       {
-        "id": "d7acae76-4a6f-4637-a4d3-28e8b2839f1d",
-        "source": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "dad20455-77fd-4e5b-9c06-8946746390f1",
+        "source": "27ee6701-fcea-4e00-a465-f9cf6c722f4e",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "references",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -1146,9 +1416,9 @@
         "explanation": null
       },
       {
-        "id": "b90c53bc-22f5-4dc9-a82a-0af52e13b55a",
-        "source": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
-        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
+        "id": "a789faab-197f-4358-88f9-cafdd68defe5",
+        "source": "7c73062a-366c-4c83-84c1-feed4d566a4e",
+        "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
         "relation": "references",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -1159,8 +1429,2831 @@
           "note": "env var read"
         },
         "explanation": null
+      },
+      {
+        "id": "d982dd0c-855f-4554-bb65-886f5ec56ebb",
+        "source": "57689533-7cd5-4c37-b686-094d198fc369",
+        "target": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+        "relation": "calls",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 37
+        },
+        "explanation": null
+      },
+      {
+        "id": "fd93588a-febb-4b8a-a10c-4131dce8a39c",
+        "source": "57689533-7cd5-4c37-b686-094d198fc369",
+        "target": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+        "relation": "calls",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 38
+        },
+        "explanation": null
+      },
+      {
+        "id": "7ca24b56-9ac6-4ccc-8782-f0f7048d8521",
+        "source": "57689533-7cd5-4c37-b686-094d198fc369",
+        "target": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+        "relation": "calls",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 39
+        },
+        "explanation": null
+      },
+      {
+        "id": "eb928d71-d198-49d0-b896-4b84b2087619",
+        "source": "57689533-7cd5-4c37-b686-094d198fc369",
+        "target": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+        "relation": "calls",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 40
+        },
+        "explanation": null
+      },
+      {
+        "id": "c17f284d-b170-47f0-b249-1f64294cdae6",
+        "source": "57689533-7cd5-4c37-b686-094d198fc369",
+        "target": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+        "relation": "calls",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 41
+        },
+        "explanation": null
+      },
+      {
+        "id": "797c3487-8169-4e8b-8936-e9a2c0ec0a09",
+        "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+        "target": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+        "relation": "calls",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/worker/main.py",
+          "line": 18
+        },
+        "explanation": null
       }
     ]
+  },
+  "endpoints": [
+    {
+      "kind": "http_api",
+      "method": "POST",
+      "path": "/orders",
+      "id": "edc7946a-88d4-46a1-bd05-4c7287c17305",
+      "address": "aws_apigatewayv2_route.post_order",
+      "apiNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+      "functionNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224"
+    },
+    {
+      "kind": "http_api",
+      "method": "DELETE",
+      "path": "/orders/{id}",
+      "id": "edee504c-da13-4162-9e38-89ad7b9a7d21",
+      "address": "aws_apigatewayv2_route.delete_order",
+      "apiNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+      "functionNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224"
+    },
+    {
+      "kind": "http_api",
+      "method": "GET",
+      "path": "/orders/{id}",
+      "id": "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c",
+      "address": "aws_apigatewayv2_route.get_order",
+      "apiNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+      "functionNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224"
+    },
+    {
+      "kind": "http_api",
+      "method": "POST",
+      "path": "/reports",
+      "id": "a168f7f5-98d7-4210-a2ec-1d02f080c735",
+      "address": "aws_apigatewayv2_route.post_report",
+      "apiNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+      "functionNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224"
+    },
+    {
+      "kind": "http_api",
+      "method": "PUT",
+      "path": "/uploads/{key}",
+      "id": "b0377450-3545-4b90-845c-364f38aae961",
+      "address": "aws_apigatewayv2_route.put_upload",
+      "apiNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+      "functionNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224"
+    }
+  ],
+  "traces": {
+    "edc7946a-88d4-46a1-bd05-4c7287c17305": {
+      "request": {
+        "method": "POST",
+        "path": "/orders"
+      },
+      "match": {
+        "endpointId": "edc7946a-88d4-46a1-bd05-4c7287c17305",
+        "kind": "http_api",
+        "method": "POST",
+        "path": "/orders",
+        "isDefault": false,
+        "pathParams": {},
+        "alternates": []
+      },
+      "codeScope": "shared_handler",
+      "steps": [
+        {
+          "nodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "fromNodeId": null,
+          "relation": null,
+          "confidence": null,
+          "edgeIds": [],
+          "phase": "api",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "edc7946a-88d4-46a1-bd05-4c7287c17305",
+          "fromNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "routes_to",
+          "edgeIds": [
+            "6fc6f980-00f3-47e8-bdf5-63117a1f7f7c"
+          ],
+          "confidence": "certain",
+          "phase": "route",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "fromNodeId": "edc7946a-88d4-46a1-bd05-4c7287c17305",
+          "relation": "references",
+          "edgeIds": [
+            "e58d2fa2-c2ea-46ab-8cfa-3a937c2f8975"
+          ],
+          "confidence": "certain",
+          "phase": "integration",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "fromNodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "invokes",
+          "edgeIds": [
+            "17e08568-f26a-4f80-be3c-90b9144ed972"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "fromNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "edgeIds": [
+            "246fe760-d91d-43e4-9ae4-b4d9e18d68d6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "d982dd0c-855f-4554-bb65-886f5ec56ebb"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "fromNodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "writes",
+          "edgeIds": [
+            "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+              "async": false
+            },
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "2cefdaf5-eaba-4a9d-8bbc-7861c8c95371",
+              "async": false
+            },
+            {
+              "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a3358206-d4d5-4904-980b-ebc29f5368ca",
+              "async": false
+            },
+            {
+              "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "e06ae556-108e-4799-bd00-1821672e54ca",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "fd93588a-febb-4b8a-a10c-4131dce8a39c"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "fromNodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "publishes",
+          "edgeIds": [
+            "4613dbfb-ce9a-4ede-8729-277d3f02715d"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "publishes",
+              "confidence": "high",
+              "edgeId": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+              "async": false
+            },
+            {
+              "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a172be56-9d6e-4340-8f80-a6fac662033e",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "7ca24b56-9ac6-4ccc-8782-f0f7048d8521"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "fromNodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "writes",
+          "edgeIds": [
+            "ec5fdceb-98cd-40f6-af5c-d4e14663811a"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "eb928d71-d198-49d0-b896-4b84b2087619"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "fromNodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "writes",
+          "edgeIds": [
+            "8660e452-c6d7-4534-be8f-dd3f90e3a6c1"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "c17f284d-b170-47f0-b249-1f64294cdae6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "fromNodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "invokes",
+          "edgeIds": [
+            "93bfd283-7f16-4757-9b12-8a396b1c1770",
+            "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "fromNodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "edgeIds": [
+            "d406cb64-6555-48d7-8dd6-6f76db254bab"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "fromNodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "relation": "calls",
+          "edgeIds": [
+            "797c3487-8169-4e8b-8936-e9a2c0ec0a09"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        }
+      ],
+      "edges": [
+        {
+          "id": "6fc6f980-00f3-47e8-bdf5-63117a1f7f7c",
+          "source": "edc7946a-88d4-46a1-bd05-4c7287c17305",
+          "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "api_id",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "e58d2fa2-c2ea-46ab-8cfa-3a937c2f8975",
+          "source": "edc7946a-88d4-46a1-bd05-4c7287c17305",
+          "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "target",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "17e08568-f26a-4f80-be3c-90b9144ed972",
+          "source": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "integration_uri",
+            "referencedAttribute": "invoke_arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "246fe760-d91d-43e4-9ae4-b4d9e18d68d6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/api",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "d982dd0c-855f-4554-bb65-886f5ec56ebb",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 37
+          },
+          "explanation": null
+        },
+        {
+          "id": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+          "source": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 23,
+            "envVar": "TABLE_NAME",
+            "operations": [
+              "dynamodb:DeleteItem"
+            ],
+            "locations": [
+              "src/api/app.js:23"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "fd93588a-febb-4b8a-a10c-4131dce8a39c",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 38
+          },
+          "explanation": null
+        },
+        {
+          "id": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+          "source": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "publishes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 18,
+            "envVar": "QUEUE_URL",
+            "operations": [
+              "sqs:SendMessage"
+            ],
+            "locations": [
+              "src/api/app.js:18"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "7ca24b56-9ac6-4ccc-8782-f0f7048d8521",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 39
+          },
+          "explanation": null
+        },
+        {
+          "id": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+          "source": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "target": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "relation": "writes",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 28,
+            "hardcoded": true,
+            "value": "legacy-reports",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:28"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "eb928d71-d198-49d0-b896-4b84b2087619",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 40
+          },
+          "explanation": null
+        },
+        {
+          "id": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+          "source": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "target": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 32,
+            "envVar": "BUCKET",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:32"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "c17f284d-b170-47f0-b249-1f64294cdae6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 41
+          },
+          "explanation": null
+        },
+        {
+          "id": "93bfd283-7f16-4757-9b12-8a396b1c1770",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "event_source_arn",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "function_name",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "d406cb64-6555-48d7-8dd6-6f76db254bab",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/worker",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "797c3487-8169-4e8b-8936-e9a2c0ec0a09",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/worker/main.py",
+            "line": 18
+          },
+          "explanation": null
+        }
+      ],
+      "gaps": [
+        "the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path POST /orders takes inside it, so the code shown is everything the handler can reach."
+      ],
+      "truncated": false,
+      "summary": "POST /orders is handled by POST /orders, an HTTP API route on the http/websocket api http. It invokes the lambda function api, which runs handler, cancelOrder, saveOrder, archiveReport, storeUpload and getOrder. Along the way it reads the dynamodb table orders; writes to the dynamodb table orders, legacy-reports (not defined in your infrastructure code) and the s3 bucket uploads; publishes to the sqs queue jobs. Afterwards, the sqs queue jobs triggers the lambda function worker in the background. the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path POST /orders takes inside it, so the code shown is everything the handler can reach."
+    },
+    "edee504c-da13-4162-9e38-89ad7b9a7d21": {
+      "request": {
+        "method": "DELETE",
+        "path": "/orders/123"
+      },
+      "match": {
+        "endpointId": "edee504c-da13-4162-9e38-89ad7b9a7d21",
+        "kind": "http_api",
+        "method": "DELETE",
+        "path": "/orders/{id}",
+        "isDefault": false,
+        "pathParams": {
+          "id": "123"
+        },
+        "alternates": []
+      },
+      "codeScope": "shared_handler",
+      "steps": [
+        {
+          "nodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "fromNodeId": null,
+          "relation": null,
+          "confidence": null,
+          "edgeIds": [],
+          "phase": "api",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "edee504c-da13-4162-9e38-89ad7b9a7d21",
+          "fromNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "routes_to",
+          "edgeIds": [
+            "bdc49d5b-6a98-4ba3-bfdb-5c5f850ab126"
+          ],
+          "confidence": "certain",
+          "phase": "route",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "fromNodeId": "edee504c-da13-4162-9e38-89ad7b9a7d21",
+          "relation": "references",
+          "edgeIds": [
+            "354bb0b4-d2a7-4c61-9397-ab69178596f6"
+          ],
+          "confidence": "certain",
+          "phase": "integration",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "fromNodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "invokes",
+          "edgeIds": [
+            "17e08568-f26a-4f80-be3c-90b9144ed972"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "fromNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "edgeIds": [
+            "246fe760-d91d-43e4-9ae4-b4d9e18d68d6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "d982dd0c-855f-4554-bb65-886f5ec56ebb"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "fromNodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "writes",
+          "edgeIds": [
+            "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+              "async": false
+            },
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "2cefdaf5-eaba-4a9d-8bbc-7861c8c95371",
+              "async": false
+            },
+            {
+              "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a3358206-d4d5-4904-980b-ebc29f5368ca",
+              "async": false
+            },
+            {
+              "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "e06ae556-108e-4799-bd00-1821672e54ca",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "fd93588a-febb-4b8a-a10c-4131dce8a39c"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "fromNodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "publishes",
+          "edgeIds": [
+            "4613dbfb-ce9a-4ede-8729-277d3f02715d"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "publishes",
+              "confidence": "high",
+              "edgeId": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+              "async": false
+            },
+            {
+              "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a172be56-9d6e-4340-8f80-a6fac662033e",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "7ca24b56-9ac6-4ccc-8782-f0f7048d8521"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "fromNodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "writes",
+          "edgeIds": [
+            "ec5fdceb-98cd-40f6-af5c-d4e14663811a"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "eb928d71-d198-49d0-b896-4b84b2087619"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "fromNodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "writes",
+          "edgeIds": [
+            "8660e452-c6d7-4534-be8f-dd3f90e3a6c1"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "c17f284d-b170-47f0-b249-1f64294cdae6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "fromNodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "invokes",
+          "edgeIds": [
+            "93bfd283-7f16-4757-9b12-8a396b1c1770",
+            "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "fromNodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "edgeIds": [
+            "d406cb64-6555-48d7-8dd6-6f76db254bab"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "fromNodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "relation": "calls",
+          "edgeIds": [
+            "797c3487-8169-4e8b-8936-e9a2c0ec0a09"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        }
+      ],
+      "edges": [
+        {
+          "id": "bdc49d5b-6a98-4ba3-bfdb-5c5f850ab126",
+          "source": "edee504c-da13-4162-9e38-89ad7b9a7d21",
+          "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "api_id",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "354bb0b4-d2a7-4c61-9397-ab69178596f6",
+          "source": "edee504c-da13-4162-9e38-89ad7b9a7d21",
+          "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "target",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "17e08568-f26a-4f80-be3c-90b9144ed972",
+          "source": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "integration_uri",
+            "referencedAttribute": "invoke_arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "246fe760-d91d-43e4-9ae4-b4d9e18d68d6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/api",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "d982dd0c-855f-4554-bb65-886f5ec56ebb",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 37
+          },
+          "explanation": null
+        },
+        {
+          "id": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+          "source": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 23,
+            "envVar": "TABLE_NAME",
+            "operations": [
+              "dynamodb:DeleteItem"
+            ],
+            "locations": [
+              "src/api/app.js:23"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "fd93588a-febb-4b8a-a10c-4131dce8a39c",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 38
+          },
+          "explanation": null
+        },
+        {
+          "id": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+          "source": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "publishes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 18,
+            "envVar": "QUEUE_URL",
+            "operations": [
+              "sqs:SendMessage"
+            ],
+            "locations": [
+              "src/api/app.js:18"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "7ca24b56-9ac6-4ccc-8782-f0f7048d8521",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 39
+          },
+          "explanation": null
+        },
+        {
+          "id": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+          "source": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "target": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "relation": "writes",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 28,
+            "hardcoded": true,
+            "value": "legacy-reports",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:28"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "eb928d71-d198-49d0-b896-4b84b2087619",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 40
+          },
+          "explanation": null
+        },
+        {
+          "id": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+          "source": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "target": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 32,
+            "envVar": "BUCKET",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:32"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "c17f284d-b170-47f0-b249-1f64294cdae6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 41
+          },
+          "explanation": null
+        },
+        {
+          "id": "93bfd283-7f16-4757-9b12-8a396b1c1770",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "event_source_arn",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "function_name",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "d406cb64-6555-48d7-8dd6-6f76db254bab",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/worker",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "797c3487-8169-4e8b-8936-e9a2c0ec0a09",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/worker/main.py",
+            "line": 18
+          },
+          "explanation": null
+        }
+      ],
+      "gaps": [
+        "the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path DELETE /orders/{id} takes inside it, so the code shown is everything the handler can reach."
+      ],
+      "truncated": false,
+      "summary": "DELETE /orders/123 is handled by DELETE /orders/{id}, an HTTP API route on the http/websocket api http. It invokes the lambda function api, which runs handler, cancelOrder, saveOrder, archiveReport, storeUpload and getOrder. Along the way it reads the dynamodb table orders; writes to the dynamodb table orders, legacy-reports (not defined in your infrastructure code) and the s3 bucket uploads; publishes to the sqs queue jobs. Afterwards, the sqs queue jobs triggers the lambda function worker in the background. the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path DELETE /orders/{id} takes inside it, so the code shown is everything the handler can reach."
+    },
+    "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c": {
+      "request": {
+        "method": "GET",
+        "path": "/orders/123"
+      },
+      "match": {
+        "endpointId": "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c",
+        "kind": "http_api",
+        "method": "GET",
+        "path": "/orders/{id}",
+        "isDefault": false,
+        "pathParams": {
+          "id": "123"
+        },
+        "alternates": []
+      },
+      "codeScope": "shared_handler",
+      "steps": [
+        {
+          "nodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "fromNodeId": null,
+          "relation": null,
+          "confidence": null,
+          "edgeIds": [],
+          "phase": "api",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c",
+          "fromNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "routes_to",
+          "edgeIds": [
+            "a24ce868-a7fb-46ed-8215-5b2854dd5fb1"
+          ],
+          "confidence": "certain",
+          "phase": "route",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "fromNodeId": "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c",
+          "relation": "references",
+          "edgeIds": [
+            "255edff0-4708-438c-b2bc-7397d2f0b5df"
+          ],
+          "confidence": "certain",
+          "phase": "integration",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "fromNodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "invokes",
+          "edgeIds": [
+            "17e08568-f26a-4f80-be3c-90b9144ed972"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "fromNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "edgeIds": [
+            "246fe760-d91d-43e4-9ae4-b4d9e18d68d6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "d982dd0c-855f-4554-bb65-886f5ec56ebb"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "fromNodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "writes",
+          "edgeIds": [
+            "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+              "async": false
+            },
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "2cefdaf5-eaba-4a9d-8bbc-7861c8c95371",
+              "async": false
+            },
+            {
+              "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a3358206-d4d5-4904-980b-ebc29f5368ca",
+              "async": false
+            },
+            {
+              "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "e06ae556-108e-4799-bd00-1821672e54ca",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "fd93588a-febb-4b8a-a10c-4131dce8a39c"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "fromNodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "publishes",
+          "edgeIds": [
+            "4613dbfb-ce9a-4ede-8729-277d3f02715d"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "publishes",
+              "confidence": "high",
+              "edgeId": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+              "async": false
+            },
+            {
+              "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a172be56-9d6e-4340-8f80-a6fac662033e",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "7ca24b56-9ac6-4ccc-8782-f0f7048d8521"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "fromNodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "writes",
+          "edgeIds": [
+            "ec5fdceb-98cd-40f6-af5c-d4e14663811a"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "eb928d71-d198-49d0-b896-4b84b2087619"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "fromNodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "writes",
+          "edgeIds": [
+            "8660e452-c6d7-4534-be8f-dd3f90e3a6c1"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "c17f284d-b170-47f0-b249-1f64294cdae6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "fromNodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "invokes",
+          "edgeIds": [
+            "93bfd283-7f16-4757-9b12-8a396b1c1770",
+            "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "fromNodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "edgeIds": [
+            "d406cb64-6555-48d7-8dd6-6f76db254bab"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "fromNodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "relation": "calls",
+          "edgeIds": [
+            "797c3487-8169-4e8b-8936-e9a2c0ec0a09"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        }
+      ],
+      "edges": [
+        {
+          "id": "a24ce868-a7fb-46ed-8215-5b2854dd5fb1",
+          "source": "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c",
+          "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "api_id",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "255edff0-4708-438c-b2bc-7397d2f0b5df",
+          "source": "7d3078e3-ff7e-41c3-ab8f-af8a0fd1469c",
+          "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "target",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "17e08568-f26a-4f80-be3c-90b9144ed972",
+          "source": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "integration_uri",
+            "referencedAttribute": "invoke_arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "246fe760-d91d-43e4-9ae4-b4d9e18d68d6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/api",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "d982dd0c-855f-4554-bb65-886f5ec56ebb",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 37
+          },
+          "explanation": null
+        },
+        {
+          "id": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+          "source": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 23,
+            "envVar": "TABLE_NAME",
+            "operations": [
+              "dynamodb:DeleteItem"
+            ],
+            "locations": [
+              "src/api/app.js:23"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "fd93588a-febb-4b8a-a10c-4131dce8a39c",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 38
+          },
+          "explanation": null
+        },
+        {
+          "id": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+          "source": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "publishes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 18,
+            "envVar": "QUEUE_URL",
+            "operations": [
+              "sqs:SendMessage"
+            ],
+            "locations": [
+              "src/api/app.js:18"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "7ca24b56-9ac6-4ccc-8782-f0f7048d8521",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 39
+          },
+          "explanation": null
+        },
+        {
+          "id": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+          "source": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "target": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "relation": "writes",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 28,
+            "hardcoded": true,
+            "value": "legacy-reports",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:28"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "eb928d71-d198-49d0-b896-4b84b2087619",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 40
+          },
+          "explanation": null
+        },
+        {
+          "id": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+          "source": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "target": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 32,
+            "envVar": "BUCKET",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:32"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "c17f284d-b170-47f0-b249-1f64294cdae6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 41
+          },
+          "explanation": null
+        },
+        {
+          "id": "93bfd283-7f16-4757-9b12-8a396b1c1770",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "event_source_arn",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "function_name",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "d406cb64-6555-48d7-8dd6-6f76db254bab",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/worker",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "797c3487-8169-4e8b-8936-e9a2c0ec0a09",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/worker/main.py",
+            "line": 18
+          },
+          "explanation": null
+        }
+      ],
+      "gaps": [
+        "the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path GET /orders/{id} takes inside it, so the code shown is everything the handler can reach."
+      ],
+      "truncated": false,
+      "summary": "GET /orders/123 is handled by GET /orders/{id}, an HTTP API route on the http/websocket api http. It invokes the lambda function api, which runs handler, cancelOrder, saveOrder, archiveReport, storeUpload and getOrder. Along the way it reads the dynamodb table orders; writes to the dynamodb table orders, legacy-reports (not defined in your infrastructure code) and the s3 bucket uploads; publishes to the sqs queue jobs. Afterwards, the sqs queue jobs triggers the lambda function worker in the background. the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path GET /orders/{id} takes inside it, so the code shown is everything the handler can reach."
+    },
+    "a168f7f5-98d7-4210-a2ec-1d02f080c735": {
+      "request": {
+        "method": "POST",
+        "path": "/reports"
+      },
+      "match": {
+        "endpointId": "a168f7f5-98d7-4210-a2ec-1d02f080c735",
+        "kind": "http_api",
+        "method": "POST",
+        "path": "/reports",
+        "isDefault": false,
+        "pathParams": {},
+        "alternates": []
+      },
+      "codeScope": "shared_handler",
+      "steps": [
+        {
+          "nodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "fromNodeId": null,
+          "relation": null,
+          "confidence": null,
+          "edgeIds": [],
+          "phase": "api",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "a168f7f5-98d7-4210-a2ec-1d02f080c735",
+          "fromNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "routes_to",
+          "edgeIds": [
+            "2e8f51f1-81bb-43cd-bb06-b3cb415bec26"
+          ],
+          "confidence": "certain",
+          "phase": "route",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "fromNodeId": "a168f7f5-98d7-4210-a2ec-1d02f080c735",
+          "relation": "references",
+          "edgeIds": [
+            "1a7bdf07-a0f6-437a-b123-838259a524da"
+          ],
+          "confidence": "certain",
+          "phase": "integration",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "fromNodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "invokes",
+          "edgeIds": [
+            "17e08568-f26a-4f80-be3c-90b9144ed972"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "fromNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "edgeIds": [
+            "246fe760-d91d-43e4-9ae4-b4d9e18d68d6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "d982dd0c-855f-4554-bb65-886f5ec56ebb"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "fromNodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "writes",
+          "edgeIds": [
+            "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+              "async": false
+            },
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "2cefdaf5-eaba-4a9d-8bbc-7861c8c95371",
+              "async": false
+            },
+            {
+              "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a3358206-d4d5-4904-980b-ebc29f5368ca",
+              "async": false
+            },
+            {
+              "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "e06ae556-108e-4799-bd00-1821672e54ca",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "fd93588a-febb-4b8a-a10c-4131dce8a39c"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "fromNodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "publishes",
+          "edgeIds": [
+            "4613dbfb-ce9a-4ede-8729-277d3f02715d"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "publishes",
+              "confidence": "high",
+              "edgeId": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+              "async": false
+            },
+            {
+              "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a172be56-9d6e-4340-8f80-a6fac662033e",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "7ca24b56-9ac6-4ccc-8782-f0f7048d8521"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "fromNodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "writes",
+          "edgeIds": [
+            "ec5fdceb-98cd-40f6-af5c-d4e14663811a"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "eb928d71-d198-49d0-b896-4b84b2087619"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "fromNodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "writes",
+          "edgeIds": [
+            "8660e452-c6d7-4534-be8f-dd3f90e3a6c1"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "c17f284d-b170-47f0-b249-1f64294cdae6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "fromNodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "invokes",
+          "edgeIds": [
+            "93bfd283-7f16-4757-9b12-8a396b1c1770",
+            "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "fromNodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "edgeIds": [
+            "d406cb64-6555-48d7-8dd6-6f76db254bab"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "fromNodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "relation": "calls",
+          "edgeIds": [
+            "797c3487-8169-4e8b-8936-e9a2c0ec0a09"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        }
+      ],
+      "edges": [
+        {
+          "id": "2e8f51f1-81bb-43cd-bb06-b3cb415bec26",
+          "source": "a168f7f5-98d7-4210-a2ec-1d02f080c735",
+          "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "api_id",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "1a7bdf07-a0f6-437a-b123-838259a524da",
+          "source": "a168f7f5-98d7-4210-a2ec-1d02f080c735",
+          "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "target",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "17e08568-f26a-4f80-be3c-90b9144ed972",
+          "source": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "integration_uri",
+            "referencedAttribute": "invoke_arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "246fe760-d91d-43e4-9ae4-b4d9e18d68d6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/api",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "d982dd0c-855f-4554-bb65-886f5ec56ebb",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 37
+          },
+          "explanation": null
+        },
+        {
+          "id": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+          "source": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 23,
+            "envVar": "TABLE_NAME",
+            "operations": [
+              "dynamodb:DeleteItem"
+            ],
+            "locations": [
+              "src/api/app.js:23"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "fd93588a-febb-4b8a-a10c-4131dce8a39c",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 38
+          },
+          "explanation": null
+        },
+        {
+          "id": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+          "source": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "publishes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 18,
+            "envVar": "QUEUE_URL",
+            "operations": [
+              "sqs:SendMessage"
+            ],
+            "locations": [
+              "src/api/app.js:18"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "7ca24b56-9ac6-4ccc-8782-f0f7048d8521",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 39
+          },
+          "explanation": null
+        },
+        {
+          "id": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+          "source": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "target": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "relation": "writes",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 28,
+            "hardcoded": true,
+            "value": "legacy-reports",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:28"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "eb928d71-d198-49d0-b896-4b84b2087619",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 40
+          },
+          "explanation": null
+        },
+        {
+          "id": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+          "source": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "target": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 32,
+            "envVar": "BUCKET",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:32"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "c17f284d-b170-47f0-b249-1f64294cdae6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 41
+          },
+          "explanation": null
+        },
+        {
+          "id": "93bfd283-7f16-4757-9b12-8a396b1c1770",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "event_source_arn",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "function_name",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "d406cb64-6555-48d7-8dd6-6f76db254bab",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/worker",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "797c3487-8169-4e8b-8936-e9a2c0ec0a09",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/worker/main.py",
+            "line": 18
+          },
+          "explanation": null
+        }
+      ],
+      "gaps": [
+        "the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path POST /reports takes inside it, so the code shown is everything the handler can reach."
+      ],
+      "truncated": false,
+      "summary": "POST /reports is handled by POST /reports, an HTTP API route on the http/websocket api http. It invokes the lambda function api, which runs handler, cancelOrder, saveOrder, archiveReport, storeUpload and getOrder. Along the way it reads the dynamodb table orders; writes to the dynamodb table orders, legacy-reports (not defined in your infrastructure code) and the s3 bucket uploads; publishes to the sqs queue jobs. Afterwards, the sqs queue jobs triggers the lambda function worker in the background. the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path POST /reports takes inside it, so the code shown is everything the handler can reach."
+    },
+    "b0377450-3545-4b90-845c-364f38aae961": {
+      "request": {
+        "method": "PUT",
+        "path": "/uploads/sample-key"
+      },
+      "match": {
+        "endpointId": "b0377450-3545-4b90-845c-364f38aae961",
+        "kind": "http_api",
+        "method": "PUT",
+        "path": "/uploads/{key}",
+        "isDefault": false,
+        "pathParams": {
+          "key": "sample-key"
+        },
+        "alternates": []
+      },
+      "codeScope": "shared_handler",
+      "steps": [
+        {
+          "nodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "fromNodeId": null,
+          "relation": null,
+          "confidence": null,
+          "edgeIds": [],
+          "phase": "api",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "b0377450-3545-4b90-845c-364f38aae961",
+          "fromNodeId": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "routes_to",
+          "edgeIds": [
+            "a594cc68-77c8-486b-a47f-54561513d773"
+          ],
+          "confidence": "certain",
+          "phase": "route",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "fromNodeId": "b0377450-3545-4b90-845c-364f38aae961",
+          "relation": "references",
+          "edgeIds": [
+            "ec384825-1f53-4528-8a55-cddd2c987d2d"
+          ],
+          "confidence": "certain",
+          "phase": "integration",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "fromNodeId": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "invokes",
+          "edgeIds": [
+            "17e08568-f26a-4f80-be3c-90b9144ed972"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "fromNodeId": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "edgeIds": [
+            "246fe760-d91d-43e4-9ae4-b4d9e18d68d6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "d982dd0c-855f-4554-bb65-886f5ec56ebb"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "fromNodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "writes",
+          "edgeIds": [
+            "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+              "async": false
+            },
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "2cefdaf5-eaba-4a9d-8bbc-7861c8c95371",
+              "async": false
+            },
+            {
+              "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a3358206-d4d5-4904-980b-ebc29f5368ca",
+              "async": false
+            },
+            {
+              "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "e06ae556-108e-4799-bd00-1821672e54ca",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "fd93588a-febb-4b8a-a10c-4131dce8a39c"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "fromNodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "publishes",
+          "edgeIds": [
+            "4613dbfb-ce9a-4ede-8729-277d3f02715d"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+              "relation": "publishes",
+              "confidence": "high",
+              "edgeId": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+              "async": false
+            },
+            {
+              "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+              "relation": "reads",
+              "confidence": "high",
+              "edgeId": "a172be56-9d6e-4340-8f80-a6fac662033e",
+              "async": true
+            }
+          ]
+        },
+        {
+          "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "7ca24b56-9ac6-4ccc-8782-f0f7048d8521"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "fromNodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "writes",
+          "edgeIds": [
+            "ec5fdceb-98cd-40f6-af5c-d4e14663811a"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "eb928d71-d198-49d0-b896-4b84b2087619"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "fromNodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "writes",
+          "edgeIds": [
+            "8660e452-c6d7-4534-be8f-dd3f90e3a6c1"
+          ],
+          "confidence": "high",
+          "phase": "data",
+          "async": false,
+          "uses": [
+            {
+              "nodeId": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+              "relation": "writes",
+              "confidence": "high",
+              "edgeId": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+              "async": false
+            }
+          ]
+        },
+        {
+          "nodeId": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "fromNodeId": "57689533-7cd5-4c37-b686-094d198fc369",
+          "relation": "calls",
+          "edgeIds": [
+            "c17f284d-b170-47f0-b249-1f64294cdae6"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": false,
+          "uses": []
+        },
+        {
+          "nodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "fromNodeId": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "invokes",
+          "edgeIds": [
+            "93bfd283-7f16-4757-9b12-8a396b1c1770",
+            "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb"
+          ],
+          "confidence": "certain",
+          "phase": "compute",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "fromNodeId": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "edgeIds": [
+            "d406cb64-6555-48d7-8dd6-6f76db254bab"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        },
+        {
+          "nodeId": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "fromNodeId": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "relation": "calls",
+          "edgeIds": [
+            "797c3487-8169-4e8b-8936-e9a2c0ec0a09"
+          ],
+          "confidence": "high",
+          "phase": "code",
+          "async": true,
+          "uses": []
+        }
+      ],
+      "edges": [
+        {
+          "id": "a594cc68-77c8-486b-a47f-54561513d773",
+          "source": "b0377450-3545-4b90-845c-364f38aae961",
+          "target": "9374fa53-215b-4f73-9d3d-8cd7aed3b7a3",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "api_id",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "ec384825-1f53-4528-8a55-cddd2c987d2d",
+          "source": "b0377450-3545-4b90-845c-364f38aae961",
+          "target": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "target",
+            "referencedAttribute": "id"
+          },
+          "explanation": null
+        },
+        {
+          "id": "17e08568-f26a-4f80-be3c-90b9144ed972",
+          "source": "f85c8379-2718-4c70-bc65-5f6335bef186",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "integration_uri",
+            "referencedAttribute": "invoke_arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "246fe760-d91d-43e4-9ae4-b4d9e18d68d6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "dbe23f9f-3f72-4d62-a936-c9ce43608224",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/api",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "d982dd0c-855f-4554-bb65-886f5ec56ebb",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 37
+          },
+          "explanation": null
+        },
+        {
+          "id": "ecc086dc-3f87-4ea4-aaf9-a15dfa3005e8",
+          "source": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+          "target": "2149da39-e29b-4c74-9ba9-084fa93784a7",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 23,
+            "envVar": "TABLE_NAME",
+            "operations": [
+              "dynamodb:DeleteItem"
+            ],
+            "locations": [
+              "src/api/app.js:23"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "fd93588a-febb-4b8a-a10c-4131dce8a39c",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 38
+          },
+          "explanation": null
+        },
+        {
+          "id": "4613dbfb-ce9a-4ede-8729-277d3f02715d",
+          "source": "b3602fd6-2dc5-4fff-bb1a-ff38a1727848",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "publishes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 18,
+            "envVar": "QUEUE_URL",
+            "operations": [
+              "sqs:SendMessage"
+            ],
+            "locations": [
+              "src/api/app.js:18"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "7ca24b56-9ac6-4ccc-8782-f0f7048d8521",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 39
+          },
+          "explanation": null
+        },
+        {
+          "id": "ec5fdceb-98cd-40f6-af5c-d4e14663811a",
+          "source": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
+          "target": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+          "relation": "writes",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 28,
+            "hardcoded": true,
+            "value": "legacy-reports",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:28"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "eb928d71-d198-49d0-b896-4b84b2087619",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 40
+          },
+          "explanation": null
+        },
+        {
+          "id": "8660e452-c6d7-4534-be8f-dd3f90e3a6c1",
+          "source": "a28ce44d-4cd3-457e-a7ae-d1dc54c08de8",
+          "target": "87530dc4-a645-4495-bd08-aecd8747b055",
+          "relation": "writes",
+          "linkMethod": "env_var",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 32,
+            "envVar": "BUCKET",
+            "operations": [
+              "s3:PutObject"
+            ],
+            "locations": [
+              "src/api/app.js:32"
+            ]
+          },
+          "explanation": null
+        },
+        {
+          "id": "c17f284d-b170-47f0-b249-1f64294cdae6",
+          "source": "57689533-7cd5-4c37-b686-094d198fc369",
+          "target": "19dfcec0-434d-4b63-a0a8-bf68c21c63b3",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/api/app.js",
+            "line": 41
+          },
+          "explanation": null
+        },
+        {
+          "id": "93bfd283-7f16-4757-9b12-8a396b1c1770",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "56c83c6b-8366-4170-b6f2-a55661eb273c",
+          "relation": "references",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "event_source_arn",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "c5d690b2-2b3e-4131-a5be-9d13bd55d7bb",
+          "source": "ec7331da-771f-4c0c-9b27-a1255dc9e684",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "invokes",
+          "linkMethod": "declared_reference",
+          "confidence": "certain",
+          "evidence": {
+            "attribute": "function_name",
+            "referencedAttribute": "arn"
+          },
+          "explanation": null
+        },
+        {
+          "id": "d406cb64-6555-48d7-8dd6-6f76db254bab",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "3eabfce5-dc2a-460d-a675-ca3edeac4fb7",
+          "relation": "runs_code",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "sourceDir": "src/worker",
+            "handler": true
+          },
+          "explanation": null
+        },
+        {
+          "id": "797c3487-8169-4e8b-8936-e9a2c0ec0a09",
+          "source": "d71236c5-6fe7-40bd-9e48-32518c025875",
+          "target": "45cbd264-c5b3-4c85-996c-bbe165033ade",
+          "relation": "calls",
+          "linkMethod": "code_mapping",
+          "confidence": "high",
+          "evidence": {
+            "file": "src/worker/main.py",
+            "line": 18
+          },
+          "explanation": null
+        }
+      ],
+      "gaps": [
+        "the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path PUT /uploads/{key} takes inside it, so the code shown is everything the handler can reach."
+      ],
+      "truncated": false,
+      "summary": "PUT /uploads/sample-key is handled by PUT /uploads/{key}, an HTTP API route on the http/websocket api http. It invokes the lambda function api, which runs handler, cancelOrder, saveOrder, archiveReport, storeUpload and getOrder. Along the way it reads the dynamodb table orders; writes to the dynamodb table orders, legacy-reports (not defined in your infrastructure code) and the s3 bucket uploads; publishes to the sqs queue jobs. Afterwards, the sqs queue jobs triggers the lambda function worker in the background. the lambda function api serves 5 endpoints through one handler, and Ripplemap can't tell which code path PUT /uploads/{key} takes inside it, so the code shown is everything the handler can reach."
+    }
   },
   "findings": [
     {
@@ -1168,8 +4261,8 @@
       "severity": "high",
       "title": "cancelOrder calls dynamodb:DeleteItem on orders, but aws_iam_role.api_role doesn't allow it",
       "detail": "src/api/app.js:23 calls dynamodb:DeleteItem on aws_dynamodb_table.orders. The Lambda aws_lambda_function.api runs as aws_iam_role.api_role, whose policies don't grant that action on this resource, so the call fails with AccessDenied at runtime.",
-      "nodeId": "19df2589-cfbc-47c8-aa0f-3cbe15cc379e",
-      "relatedNodeId": "e978f221-1a76-468f-81b6-29dfac55124a",
+      "nodeId": "76b6228e-9f08-4c6c-bfd6-5c8a81e944fb",
+      "relatedNodeId": "9fad9b63-7225-455e-bf3a-6451d1ac5501",
       "evidence": {
         "action": "dynamodb:DeleteItem",
         "resource": "aws_dynamodb_table.orders",
@@ -1186,7 +4279,7 @@
       "severity": "high",
       "title": "aws_iam_role.api_role allows s3:* on everything, but the code uses only s3:PutObject on aws_s3_bucket.uploads, legacy-reports",
       "detail": "aws_iam_role_policy.api_access (statement 2) grants s3:* on all resources (*). The code that runs as this role uses s3:PutObject on aws_s3_bucket.uploads, legacy-reports. Narrowing the policy to what is used limits the damage if the function is compromised.",
-      "nodeId": "e978f221-1a76-468f-81b6-29dfac55124a",
+      "nodeId": "9fad9b63-7225-455e-bf3a-6451d1ac5501",
       "relatedNodeId": null,
       "evidence": {
         "policy": "aws_iam_role_policy.api_access",
@@ -1209,10 +4302,10 @@
     {
       "kind": "unmanaged_resource",
       "severity": "medium",
-      "title": "\"legacy-reports\" (s3) is hardcoded in code but not managed by Terraform",
-      "detail": "src/api/app.js:28 (s3:PutObject). No Terraform resource of this type has that name, so changes to it can't be reviewed or reproduced and it may have drifted.",
-      "nodeId": "de9469ea-1c85-4f13-abe5-4cac3b24d283",
-      "relatedNodeId": "643da6d8-398b-4d79-ae15-1b606e24614f",
+      "title": "\"legacy-reports\" (s3) is hardcoded in code but not defined in your infrastructure code",
+      "detail": "src/api/app.js:28 (s3:PutObject). No resource of this type in the analyzed infrastructure code has that name, so changes to it can't be reviewed or reproduced and it may have drifted.",
+      "nodeId": "ab6bd8c2-5c2c-4614-b5c7-26e9c80f2df1",
+      "relatedNodeId": "79841f51-1f2c-40e6-81ae-5f6e4109a66c",
       "evidence": {
         "service": "s3",
         "name": "legacy-reports",
@@ -1229,9 +4322,9 @@
     }
   ],
   "sourceFiles": {
-    "infra/main.tf": "resource \"aws_dynamodb_table\" \"orders\" {\r\n  name         = \"orders-${var.env}\"\r\n  billing_mode = \"PAY_PER_REQUEST\"\r\n  hash_key     = \"id\"\r\n\r\n  attribute {\r\n    name = \"id\"\r\n    type = \"S\"\r\n  }\r\n}\r\n\r\nresource \"aws_s3_bucket\" \"uploads\" {\r\n  bucket = \"ripplemap-uploads-${var.env}\"\r\n}\r\n\r\nresource \"aws_s3_bucket\" \"site\" {\r\n  bucket = \"ripplemap-site-${var.env}\"\r\n}\r\n\r\nresource \"aws_sqs_queue\" \"jobs\" {\r\n  name = \"jobs-${var.env}\"\r\n}\r\n\r\nresource \"aws_iam_role\" \"api_role\" {\r\n  name = \"api-role\"\r\n  assume_role_policy = jsonencode({\r\n    Version = \"2012-10-17\"\r\n    Statement = [{\r\n      Effect    = \"Allow\"\r\n      Action    = \"sts:AssumeRole\"\r\n      Principal = { Service = \"lambda.amazonaws.com\" }\r\n    }]\r\n  })\r\n}\r\n\r\n# Planted trap: s3:* on everything, while the code only writes one bucket.\r\nresource \"aws_iam_role_policy\" \"api_access\" {\r\n  name = \"api-access\"\r\n  role = aws_iam_role.api_role.id\r\n  # Planted trap: the code also calls dynamodb:DeleteItem, which is not allowed here.\r\n  policy = jsonencode({\r\n    Version = \"2012-10-17\"\r\n    Statement = [\r\n      {\r\n        Effect   = \"Allow\"\r\n        Action   = [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:Query\"]\r\n        Resource = [aws_dynamodb_table.orders.arn, \"${aws_dynamodb_table.orders.arn}/index/*\"]\r\n      },\r\n      {\r\n        Effect   = \"Allow\"\r\n        Action   = \"s3:*\"\r\n        Resource = \"*\"\r\n      },\r\n      {\r\n        Effect   = \"Allow\"\r\n        Action   = [\"sqs:SendMessage\"]\r\n        Resource = aws_sqs_queue.jobs.arn\r\n      }\r\n    ]\r\n  })\r\n}\r\n\r\nresource \"aws_iam_role\" \"worker_role\" {\r\n  name = \"worker-role\"\r\n  assume_role_policy = jsonencode({\r\n    Version = \"2012-10-17\"\r\n    Statement = [{\r\n      Effect    = \"Allow\"\r\n      Action    = \"sts:AssumeRole\"\r\n      Principal = { Service = \"lambda.amazonaws.com\" }\r\n    }]\r\n  })\r\n}\r\n\r\ndata \"aws_iam_policy_document\" \"worker\" {\r\n  statement {\r\n    actions   = [\"sqs:ReceiveMessage\", \"sqs:DeleteMessage\"]\r\n    resources = [aws_sqs_queue.jobs.arn]\r\n  }\r\n  statement {\r\n    actions   = [\"dynamodb:PutItem\", \"dynamodb:UpdateItem\"]\r\n    resources = [aws_dynamodb_table.orders.arn]\r\n  }\r\n}\r\n\r\nresource \"aws_iam_policy\" \"worker\" {\r\n  name   = \"worker\"\r\n  policy = data.aws_iam_policy_document.worker.json\r\n}\r\n\r\nresource \"aws_iam_role_policy_attachment\" \"worker\" {\r\n  role       = aws_iam_role.worker_role.name\r\n  policy_arn = aws_iam_policy.worker.arn\r\n}\r\n\r\ndata \"archive_file\" \"api\" {\r\n  type        = \"zip\"\r\n  source_dir  = \"${path.module}/../src/api\"\r\n  output_path = \"${path.module}/api.zip\"\r\n}\r\n\r\nresource \"aws_lambda_function\" \"api\" {\r\n  function_name = \"api-${var.env}\"\r\n  role          = aws_iam_role.api_role.arn\r\n  runtime       = \"nodejs20.x\"\r\n  handler       = \"app.handler\"\r\n  filename      = data.archive_file.api.output_path\r\n\r\n  environment {\r\n    variables = {\r\n      TABLE_NAME = aws_dynamodb_table.orders.name\r\n      BUCKET     = aws_s3_bucket.uploads.bucket\r\n      QUEUE_URL  = aws_sqs_queue.jobs.url\r\n    }\r\n  }\r\n}\r\n\r\ndata \"archive_file\" \"worker\" {\r\n  type        = \"zip\"\r\n  source_dir  = \"${path.module}/../src/worker\"\r\n  output_path = \"${path.module}/worker.zip\"\r\n}\r\n\r\nresource \"aws_lambda_function\" \"worker\" {\r\n  function_name = \"worker-${var.env}\"\r\n  role          = aws_iam_role.worker_role.arn\r\n  runtime       = \"python3.12\"\r\n  handler       = \"main.handler\"\r\n  filename      = data.archive_file.worker.output_path\r\n\r\n  environment {\r\n    variables = {\r\n      TABLE_NAME = aws_dynamodb_table.orders.name\r\n      QUEUE_URL  = aws_sqs_queue.jobs.url\r\n    }\r\n  }\r\n}\r\n\r\nresource \"aws_lambda_event_source_mapping\" \"jobs\" {\r\n  event_source_arn = aws_sqs_queue.jobs.arn\r\n  function_name    = aws_lambda_function.worker.arn\r\n}\r\n\r\nresource \"aws_apigatewayv2_api\" \"http\" {\r\n  name          = \"ripplemap-http\"\r\n  protocol_type = \"HTTP\"\r\n}\r\n\r\nresource \"aws_apigatewayv2_integration\" \"api\" {\r\n  api_id           = aws_apigatewayv2_api.http.id\r\n  integration_type = \"AWS_PROXY\"\r\n  integration_uri  = aws_lambda_function.api.invoke_arn\r\n}\r\n\r\nresource \"aws_cloudfront_distribution\" \"site\" {\r\n  enabled = true\r\n  aliases = [var.domain]\r\n\r\n  origin {\r\n    domain_name = aws_s3_bucket.site.bucket_regional_domain_name\r\n    origin_id   = \"site\"\r\n  }\r\n}\r\n\r\nresource \"aws_route53_record\" \"site\" {\r\n  zone_id = \"Z123\"\r\n  name    = var.domain\r\n  type    = \"A\"\r\n\r\n  alias {\r\n    name                   = aws_cloudfront_distribution.site.domain_name\r\n    zone_id                = aws_cloudfront_distribution.site.hosted_zone_id\r\n    evaluate_target_health = false\r\n  }\r\n}\r\n",
-    "infra/variables.tf": "variable \"env\" {\r\n  type    = string\r\n  default = \"prod\"\r\n}\r\n\r\nvariable \"domain\" {\r\n  type    = string\r\n  default = \"demo.ripplemap.wiki\"\r\n}\r\n",
-    "src/api/app.js": "const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');\r\nconst { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');\r\nconst { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');\r\nconst { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');\r\n\r\nconst db = DynamoDBDocumentClient.from(new DynamoDBClient({}));\r\nconst s3 = new S3Client({});\r\nconst sqs = new SQSClient({});\r\nconst TABLE = process.env.TABLE_NAME;\r\n\r\nasync function getOrder(id) {\r\n  const out = await db.send(new GetCommand({ TableName: TABLE, Key: { id } }));\r\n  return out.Item;\r\n}\r\n\r\nasync function saveOrder(order) {\r\n  await db.send(new PutCommand({ TableName: process.env.TABLE_NAME, Item: order }));\r\n  await sqs.send(new SendMessageCommand({ QueueUrl: process.env.QUEUE_URL, MessageBody: JSON.stringify(order) }));\r\n}\r\n\r\n// Planted trap: deleting needs dynamodb:DeleteItem, which the role does not grant.\r\nasync function cancelOrder(id) {\r\n  await db.send(new DeleteCommand({ TableName: TABLE, Key: { id } }));\r\n}\r\n\r\nasync function archiveReport(body) {\r\n  // Planted trap: this bucket is hardcoded and not in Terraform.\r\n  await s3.send(new PutObjectCommand({ Bucket: 'legacy-reports', Key: 'daily.csv', Body: body }));\r\n}\r\n\r\nasync function storeUpload(key, body) {\r\n  await s3.send(new PutObjectCommand({ Bucket: process.env.BUCKET, Key: key, Body: body }));\r\n}\r\n\r\nexports.handler = async (event) => {\r\n  if (event.requestContext.http.method === 'DELETE') return cancelOrder(event.pathParameters.id);\r\n  return getOrder(event.pathParameters.id);\r\n};\r\n\r\nmodule.exports = { saveOrder, archiveReport, storeUpload };\r\n",
-    "src/worker/main.py": "import json\r\nimport os\r\n\r\nimport boto3\r\n\r\ndynamodb = boto3.resource(\"dynamodb\")\r\nsqs = boto3.client(\"sqs\")\r\ntable = dynamodb.Table(os.environ[\"TABLE_NAME\"])\r\n\r\n\r\ndef process(record):\r\n    order = json.loads(record[\"body\"])\r\n    table.put_item(Item=order)\r\n\r\n\r\ndef handler(event, context):\r\n    for record in event[\"Records\"]:\r\n        process(record)\r\n    sqs.receive_message(QueueUrl=os.environ[\"QUEUE_URL\"], MaxNumberOfMessages=1)\r\n"
+    "infra/main.tf": "resource \"aws_dynamodb_table\" \"orders\" {\n  name         = \"orders-${var.env}\"\n  billing_mode = \"PAY_PER_REQUEST\"\n  hash_key     = \"id\"\n\n  attribute {\n    name = \"id\"\n    type = \"S\"\n  }\n}\n\nresource \"aws_s3_bucket\" \"uploads\" {\n  bucket = \"ripplemap-uploads-${var.env}\"\n}\n\nresource \"aws_s3_bucket\" \"site\" {\n  bucket = \"ripplemap-site-${var.env}\"\n}\n\nresource \"aws_sqs_queue\" \"jobs\" {\n  name = \"jobs-${var.env}\"\n}\n\nresource \"aws_iam_role\" \"api_role\" {\n  name = \"api-role\"\n  assume_role_policy = jsonencode({\n    Version = \"2012-10-17\"\n    Statement = [{\n      Effect    = \"Allow\"\n      Action    = \"sts:AssumeRole\"\n      Principal = { Service = \"lambda.amazonaws.com\" }\n    }]\n  })\n}\n\n# Planted trap: s3:* on everything, while the code only writes one bucket.\nresource \"aws_iam_role_policy\" \"api_access\" {\n  name = \"api-access\"\n  role = aws_iam_role.api_role.id\n  # Planted trap: the code also calls dynamodb:DeleteItem, which is not allowed here.\n  policy = jsonencode({\n    Version = \"2012-10-17\"\n    Statement = [\n      {\n        Effect   = \"Allow\"\n        Action   = [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:Query\"]\n        Resource = [aws_dynamodb_table.orders.arn, \"${aws_dynamodb_table.orders.arn}/index/*\"]\n      },\n      {\n        Effect   = \"Allow\"\n        Action   = \"s3:*\"\n        Resource = \"*\"\n      },\n      {\n        Effect   = \"Allow\"\n        Action   = [\"sqs:SendMessage\"]\n        Resource = aws_sqs_queue.jobs.arn\n      }\n    ]\n  })\n}\n\nresource \"aws_iam_role\" \"worker_role\" {\n  name = \"worker-role\"\n  assume_role_policy = jsonencode({\n    Version = \"2012-10-17\"\n    Statement = [{\n      Effect    = \"Allow\"\n      Action    = \"sts:AssumeRole\"\n      Principal = { Service = \"lambda.amazonaws.com\" }\n    }]\n  })\n}\n\ndata \"aws_iam_policy_document\" \"worker\" {\n  statement {\n    actions   = [\"sqs:ReceiveMessage\", \"sqs:DeleteMessage\"]\n    resources = [aws_sqs_queue.jobs.arn]\n  }\n  statement {\n    actions   = [\"dynamodb:PutItem\", \"dynamodb:UpdateItem\"]\n    resources = [aws_dynamodb_table.orders.arn]\n  }\n}\n\nresource \"aws_iam_policy\" \"worker\" {\n  name   = \"worker\"\n  policy = data.aws_iam_policy_document.worker.json\n}\n\nresource \"aws_iam_role_policy_attachment\" \"worker\" {\n  role       = aws_iam_role.worker_role.name\n  policy_arn = aws_iam_policy.worker.arn\n}\n\ndata \"archive_file\" \"api\" {\n  type        = \"zip\"\n  source_dir  = \"${path.module}/../src/api\"\n  output_path = \"${path.module}/api.zip\"\n}\n\nresource \"aws_lambda_function\" \"api\" {\n  function_name = \"api-${var.env}\"\n  role          = aws_iam_role.api_role.arn\n  runtime       = \"nodejs20.x\"\n  handler       = \"app.handler\"\n  filename      = data.archive_file.api.output_path\n\n  environment {\n    variables = {\n      TABLE_NAME = aws_dynamodb_table.orders.name\n      BUCKET     = aws_s3_bucket.uploads.bucket\n      QUEUE_URL  = aws_sqs_queue.jobs.url\n    }\n  }\n}\n\ndata \"archive_file\" \"worker\" {\n  type        = \"zip\"\n  source_dir  = \"${path.module}/../src/worker\"\n  output_path = \"${path.module}/worker.zip\"\n}\n\nresource \"aws_lambda_function\" \"worker\" {\n  function_name = \"worker-${var.env}\"\n  role          = aws_iam_role.worker_role.arn\n  runtime       = \"python3.12\"\n  handler       = \"main.handler\"\n  filename      = data.archive_file.worker.output_path\n\n  environment {\n    variables = {\n      TABLE_NAME = aws_dynamodb_table.orders.name\n      QUEUE_URL  = aws_sqs_queue.jobs.url\n    }\n  }\n}\n\nresource \"aws_lambda_event_source_mapping\" \"jobs\" {\n  event_source_arn = aws_sqs_queue.jobs.arn\n  function_name    = aws_lambda_function.worker.arn\n}\n\nresource \"aws_apigatewayv2_api\" \"http\" {\n  name          = \"ripplemap-http\"\n  protocol_type = \"HTTP\"\n}\n\nresource \"aws_apigatewayv2_integration\" \"api\" {\n  api_id           = aws_apigatewayv2_api.http.id\n  integration_type = \"AWS_PROXY\"\n  integration_uri  = aws_lambda_function.api.invoke_arn\n}\n\nresource \"aws_apigatewayv2_route\" \"get_order\" {\n  api_id    = aws_apigatewayv2_api.http.id\n  route_key = \"GET /orders/{id}\"\n  target    = \"integrations/${aws_apigatewayv2_integration.api.id}\"\n}\n\nresource \"aws_apigatewayv2_route\" \"post_order\" {\n  api_id    = aws_apigatewayv2_api.http.id\n  route_key = \"POST /orders\"\n  target    = \"integrations/${aws_apigatewayv2_integration.api.id}\"\n}\n\nresource \"aws_apigatewayv2_route\" \"delete_order\" {\n  api_id    = aws_apigatewayv2_api.http.id\n  route_key = \"DELETE /orders/{id}\"\n  target    = \"integrations/${aws_apigatewayv2_integration.api.id}\"\n}\n\nresource \"aws_apigatewayv2_route\" \"put_upload\" {\n  api_id    = aws_apigatewayv2_api.http.id\n  route_key = \"PUT /uploads/{key}\"\n  target    = \"integrations/${aws_apigatewayv2_integration.api.id}\"\n}\n\nresource \"aws_apigatewayv2_route\" \"post_report\" {\n  api_id    = aws_apigatewayv2_api.http.id\n  route_key = \"POST /reports\"\n  target    = \"integrations/${aws_apigatewayv2_integration.api.id}\"\n}\n\nresource \"aws_cloudfront_distribution\" \"site\" {\n  enabled = true\n  aliases = [var.domain]\n\n  origin {\n    domain_name = aws_s3_bucket.site.bucket_regional_domain_name\n    origin_id   = \"site\"\n  }\n}\n\nresource \"aws_route53_record\" \"site\" {\n  zone_id = \"Z123\"\n  name    = var.domain\n  type    = \"A\"\n\n  alias {\n    name                   = aws_cloudfront_distribution.site.domain_name\n    zone_id                = aws_cloudfront_distribution.site.hosted_zone_id\n    evaluate_target_health = false\n  }\n}\n",
+    "infra/variables.tf": "variable \"env\" {\n  type    = string\n  default = \"prod\"\n}\n\nvariable \"domain\" {\n  type    = string\n  default = \"demo.ripplemap.wiki\"\n}\n",
+    "src/api/app.js": "const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');\nconst { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');\nconst { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');\nconst { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');\n\nconst db = DynamoDBDocumentClient.from(new DynamoDBClient({}));\nconst s3 = new S3Client({});\nconst sqs = new SQSClient({});\nconst TABLE = process.env.TABLE_NAME;\n\nasync function getOrder(id) {\n  const out = await db.send(new GetCommand({ TableName: TABLE, Key: { id } }));\n  return out.Item;\n}\n\nasync function saveOrder(order) {\n  await db.send(new PutCommand({ TableName: process.env.TABLE_NAME, Item: order }));\n  await sqs.send(new SendMessageCommand({ QueueUrl: process.env.QUEUE_URL, MessageBody: JSON.stringify(order) }));\n}\n\n// Planted trap: deleting needs dynamodb:DeleteItem, which the role does not grant.\nasync function cancelOrder(id) {\n  await db.send(new DeleteCommand({ TableName: TABLE, Key: { id } }));\n}\n\nasync function archiveReport(body) {\n  // Planted trap: this bucket is hardcoded and not in Terraform.\n  await s3.send(new PutObjectCommand({ Bucket: 'legacy-reports', Key: 'daily.csv', Body: body }));\n}\n\nasync function storeUpload(key, body) {\n  await s3.send(new PutObjectCommand({ Bucket: process.env.BUCKET, Key: key, Body: body }));\n}\n\nexports.handler = async (event) => {\n  const method = event.requestContext.http.method;\n  if (method === 'DELETE') return cancelOrder(event.pathParameters.id);\n  if (method === 'POST' && event.rawPath === '/orders') return saveOrder(JSON.parse(event.body));\n  if (method === 'POST' && event.rawPath === '/reports') return archiveReport(event.body);\n  if (method === 'PUT') return storeUpload(event.pathParameters.key, event.body);\n  return getOrder(event.pathParameters.id);\n};\n\nmodule.exports = { saveOrder, archiveReport, storeUpload };\n",
+    "src/worker/main.py": "import json\nimport os\n\nimport boto3\n\ndynamodb = boto3.resource(\"dynamodb\")\nsqs = boto3.client(\"sqs\")\ntable = dynamodb.Table(os.environ[\"TABLE_NAME\"])\n\n\ndef process(record):\n    order = json.loads(record[\"body\"])\n    table.put_item(Item=order)\n\n\ndef handler(event, context):\n    for record in event[\"Records\"]:\n        process(record)\n    sqs.receive_message(QueueUrl=os.environ[\"QUEUE_URL\"], MaxNumberOfMessages=1)\n"
   }
 }

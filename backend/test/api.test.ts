@@ -303,6 +303,67 @@ describe.skipIf(!enabled)('API (end to end against Postgres)', () => {
       expect((await api('POST', `/projects/${projectId}/graph/query`, { token: alice.token, body: { op: 'nonsense', node: 'x' } })).status).toBe(422);
     });
 
+    it('lists the endpoints the infrastructure exposes', async () => {
+      const res = await api('GET', `/projects/${projectId}/runs/current/endpoints`, { token: alice.token });
+      expect(res.status).toBe(200);
+      expect(res.body.items.map((e: any) => `${e.method} ${e.path}`)).toEqual([
+        'POST /orders',
+        'DELETE /orders/{id}',
+        'GET /orders/{id}',
+        'POST /reports',
+        'PUT /uploads/{key}',
+      ]);
+      expect(res.body.items[0]).toMatchObject({ kind: 'http_api', apiNodeId: expect.any(String), functionNodeId: expect.any(String) });
+    });
+
+    it('"calls" an endpoint: follows the request from the API through the code to the data and into the worker', async () => {
+      const res = await api('POST', `/projects/${projectId}/runs/current/endpoints/trace`, { token: alice.token, body: { method: 'post', path: 'orders?dry=1' } });
+      expect(res.status).toBe(200);
+      const graph = (await api('GET', `/projects/${projectId}/runs/current/graph`, { token: alice.token })).body;
+      const addressOf = (id: string) => graph.nodes.find((n: any) => n.id === id).address;
+      expect(res.body.request).toEqual({ method: 'POST', path: '/orders' });
+      expect(res.body.match).toMatchObject({ method: 'POST', path: '/orders', kind: 'http_api' });
+      const steps = res.body.steps.map((s: any) => [s.phase, addressOf(s.nodeId), s.async]);
+      expect(steps.slice(0, 5)).toEqual([
+        ['api', 'aws_apigatewayv2_api.http', false],
+        ['route', 'aws_apigatewayv2_route.post_order', false],
+        ['integration', 'aws_apigatewayv2_integration.api', false],
+        ['compute', 'aws_lambda_function.api', false],
+        ['code', 'src/api/app.js::handler', false],
+      ]);
+      expect(steps.filter((s: any) => s[2]).map((s: any) => s[1])).toEqual(['aws_lambda_function.worker', 'src/worker/main.py::handler', 'src/worker/main.py::process']);
+      expect(res.body.codeScope).toBe('shared_handler');
+      expect(res.body.gaps[0]).toContain('serves 5 endpoints through one handler');
+      expect(res.body.edges.length).toBeGreaterThan(5);
+      // 'calls' is a stored edge relation (migration 009), so the graph a viewer loads has the call graph too.
+      expect(graph.edges.filter((e: any) => e.relation === 'calls').length).toBe(6);
+    });
+
+    it('fills in path parameters and honours a chosen endpoint', async () => {
+      const res = await api('POST', `/projects/${projectId}/runs/current/endpoints/trace`, { token: alice.token, body: { method: 'GET', path: '/orders/abc-123' } });
+      expect(res.body.match).toMatchObject({ path: '/orders/{id}', pathParams: { id: 'abc-123' } });
+      const listed = (await api('GET', `/projects/${projectId}/runs/current/endpoints`, { token: alice.token })).body.items;
+      const put = listed.find((e: any) => e.method === 'PUT');
+      const chosen = await api('POST', `/projects/${projectId}/runs/current/endpoints/trace`, { token: alice.token, body: { method: 'GET', path: '/x', endpointId: put.id } });
+      expect(chosen.body.match.endpointId).toBe(put.id);
+    });
+
+    it('answers 404 with the nearest endpoints when nothing matches, and validates the request', async () => {
+      const miss = await api('POST', `/projects/${projectId}/runs/current/endpoints/trace`, { token: alice.token, body: { method: 'GET', path: '/orderz/1' } });
+      expect(miss).toMatchObject({ status: 404, body: { code: 'no_matching_endpoint' } });
+      expect(miss.body.detail).toContain('Closest:');
+      expect((await api('POST', `/projects/${projectId}/runs/current/endpoints/trace`, { token: alice.token, body: { method: 'GET!', path: '/x' } })).status).toBe(422);
+      expect((await api('POST', `/projects/${projectId}/runs/current/endpoints/trace`, { token: alice.token, body: { path: '/x' } })).status).toBe(422);
+      expect((await api('POST', `/projects/${projectId}/runs/current/endpoints/trace`, { body: { method: 'GET', path: '/orders/1' } })).status).toBe(401);
+    });
+
+    it('lets the Ask and voice tools follow an endpoint too', async () => {
+      const res = await api('POST', `/projects/${projectId}/graph/query`, { token: alice.token, body: { op: 'endpoint', node: 'DELETE /orders/9' } });
+      expect(res.status).toBe(200);
+      expect(res.body.summary).toContain('DELETE /orders/9 is handled by DELETE /orders/{id}');
+      expect(res.body.results.map((r: any) => r.node.address)).toContain('aws_dynamodb_table.orders');
+    });
+
     it('searches nodes', async () => {
       const res = await api('GET', `/projects/${projectId}/runs/current/nodes?q=orders&kind=resource`, { token: alice.token });
       expect(res.body.items.map((n: any) => n.address)).toContain('aws_dynamodb_table.orders');
@@ -505,6 +566,7 @@ describe.skipIf(!enabled)('API (end to end against Postgres)', () => {
 
     it('enforces viewer limits: read yes, change no, no activity log', async () => {
       expect((await api('GET', `/projects/${projectId}/runs/current/graph`, { token: bob.token })).status).toBe(200);
+      expect((await api('POST', `/projects/${projectId}/runs/current/endpoints/trace`, { token: bob.token, body: { method: 'GET', path: '/orders/1' } })).status).toBe(200);
       expect((await api('GET', `/projects/${projectId}/members`, { token: bob.token })).body.items.map((m: any) => [m.user.username, m.role])).toEqual([['alice', 'owner'], ['bob', 'viewer']]);
       expect((await api('POST', `/projects/${projectId}/runs`, { token: bob.token, body: {} })).status).toBe(403);
       expect((await api('POST', `/projects/${projectId}/runs/current/plans`, { token: bob.token, body: {} })).status).toBe(403);
@@ -536,6 +598,8 @@ describe.skipIf(!enabled)('API (end to end against Postgres)', () => {
       const viaLink = await api('GET', `/projects/${projectId}`, { shareToken: token });
       expect(viaLink.body).toMatchObject({ id: projectId, myRole: null });
       expect((await api('GET', `/projects/${projectId}/runs/current/graph`, { shareToken: token })).status).toBe(200);
+      expect((await api('GET', `/projects/${projectId}/runs/current/endpoints`, { shareToken: token })).body.items).toHaveLength(5);
+      expect((await api('POST', `/projects/${projectId}/runs/current/endpoints/trace`, { shareToken: token, body: { method: 'GET', path: '/orders/1' } })).status).toBe(200);
       expect((await api('GET', `/projects/${projectId}/runs/current/findings`, { shareToken: token })).body.items.length).toBeGreaterThan(0);
       expect((await api('GET', `/shared/${token}`)).body.id).toBe(projectId);
       // read-only, and nothing about people or history

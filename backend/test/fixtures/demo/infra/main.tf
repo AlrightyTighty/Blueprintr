@@ -152,6 +152,36 @@ resource "aws_apigatewayv2_integration" "api" {
   integration_uri  = aws_lambda_function.api.invoke_arn
 }
 
+resource "aws_apigatewayv2_route" "get_order" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "GET /orders/{id}"
+  target    = "integrations/${aws_apigatewayv2_integration.api.id}"
+}
+
+resource "aws_apigatewayv2_route" "post_order" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "POST /orders"
+  target    = "integrations/${aws_apigatewayv2_integration.api.id}"
+}
+
+resource "aws_apigatewayv2_route" "delete_order" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "DELETE /orders/{id}"
+  target    = "integrations/${aws_apigatewayv2_integration.api.id}"
+}
+
+resource "aws_apigatewayv2_route" "put_upload" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "PUT /uploads/{key}"
+  target    = "integrations/${aws_apigatewayv2_integration.api.id}"
+}
+
+resource "aws_apigatewayv2_route" "post_report" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "POST /reports"
+  target    = "integrations/${aws_apigatewayv2_integration.api.id}"
+}
+
 resource "aws_cloudfront_distribution" "site" {
   enabled = true
   aliases = [var.domain]

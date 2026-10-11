@@ -7,6 +7,7 @@ const KNOWN: Record<string, string> = {
   'AWS::Lambda::Function': 'aws_lambda_function',
   'AWS::Lambda::EventSourceMapping': 'aws_lambda_event_source_mapping',
   'AWS::Lambda::Permission': 'aws_lambda_permission',
+  'AWS::Lambda::Url': 'aws_lambda_function_url',
   'AWS::S3::Bucket': 'aws_s3_bucket',
   'AWS::S3::BucketPolicy': 'aws_s3_bucket_policy',
   'AWS::DynamoDB::Table': 'aws_dynamodb_table',

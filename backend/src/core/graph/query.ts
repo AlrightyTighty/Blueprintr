@@ -1,8 +1,11 @@
 import type { FindingRow } from '../../repositories/findings.js';
+import { traceRequest } from '../endpoints/trace.js';
 import { reach, shortestPath, type Reached } from './traversal.js';
 import type { Confidence, Graph, GraphEdge, GraphNode } from './types.js';
 
-export type QueryOp = 'touches' | 'dependents' | 'dependencies' | 'path' | 'findings';
+/** The questions the graph can answer. One list, so routes, the Ask tool and the voice tool can't drift apart. */
+export const QUERY_OPS = ['touches', 'dependents', 'dependencies', 'path', 'findings', 'endpoint'] as const;
+export type QueryOp = (typeof QUERY_OPS)[number];
 
 export interface QueryRequest {
   op: QueryOp;
@@ -58,6 +61,7 @@ export function runGraphQuery(
   context: { findings: FindingRow[]; /** nodeId to a short plan tag such as "replace" or "downstream" */ planTags?: Map<string, string> },
 ): QueryResult {
   const nodes = new Map(graph.nodes.map((n) => [n.id, n]));
+  if (request.op === 'endpoint') return endpointQuery(graph, request, nodes);
   const resolved = resolveNodes(graph, request.node);
   const tag = (n: GraphNode) => {
     const t = context.planTags?.get(n.id);
@@ -146,4 +150,26 @@ export function runGraphQuery(
       return { op: 'findings', resolved, results: [], edges: [], findings: related, summary };
     }
   }
+}
+
+/** "GET /orders/123": follow that request through the infrastructure and the code. */
+function endpointQuery(graph: Graph, request: QueryRequest, nodes: Map<string, GraphNode>): QueryResult {
+  const nothing = (summary: string): QueryResult => ({ op: 'endpoint', resolved: [], results: [], edges: [], findings: [], summary });
+  const parsed = /^([A-Za-z]+)\s+(\/\S*)$/.exec(request.node.trim());
+  if (!parsed) return nothing('Give the endpoint as a method and a path, like "GET /orders/123".');
+
+  const outcome = traceRequest(graph, { method: parsed[1]!, path: parsed[2]! });
+  if (!outcome.found) {
+    if (outcome.reason === 'no_endpoints') return nothing('This analysis found no API endpoints (no API Gateway routes, REST methods or function URLs).');
+    const suggestions = outcome.closest.map((e) => `${e.method} ${e.path}`);
+    return nothing(`No endpoint matches ${request.node.trim()}. Closest: ${list(suggestions)}.`);
+  }
+  const { trace } = outcome;
+  const results = trace.steps.map((step, index): ReachedView => ({
+    node: nodes.get(step.nodeId)!,
+    distance: index + 1,
+    via: step.edgeIds,
+    weakestConfidence: step.confidence ?? 'certain',
+  }));
+  return { op: 'endpoint', resolved: [nodes.get(trace.match.endpointId)!], results, edges: trace.edges, findings: [], summary: trace.summary };
 }

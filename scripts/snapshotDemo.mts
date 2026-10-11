@@ -4,10 +4,12 @@
 //   npm run snapshot:demo
 //
 // Re-run it whenever the demo repo (backend/test/fixtures/demo) or the analysis changes.
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { analyze } from '../backend/src/core/analysis/pipeline.ts';
+import { listEndpoints } from '../backend/src/core/endpoints/list.ts';
+import { traceRequest } from '../backend/src/core/endpoints/trace.ts';
 import { loadFixture } from '../backend/test/helpers.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -30,23 +32,47 @@ interface ResourceTypeRow {
   color: string;
 }
 function readResourceTypeCatalog(): Map<string, ResourceTypeRow> {
-  const sql = readFileSync(join(here, '../database/003_resource_types.sql'), 'utf8');
+  // The catalog is seeded by one migration and extended by later ones, so read every migration's rows.
   const row = /\('([^']+)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'([^']*)',\s*'(#[0-9A-Fa-f]{6})',\s*\d+\)/g;
   const catalog = new Map<string, ResourceTypeRow>();
-  for (const [, terraformType, service, displayName, category, iconKey, color] of sql.matchAll(row)) {
-    catalog.set(terraformType, { terraformType, provider: 'aws', service, displayName, category, iconKey, color });
+  const databaseDir = join(here, '../database');
+  for (const file of readdirSync(databaseDir).filter((name) => /^\d{3}_.*\.sql$/.test(name)).sort()) {
+    const sql = readFileSync(join(databaseDir, file), 'utf8');
+    for (const [, terraformType, service, displayName, category, iconKey, color] of sql.matchAll(row)) {
+      catalog.set(terraformType, { terraformType, provider: 'aws', service, displayName, category, iconKey, color });
+    }
   }
   return catalog;
 }
 const catalog = readResourceTypeCatalog();
-if (catalog.size === 0) throw new Error('Found no resource types in database/003_resource_types.sql.');
+if (catalog.size === 0) throw new Error('Found no resource types in the database migrations.');
 const nodes = analysis.nodes.map((node) => ({
   ...node,
   resourceType: (node.terraformType && catalog.get(node.terraformType)) || node.resourceType || null,
 }));
 
+const graph = { runId: RUN_ID, commitSha: null, nodes, edges: analysis.edges };
+
+// Every endpoint, and the trace of a request to it, so the demo's endpoint tours need no backend. The path
+// is a sample ({id} becomes 123), because the demo can only follow requests it has already traced.
+const sampleValue = (name: string) => (name === 'id' ? '123' : name.endsWith('+') ? 'a/b' : `sample-${name}`);
+const samplePath = (template: string) => template.replace(/\{([^}]+)\}/g, (_match, name: string) => sampleValue(name));
+const endpoints = listEndpoints(graph as never);
+const traces = Object.fromEntries(
+  endpoints.flatMap((endpoint) => {
+    const outcome = traceRequest(graph as never, {
+      method: endpoint.method === 'ANY' ? 'GET' : endpoint.method,
+      path: samplePath(endpoint.path),
+      endpointId: endpoint.id,
+    });
+    return outcome.found ? [[endpoint.id, outcome.trace]] : [];
+  }),
+);
+
 const snapshot = {
-  graph: { runId: RUN_ID, commitSha: null, nodes, edges: analysis.edges },
+  graph,
+  endpoints,
+  traces,
   findings: analysis.findings.map((finding, index) => ({
     ...finding,
     id: `demo-finding-${index}`,
@@ -60,5 +86,6 @@ const outputPath = join(here, '../frontend/src/demo/demoSnapshot.json');
 mkdirSync(dirname(outputPath), { recursive: true });
 writeFileSync(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`);
 
+console.log(`Saved ${endpoints.length} endpoints with ${Object.keys(traces).length} traces.`);
 console.log(`Saved ${nodes.length} nodes (${nodes.filter((node) => node.resourceType).length} with catalog icons), ${analysis.edges.length} edges, ${analysis.findings.length} findings and ${files.length} source files.`);
 console.log(`  -> ${outputPath}`);

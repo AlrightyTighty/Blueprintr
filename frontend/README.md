@@ -66,12 +66,14 @@ All backend calls live in `src/services/`. The offline stand-ins for Gemini and 
 ## Tours
 
 The workspace is a guided tour of the repo (see `claude.md`). Everything below runs in the browser from
-the graph; nothing here needs a journey endpoint on the backend.
+the graph, except endpoint tours: the backend resolves a method and path to the request's route through the graph
+(`traceEndpoint` in `services/analysisService.ts`) and the frontend tells it. The demo project has a stored trace per endpoint.
 
 | Piece                       | Where                                                                   |
 | --------------------------- | ----------------------------------------------------------------------- |
 | Journey extraction          | `src/core/journeys/extractJourneys.ts` (first day, follow a request)    |
 | Disaster and change tours   | `src/core/journeys/impactJourneys.ts`, using `core/graph/cascade.ts`    |
+| Endpoint tours ("call" an endpoint) | `src/core/journeys/endpointJourney.ts`, `src/features/tour-player/EndpointTour.tsx`; the trace itself comes from the backend (`POST .../endpoints/trace`) |
 | Stop scripts                | `src/core/journeys/narration.ts`, `stops.ts` (offline, graph-grounded)  |
 | Tour player + code panel    | `src/features/tour-player/` (`TourDock`, `TourPanel`, `useTourStore`)   |
 | Voice and personalities     | `src/features/voice/` (browser speech today; see `narrator.ts`)         |

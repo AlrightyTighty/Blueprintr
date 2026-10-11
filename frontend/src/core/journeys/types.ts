@@ -15,7 +15,7 @@ export interface Stop {
   inferred: boolean;
 }
 
-export type JourneyKind = 'first_day' | 'request' | 'disaster' | 'change';
+export type JourneyKind = 'first_day' | 'request' | 'disaster' | 'change' | 'endpoint';
 
 export interface Journey {
   id: string;

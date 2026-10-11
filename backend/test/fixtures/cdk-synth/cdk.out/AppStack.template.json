@@ -1,0 +1,193 @@
+{
+  "Resources": {
+    "ApiFunctionServiceRole1A2B3C4D": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+              ]
+            ]
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/ApiFunction/ServiceRole/Resource"
+      }
+    },
+    "ApiFunctionServiceRoleDefaultPolicy5E6F7A8B": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:Query"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::ImportValue": "DataStack:ExportsOutputFnGetAttOrdersTableABC12345Arn0A1B2C3D"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "ApiFunctionServiceRoleDefaultPolicy5E6F7A8B",
+        "Roles": [
+          {
+            "Ref": "ApiFunctionServiceRole1A2B3C4D"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/ApiFunction/ServiceRole/DefaultPolicy/Resource"
+      }
+    },
+    "ApiFunction9D8C7B6A": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+          },
+          "S3Key": "0123abcd.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "TABLE_NAME": {
+              "Fn::ImportValue": "DataStack:ExportsOutputRefOrdersTableABC12345"
+            }
+          }
+        },
+        "Handler": "app.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "ApiFunctionServiceRole1A2B3C4D",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs20.x"
+      },
+      "DependsOn": [
+        "ApiFunctionServiceRoleDefaultPolicy5E6F7A8B",
+        "ApiFunctionServiceRole1A2B3C4D"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "AppStack/ApiFunction/Resource",
+        "aws:asset:path": "../src/api",
+        "aws:asset:property": "Code"
+      }
+    },
+    "RestApi0C43BF4B": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Name": "orders"
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/RestApi/Resource"
+      }
+    },
+    "RestApiordersA1B2C3D4": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "RestApi0C43BF4B",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "orders",
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/RestApi/Default/orders/Resource"
+      }
+    },
+    "RestApiordersidE5F6A7B8": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Ref": "RestApiordersA1B2C3D4"
+        },
+        "PathPart": "{id}",
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/RestApi/Default/orders/{id}/Resource"
+      }
+    },
+    "RestApiordersidGET9C0D1E2F": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "GET",
+        "ResourceId": {
+          "Ref": "RestApiordersidE5F6A7B8"
+        },
+        "RestApiId": {
+          "Ref": "RestApi0C43BF4B"
+        },
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "ApiFunction9D8C7B6A",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "AppStack/RestApi/Default/orders/{id}/GET/Resource"
+      }
+    }
+  }
+}

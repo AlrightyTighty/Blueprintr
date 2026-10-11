@@ -16,7 +16,7 @@ describe('analysis pipeline on the demo repo', async () => {
     edges.some((e) => e.from === from && e.to === to && e.relation === relation && (!method || e.method === method));
 
   it('creates a node for every Terraform resource', () => {
-    expect(out.nodes.filter((n) => n.kind === 'resource')).toHaveLength(16);
+    expect(out.nodes.filter((n) => n.kind === 'resource')).toHaveLength(21); // 16 resources + 5 API routes
     expect(out.nodes.find((n) => n.address === 'aws_dynamodb_table.orders')?.attributes).toMatchObject({ name: 'orders-prod' });
   });
 

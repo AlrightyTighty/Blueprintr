@@ -2,10 +2,12 @@
 // backend/openapi.yaml, or uses bundled demo data for the demo project (see config.ts).
 import { apiGet, apiPost } from '../api';
 import { isDemoProject } from '../config';
-import { demoFindings, demoGraph } from '../demo/demoData';
+import { demoEndpoints, demoFindings, demoGraph, demoTraces } from '../demo/demoData';
 import type {
   AskResult,
   Briefing,
+  Endpoint,
+  EndpointTrace,
   Finding,
   Graph,
   Page,
@@ -50,6 +52,45 @@ export async function fetchFindings(projectId: string, runId: string): Promise<F
     cursor = page.nextCursor;
   } while (cursor);
   return findings;
+}
+
+/** The API endpoints the infrastructure code declares (API Gateway routes, REST methods, function URLs). */
+export async function fetchEndpoints(projectId: string): Promise<Endpoint[]> {
+  if (isDemoProject(projectId)) return demoEndpoints;
+  return (await apiGet<{ items: Endpoint[] }>(`/projects/${projectId}/runs/current/endpoints`)).items;
+}
+
+export interface EndpointRequest {
+  method: string;
+  path: string;
+  /** Follow this endpoint instead of matching the path. */
+  endpointId?: string;
+}
+
+/**
+ * "Calls" an endpoint without sending a request: the backend finds the endpoint API Gateway would pick
+ * and follows it through the infrastructure and code. Throws an Error whose message says why when nothing matches.
+ */
+export async function traceEndpoint(projectId: string, request: EndpointRequest): Promise<EndpointTrace> {
+  if (isDemoProject(projectId)) return traceDemoEndpoint(request);
+  return apiPost<EndpointTrace>(`/projects/${projectId}/runs/current/endpoints/trace`, request);
+}
+
+/** The demo has a stored trace per endpoint, so it can follow the listed endpoints (by id, or by their method and path). */
+function traceDemoEndpoint(request: EndpointRequest): EndpointTrace {
+  const wanted = `${request.method.toUpperCase()} ${request.path.trim()}`;
+  const endpoint = demoEndpoints.find(
+    (candidate) =>
+      candidate.id === request.endpointId ||
+      `${candidate.method} ${candidate.path}` === wanted ||
+      `${demoTraces[candidate.id]?.request.method} ${demoTraces[candidate.id]?.request.path}` === wanted,
+  );
+  const trace = endpoint ? demoTraces[endpoint.id] : undefined;
+  if (!trace) {
+    const known = demoEndpoints.map((candidate) => `${candidate.method} ${candidate.path}`).join(', ');
+    throw new Error(`The demo can follow only its own endpoints: ${known}.`);
+  }
+  return trace;
 }
 
 /** Uploads plan JSON for server-side analysis. The caller falls back to local analysis on failure. */

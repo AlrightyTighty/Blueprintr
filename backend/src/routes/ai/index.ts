@@ -6,6 +6,7 @@ import { perUserLimit } from '../../http/rateLimits.js';
 import { unauthorized } from '../../http/errors.js';
 import { parse, projectParams, queryBoolean, runRef, uuid } from '../../http/validation.js';
 import { verifyToken } from '../../lib/jwt.js';
+import { QUERY_OPS } from '../../core/graph/query.js';
 import * as ai from '../../services/ai.js';
 import * as narration from '../../services/narration.js';
 
@@ -13,7 +14,7 @@ const planParams = projectParams.extend({ planId: uuid });
 const refresh = z.object({ refresh: queryBoolean.default(false) });
 
 const toolRequest = z.object({
-  op: z.enum(['touches', 'dependents', 'dependencies', 'path', 'findings']),
+  op: z.enum(QUERY_OPS),
   node: z.string().min(1).max(300),
   to: z.string().min(1).max(300).optional(),
   runId: runRef.optional(),

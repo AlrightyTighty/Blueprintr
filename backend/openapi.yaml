@@ -85,6 +85,8 @@ tags:
     description: Analysis runs, each pinned to a commit.
   - name: Graph
     description: The linked code and infrastructure graph, and blast-radius queries.
+  - name: Endpoints
+    description: The API endpoints a project's infrastructure exposes, and following one request through to the data.
   - name: Findings
     description: Permission gaps, over-broad IAM, unmanaged resources.
   - name: Plans
@@ -1452,6 +1454,92 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationError' }
 
+  # --------------------------------------------------------------- Endpoints
+  /projects/{projectId}/runs/{runId}/endpoints:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [Endpoints]
+      operationId: listEndpoints
+      summary: The endpoints the infrastructure exposes
+      description: |
+        API Gateway HTTP API routes, REST API methods and Lambda function URLs found in the
+        infrastructure code, in path order. Runs analysed before endpoint support have none; analyse again.
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      responses:
+        '200':
+          description: The endpoints.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Endpoint' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /projects/{projectId}/runs/{runId}/endpoints/trace:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    post:
+      tags: [Endpoints]
+      operationId: traceEndpoint
+      summary: Follow one request from the front door to the data
+      description: |
+        "Calls" an endpoint without sending a request: finds the endpoint that handles `method` + `path`
+        the way API Gateway would (the most specific route wins: a literal segment over `{id}` over
+        `{proxy+}` over `$default`, and an exact method over `ANY`), then walks the graph in the order a
+        request travels: domain or CDN, API, route, integration, Lambda, handler, the functions it calls,
+        and the resources they use. If a function publishes to a queue that triggers another Lambda, the
+        trace continues in that Lambda, marked `async`.
+
+        Nothing is guessed. Where the infrastructure doesn't say something, the trace stops and says so in
+        `gaps`. When several endpoints share one Lambda handler, `codeScope` is `shared_handler`: the code
+        shown is everything the handler can reach, because the infrastructure can't say which branch this
+        endpoint takes. Stage prefixes are ignored, authorizers are named but not simulated, and routes
+        declared inside application code are not read.
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [method, path]
+              properties:
+                method: { type: string, examples: [GET] }
+                path:
+                  type: string
+                  description: A concrete path (`/orders/123`) or an endpoint's own template (`/orders/{id}`). Query strings are ignored.
+                endpointId:
+                  type: string
+                  format: uuid
+                  description: Trace this endpoint instead of matching (for choosing between equally specific matches).
+      responses:
+        '200':
+          description: The request's journey.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EndpointTrace' }
+        '404':
+          description: |
+            No endpoint matches (`no_matching_endpoint`); the problem's `detail` lists the closest endpoints.
+            Also returned when the project or run is not visible to the caller.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
   # ---------------------------------------------------------------- Findings
   /projects/{projectId}/runs/{runId}/findings:
     parameters:
@@ -2009,7 +2097,8 @@ components:
         `unresolved_ref` is a reference that could not be resolved (shown as a labelled node).
     EdgeRelation:
       type: string
-      enum: [references, depends_on, assumes_role, grants_access, runs_code, reads, writes, publishes, invokes, routes_to]
+      enum: [references, depends_on, assumes_role, grants_access, runs_code, reads, writes, publishes, invokes, routes_to, calls]
+      description: '`calls`: one function calls another (the caller depends on the callee).'
     LinkMethod:
       type: string
       enum: [declared_reference, env_var, code_mapping, gemini_inference]
@@ -2485,12 +2574,14 @@ components:
       properties:
         op:
           type: string
-          enum: [touches, dependents, dependencies, path, findings]
+          enum: [touches, dependents, dependencies, path, findings, endpoint]
           description: |
             `touches`: code that reads, writes or publishes to a resource (and the roles granting it).
             `dependents` / `dependencies`: blast radius in either direction.
             `path`: shortest path between `node` and `to`.
             `findings`: findings about a node.
+            `endpoint`: follow one API request, with `node` set to a method and path such as `GET /orders/123`
+            (see `traceEndpoint`); `results` are the steps in order.
         runId:
           type: string
           default: current
@@ -2553,6 +2644,137 @@ components:
         removedEdges:
           type: array
           items: { $ref: '#/components/schemas/GraphEdge' }
+
+    # ------------------------------------------------------------ Endpoints
+    EndpointKind:
+      type: string
+      enum: [http_api, rest_api, function_url]
+    Endpoint:
+      type: object
+      required: [id, address, kind, method, path, apiNodeId, functionNodeId]
+      properties:
+        id: { type: string, format: uuid, description: The graph node that represents the endpoint. }
+        address: { type: string }
+        kind: { $ref: '#/components/schemas/EndpointKind' }
+        method:
+          type: string
+          description: Upper-case HTTP method, or `ANY`.
+        path:
+          type: string
+          description: A path template such as `/orders/{id}`. `{proxy+}` matches one or more segments.
+          examples: ['/orders/{id}']
+        isDefault:
+          type: boolean
+          description: A catch-all (`$default` route, function URL) that only wins when nothing more specific matches.
+        authorization:
+          type: string
+          description: How callers authenticate, when the infrastructure says (`JWT`, `AWS_IAM`, ...). Not simulated.
+        apiNodeId:
+          type: [string, 'null']
+          format: uuid
+          description: The API Gateway API serving it; null for function URLs.
+        functionNodeId:
+          type: [string, 'null']
+          format: uuid
+          description: The Lambda function it invokes.
+    TraceStep:
+      type: object
+      required: [nodeId, fromNodeId, relation, confidence, edgeIds, phase, async, uses]
+      properties:
+        nodeId: { type: string, format: uuid }
+        fromNodeId:
+          type: [string, 'null']
+          format: uuid
+          description: The node the request came from; null for the first step.
+        relation:
+          description: How the request got here. Null for the first step.
+          oneOf:
+            - $ref: '#/components/schemas/EdgeRelation'
+            - type: 'null'
+        confidence:
+          description: The weakest link on the way in. `inferred` means a model guessed it.
+          oneOf:
+            - $ref: '#/components/schemas/Confidence'
+            - type: 'null'
+        edgeIds:
+          type: array
+          description: The graph edges crossed to get here (more than one when the request passes through wiring such as a route or a queue trigger).
+          items: { type: string, format: uuid }
+        phase:
+          type: string
+          enum: [front_door, api, route, integration, compute, code, data]
+        async:
+          type: boolean
+          description: True once the request continues in the background, after the response.
+        uses:
+          type: array
+          description: For data steps, every traced function that touches the resource, and how.
+          items:
+            type: object
+            required: [nodeId, relation, confidence, edgeId, async]
+            properties:
+              nodeId: { type: string, format: uuid }
+              relation: { $ref: '#/components/schemas/EdgeRelation' }
+              confidence: { $ref: '#/components/schemas/Confidence' }
+              edgeId: { type: string, format: uuid }
+              async: { type: boolean }
+    EndpointTrace:
+      type: object
+      required: [request, match, codeScope, steps, edges, gaps, truncated, summary]
+      properties:
+        request:
+          type: object
+          required: [method, path]
+          properties:
+            method: { type: string }
+            path: { type: string }
+        match:
+          type: object
+          required: [endpointId, kind, method, path, isDefault, pathParams, alternates]
+          properties:
+            endpointId: { type: string, format: uuid }
+            kind: { $ref: '#/components/schemas/EndpointKind' }
+            method: { type: string }
+            path: { type: string, description: The matched template. }
+            isDefault: { type: boolean }
+            pathParams:
+              type: object
+              description: Values for `{id}`-style segments, taken from the request path.
+              additionalProperties: { type: string }
+            alternates:
+              type: array
+              description: Other endpoints that match equally well (for example the same route on two APIs).
+              items:
+                type: object
+                required: [endpointId, kind, method, path]
+                properties:
+                  endpointId: { type: string, format: uuid }
+                  kind: { $ref: '#/components/schemas/EndpointKind' }
+                  method: { type: string }
+                  path: { type: string }
+        codeScope:
+          type: string
+          enum: [endpoint, shared_handler]
+          description: |
+            `endpoint`: the Lambda serves only this endpoint. `shared_handler`: it serves several through one
+            handler, so the code shown is everything the handler can reach.
+        steps:
+          type: array
+          items: { $ref: '#/components/schemas/TraceStep' }
+        edges:
+          type: array
+          description: The graph edges the trace used, for highlighting.
+          items: { $ref: '#/components/schemas/GraphEdge' }
+        gaps:
+          type: array
+          description: What the trace could not follow, in plain words.
+          items: { type: string }
+        truncated:
+          type: boolean
+          description: The trace was cut short because it is very long.
+        summary:
+          type: string
+          description: Plain English, short enough for a model to quote or a voice to read out.
 
     # ------------------------------------------------------------- Findings
     Finding:

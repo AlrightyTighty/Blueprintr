@@ -9,7 +9,7 @@ import { inferPendingCalls, type InferenceStats } from './inference.js';
 import { linkGraph } from './link.js';
 
 /** Bump when the analysis output changes, so old runs can be told apart from new ones. */
-export const PARSER_VERSION = '0.1.0';
+export const PARSER_VERSION = '0.2.0';
 
 export type AnalysisStage = 'parsing_terraform' | 'scanning_code' | 'linking' | 'inferring' | 'findings';
 
@@ -70,6 +70,8 @@ export async function analyze(input: PipelineInput): Promise<PipelineOutput> {
     nodesByKind: countBy(nodes, (n) => n.kind),
     edges: edges.length,
     edgesByMethod: countBy(edges, (e) => e.linkMethod),
+    callEdges: edges.filter((e) => e.relation === 'calls').length,
+    endpoints: link.endpoints,
     inferredEdges: edges.filter((e) => e.confidence === 'inferred').length,
     findings: findings.length,
     findingsByKind: countBy(findings, (f) => f.kind),

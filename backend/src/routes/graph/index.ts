@@ -2,13 +2,14 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { actorOf } from '../../http/context.js';
 import { confidenceEnum, nodeKindEnum, pageQuery, parse, projectParams, runRef, uuid } from '../../http/validation.js';
+import { QUERY_OPS } from '../../core/graph/query.js';
 import * as graph from '../../services/graph.js';
 
 const runParams = projectParams.extend({ runId: runRef });
 const nodeParams = runParams.extend({ nodeId: uuid });
 
 const queryBody = z.object({
-  op: z.enum(['touches', 'dependents', 'dependencies', 'path', 'findings']),
+  op: z.enum(QUERY_OPS),
   node: z.string().min(1).max(300),
   to: z.string().min(1).max(300).optional(),
   runId: runRef.default('current'),

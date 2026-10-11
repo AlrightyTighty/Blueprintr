@@ -98,6 +98,29 @@ Limits: Terraform modules, `count`/`for_each` expansion, SAM (`AWS::Serverless::
 references show up as labelled nodes and findings instead of being guessed. Source file contents are
 never stored; only Gemini inference sees the few functions it is asked about.
 
+## Endpoint tours: "calling" an endpoint
+
+`POST /projects/{id}/runs/{runId}/endpoints/trace` takes a method and path (`GET /orders/123`) and follows that
+request through the stored graph without sending anything: the endpoint API Gateway would pick, then domain or CDN,
+API, route, integration, Lambda, handler, the functions it calls, and the resources they use. `GET .../endpoints`
+lists what can be called. The same trace backs the graph query op `endpoint`, so the Ask and voice agents can answer
+"what happens on POST /orders". The frontend turns the trace into a tour (`frontend/src/core/journeys/endpointJourney.ts`).
+
+- **Where endpoints come from** (`core/endpoints/extract.ts`, at analysis time): HTTP API routes (`route_key`),
+  REST API methods (the path is assembled from `aws_api_gateway_resource` parents), and Lambda function URLs, from
+  Terraform and CloudFormation/CDK alike. Runs analysed before this existed have none; analyse again.
+- **The call graph** (`core/code/scan.ts`): a `calls` edge for a bare call to a function in the same file, or to a
+  name imported from another analysed file. Method calls (`obj.fn()`) are not followed. Only calls on a path from a
+  handler to a function that touches a resource are kept.
+- **Matching** (`core/endpoints/match.ts`) follows API Gateway: literal beats `{id}` beats `{proxy+}` beats `$default`,
+  and an exact method beats `ANY`. Stage prefixes are ignored; authorizers are named, not simulated.
+- **Honest about what it can't know.** When several endpoints share one Lambda handler the trace sets
+  `codeScope: shared_handler`: the infrastructure can't say which branch a route takes inside the handler, so the code
+  shown is everything the handler can reach. Reading routes declared in code (Express, Fastify, Flask) would narrow
+  this and is not built. A trace never invents a hop; what it can't follow is listed in `gaps`.
+- **Background work:** when a function publishes to a queue that triggers another Lambda, the trace continues into
+  that Lambda, marked `async`.
+
 ## Deployment
 
 `iac/` bundles `src/lambda.ts` with esbuild into one Lambda behind an API Gateway HTTP API. The

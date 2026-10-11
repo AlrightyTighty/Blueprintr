@@ -12,7 +12,7 @@ import type { PlanRow } from '../repositories/plans.js';
 import { requireProject, type Actor } from './access.js';
 import { resolveReadyRun } from './analysis.js';
 import { queryGraphForRun } from './graph.js';
-import type { QueryRequest } from '../core/graph/query.js';
+import { QUERY_OPS, type QueryRequest } from '../core/graph/query.js';
 
 type Severity = 'info' | 'low' | 'medium' | 'high' | 'critical';
 
@@ -194,12 +194,13 @@ const GRAPH_TOOL: FunctionDeclaration = {
   description:
     'Query the analyzed code and infrastructure graph. Use "touches" to see what code and roles use a resource (or what resources a function uses), ' +
     '"dependents" for everything that would be affected if a node changed, "dependencies" for what a node relies on, ' +
-    '"path" to see how two nodes connect, and "findings" for problems attached to a node.',
+    '"path" to see how two nodes connect, "findings" for problems attached to a node, and "endpoint" to follow one API request ' +
+    'from the front door through the infrastructure and code to the data it touches (node = a method and path such as "GET /orders/123").',
   parameters: {
     type: 'object',
     properties: {
-      op: { type: 'string', enum: ['touches', 'dependents', 'dependencies', 'path', 'findings'] },
-      node: { type: 'string', description: 'A resource or code name or address, e.g. "orders" or "aws_dynamodb_table.orders".' },
+      op: { type: 'string', enum: [...QUERY_OPS] },
+      node: { type: 'string', description: 'A resource or code name or address, e.g. "orders" or "aws_dynamodb_table.orders"; for op=endpoint a method and path, e.g. "POST /orders".' },
       to: { type: 'string', description: 'Second node, only for op=path.' },
       maxDepth: { type: 'integer', description: 'How many hops to follow, default 10.' },
     },

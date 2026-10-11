@@ -28,6 +28,7 @@ const ARRIVAL_PHRASES: Record<EdgeRelation, string> = {
   publishes: 'publishes to',
   invokes: 'invokes',
   routes_to: 'routes traffic to',
+  calls: 'calls',
 };
 
 export function relationPhrase(relation: EdgeRelation): string {
@@ -64,7 +65,8 @@ export function inferredNote(source: 'arrival' | 'code', codeNames: string[] = [
 }
 
 export function warningSentence(warning: string): string {
-  return `Watch your step: ${warning}`;
+  // Finding titles read as headlines and don't end in a full stop; several in a row need one to be speakable.
+  return `Watch your step: ${warning}${/[.!?]$/.test(warning) ? '' : '.'}`;
 }
 
 export interface ArrivalContext {

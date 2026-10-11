@@ -13,6 +13,7 @@ import activityRoutes from './routes/activity/index.js';
 import aiRoutes from './routes/ai/index.js';
 import analysisRoutes from './routes/analysis/index.js';
 import authRoutes from './routes/auth/index.js';
+import endpointsRoutes from './routes/endpoints/index.js';
 import findingsRoutes from './routes/findings/index.js';
 import graphRoutes from './routes/graph/index.js';
 import plansRoutes from './routes/plans/index.js';
@@ -65,6 +66,7 @@ export const routeModules = [
   repositoriesRoutes,
   analysisRoutes,
   graphRoutes,
+  endpointsRoutes,
   findingsRoutes,
   plansRoutes,
   aiRoutes,

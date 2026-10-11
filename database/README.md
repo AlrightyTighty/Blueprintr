@@ -31,6 +31,7 @@ instance (tested on Postgres 16).
 | `005_plans.sql` | `plan_analyses`, `plan_changes` |
 | `006_activity_log.sql` | `activity_log` |
 | `007_resource_types_sns.sql` | adds the SNS topic to the resource catalog |
+| `009_endpoints.sql` | the `calls` edge relation, and catalog rows for REST API resources/methods and Lambda function URLs |
 | `migrate.sh` | applies unapplied files in order; tracks them in `schema_migrations` |
 | `smoke_test.sql` | assertions over the constraints; runs in a rolled-back transaction |
 
@@ -110,7 +111,7 @@ the catalog still work; the frontend falls back to a generic icon.
   domain nodes), `code_file`, `code_function`, `unmanaged_resource` (e.g. a hardcoded bucket not in
   Terraform), `unresolved_ref` (a reference we couldn't resolve, shown as a labeled node).
   `address` is a Terraform address or `path::function`, unique per run.
-- **graph_edges**: directed, with a `relation` (what the link means), a `link_method` (how we found
+- **graph_edges**: directed (source depends on target), with a `relation` (what the link means; `calls` is one function calling another), a `link_method` (how we found
   it) and a `confidence`. The database enforces the pairing below, so the UI can trust it:
 
   | link_method | Example | confidence |

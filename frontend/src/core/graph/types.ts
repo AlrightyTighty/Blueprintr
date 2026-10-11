@@ -18,7 +18,9 @@ export type EdgeRelation =
   | 'writes'
   | 'publishes'
   | 'invokes'
-  | 'routes_to';
+  | 'routes_to'
+  /** One function calls another (the caller depends on the callee). */
+  | 'calls';
 
 export type LinkMethod = 'declared_reference' | 'env_var' | 'code_mapping' | 'gemini_inference';
 
@@ -161,4 +163,68 @@ export interface PlanAnalysisDetail {
   hasBriefing: boolean;
   createdAt: string;
   changes: PlanChange[];
+}
+
+export type EndpointKind = 'http_api' | 'rest_api' | 'function_url';
+
+/** A way into the system that the infrastructure code declares: an API route, a REST method or a function URL. */
+export interface Endpoint {
+  /** The graph node that represents it. */
+  id: string;
+  address: string;
+  kind: EndpointKind;
+  /** Upper-case HTTP method, or `ANY`. */
+  method: string;
+  /** A path template such as `/orders/{id}`. */
+  path: string;
+  isDefault?: boolean;
+  authorization?: string;
+  apiNodeId: string | null;
+  functionNodeId: string | null;
+}
+
+export type TracePhase = 'front_door' | 'api' | 'route' | 'integration' | 'compute' | 'code' | 'data';
+
+export interface TraceUse {
+  nodeId: string;
+  relation: EdgeRelation;
+  confidence: Confidence;
+  edgeId: string;
+  async: boolean;
+}
+
+/** One stop along a request, in the order the request reaches it. */
+export interface TraceStep {
+  nodeId: string;
+  fromNodeId: string | null;
+  relation: EdgeRelation | null;
+  confidence: Confidence | null;
+  edgeIds: string[];
+  phase: TracePhase;
+  /** True once the request continues in the background, after the response. */
+  async: boolean;
+  /** For data steps: every traced function that touches the resource, and how. */
+  uses: TraceUse[];
+}
+
+/** One request, followed from the front door to the data it touches ("calling" an endpoint). */
+export interface EndpointTrace {
+  request: { method: string; path: string };
+  match: {
+    endpointId: string;
+    kind: EndpointKind;
+    method: string;
+    path: string;
+    isDefault: boolean;
+    pathParams: Record<string, string>;
+    alternates: { endpointId: string; kind: EndpointKind; method: string; path: string }[];
+  };
+  /** `shared_handler`: one Lambda handler serves several endpoints, so the code shown is everything it can reach. */
+  codeScope: 'endpoint' | 'shared_handler';
+  steps: TraceStep[];
+  edges: GraphEdge[];
+  /** What the trace could not follow, in plain words. */
+  gaps: string[];
+  truncated: boolean;
+  summary: string;
 }

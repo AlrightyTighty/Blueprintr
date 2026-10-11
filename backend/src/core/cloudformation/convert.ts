@@ -215,6 +215,10 @@ function bodyFor(tfType: string, resource: CfnResource, ctx: Context): Record<st
       set('function_name', x('FunctionName'));
       set('source_arn', x('SourceArn'));
       break;
+    case 'aws_lambda_function_url':
+      set('function_name', x('TargetFunctionArn'));
+      set('authorization_type', x('AuthType'));
+      break;
     case 'aws_lambda_event_source_mapping':
       set('event_source_arn', x('EventSourceArn'));
       set('function_name', x('FunctionName'));

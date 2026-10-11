@@ -33,7 +33,11 @@ async function storeUpload(key, body) {
 }
 
 exports.handler = async (event) => {
-  if (event.requestContext.http.method === 'DELETE') return cancelOrder(event.pathParameters.id);
+  const method = event.requestContext.http.method;
+  if (method === 'DELETE') return cancelOrder(event.pathParameters.id);
+  if (method === 'POST' && event.rawPath === '/orders') return saveOrder(JSON.parse(event.body));
+  if (method === 'POST' && event.rawPath === '/reports') return archiveReport(event.body);
+  if (method === 'PUT') return storeUpload(event.pathParameters.key, event.body);
   return getOrder(event.pathParameters.id);
 };
 

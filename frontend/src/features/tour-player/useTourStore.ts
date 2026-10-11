@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { Finding, Graph, PlanChange } from '../../core/graph/types';
+import type { EndpointTrace, Finding, Graph, PlanChange } from '../../core/graph/types';
+import { buildEndpointJourney } from '../../core/journeys/endpointJourney';
 import { buildChangeJourney, buildDisasterJourney } from '../../core/journeys/impactJourneys';
 import type { Journey } from '../../core/journeys/types';
 import { stopSpeaking } from '../voice/narrator';
@@ -15,6 +16,8 @@ interface TourStoreState {
   setJourneys: (journeys: Journey[]) => void;
   startJourney: (journey: Journey) => void;
   startDisaster: (graph: Graph, findings: Finding[], failedNodeId: string) => void;
+  /** Tour one "called" endpoint: the request the backend traced from the front door to the data. */
+  startEndpoint: (graph: Graph, findings: Finding[], trace: EndpointTrace) => void;
   /** Returns false when the plan changes nothing that is in the graph. */
   startChange: (graph: Graph, findings: Finding[], planChanges: PlanChange[]) => boolean;
   next: () => void;
@@ -36,6 +39,8 @@ export const useTourStore = create<TourStoreState>((set, get) => ({
 
   startDisaster: (graph, findings, failedNodeId) =>
     get().startJourney(buildDisasterJourney(graph, findings, failedNodeId)),
+
+  startEndpoint: (graph, findings, trace) => get().startJourney(buildEndpointJourney(graph, findings, trace)),
 
   startChange: (graph, findings, planChanges) => {
     const journey = buildChangeJourney(graph, findings, planChanges);
