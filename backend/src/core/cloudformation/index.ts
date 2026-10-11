@@ -7,7 +7,7 @@ const TEMPLATE_EXTENSION = /\.(ya?ml|json)$/i;
 
 /**
  * Finds CloudFormation templates among the files (hand-written, or `cdk synth` output such as
- * `cdk.out/*.template.json`) and adds their resources to the model. Blueprint never runs `cdk synth`
+ * `cdk.out/*.template.json`) and adds their resources to the model. Ripplemap never runs `cdk synth`
  * or any CDK code, so a CDK app is analysable only when its synthesized templates are in the repository.
  */
 export function addCloudFormationTemplates(model: TfModel, files: SourceFile[]): { templates: number; resources: number } {

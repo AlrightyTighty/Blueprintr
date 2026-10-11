@@ -78,7 +78,7 @@ export interface SkippedFile {
   reason: string;
 }
 
-/** One function calling another that Blueprint could resolve to a function in the analyzed files. */
+/** One function calling another that Ripplemap could resolve to a function in the analyzed files. */
 export interface CodeCall {
   /** Qualified name of the caller. */
   caller: string;

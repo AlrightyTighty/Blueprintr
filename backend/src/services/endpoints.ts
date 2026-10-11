@@ -33,7 +33,7 @@ export async function traceEndpoint(
   const closest = outcome.closest.map((e) => `${e.method} ${e.path}`).join(', ');
   const detail =
     outcome.reason === 'no_endpoints'
-      ? 'This analysis found no API endpoints. Blueprint reads API Gateway HTTP API routes, REST API methods and Lambda function URLs from your infrastructure code.'
+      ? 'This analysis found no API endpoints. Ripplemap reads API Gateway HTTP API routes, REST API methods and Lambda function URLs from your infrastructure code.'
       : outcome.reason === 'unknown_endpoint'
         ? 'That endpoint is not part of this analysis run.'
         : `No endpoint matches ${request.method.toUpperCase()} ${request.path}.${closest ? ` Closest: ${closest}.` : ''}`;

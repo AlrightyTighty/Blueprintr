@@ -43,7 +43,7 @@ info:
     - **Terraform and CloudFormation share one graph.** CloudFormation resource types are mapped onto
       Terraform-style names (`AWS::SQS::Queue` becomes `aws_sqs_queue`), so `terraformType` and the resource
       catalog work for both. A node's `attributes` say where it came from (`iac: cloudformation`, `cfnType`,
-      `logicalId`), and CDK nodes are named after the construct path. Blueprint never runs `cdk synth`, so
+      `logicalId`), and CDK nodes are named after the construct path. Ripplemap never runs `cdk synth`, so
       CDK apps need their synthesized templates in the repository. Plan overlays are Terraform-only.
     - **Never stored:** source code, GitHub tokens in the clear, and raw Terraform plan JSON.
       Uploaded plans are parsed in memory and discarded; only addresses, actions and attribute names

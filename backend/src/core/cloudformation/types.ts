@@ -1,5 +1,5 @@
 /**
- * CloudFormation resource types mapped to the Terraform-style type names the rest of Blueprint uses
+ * CloudFormation resource types mapped to the Terraform-style type names the rest of Ripplemap uses
  * (the resource catalog, icons, linker and IAM analysis are all keyed by them). Anything not listed
  * falls back to `aws_<service>_<resource>`, which is how Terraform names most AWS resources anyway.
  */

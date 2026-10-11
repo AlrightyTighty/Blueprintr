@@ -89,7 +89,7 @@ executing anything), and `core/analysis/pipeline.ts` does the rest:
 4. Gemini resolves calls static analysis could not (labelled `inferred`); skipped when not configured.
 5. Findings: permission gaps, over-broad IAM, unmanaged resources, unresolved references.
 
-CDK: Blueprint never runs `cdk synth` or any CDK code, so a CDK app is analysable only when its synthesized
+CDK: Ripplemap never runs `cdk synth` or any CDK code, so a CDK app is analysable only when its synthesized
 templates are in the repository (commit `cdk.out/*.template.json`, or point at a folder of templates). Code to
 Lambda mapping works from `aws:asset:path` when assets are un-staged (`cdk synth --no-staging`) and otherwise
 from the handler, but only when exactly one file matches. Terraform plan overlays are Terraform-only for now.
