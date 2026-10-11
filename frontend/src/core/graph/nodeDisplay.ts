@@ -38,3 +38,44 @@ export function getNodeDisplayName(node: GraphNode): string {
   if (category === 'resource' || category === 'iam_role') return node.address;
   return node.name;
 }
+
+/** The kind of AWS thing a resource is, for choosing how to describe it. */
+export type ResourceRole = 'domain' | 'cdn' | 'api' | 'function' | 'bucket' | 'table' | 'queue' | 'role' | 'other';
+
+const ROLE_BY_TERRAFORM_TYPE: Record<string, ResourceRole> = {
+  aws_route53_record: 'domain',
+  aws_route53_zone: 'domain',
+  aws_cloudfront_distribution: 'cdn',
+  aws_api_gateway_rest_api: 'api',
+  aws_apigatewayv2_api: 'api',
+  aws_lambda_function: 'function',
+  aws_s3_bucket: 'bucket',
+  aws_dynamodb_table: 'table',
+  aws_sqs_queue: 'queue',
+  aws_iam_role: 'role',
+  aws_iam_policy: 'role',
+  aws_iam_role_policy: 'role',
+};
+
+export function getResourceRole(node: GraphNode): ResourceRole {
+  return (node.terraformType && ROLE_BY_TERRAFORM_TYPE[node.terraformType]) || 'other';
+}
+
+const FRIENDLY_NAMES: Record<ResourceRole, string> = {
+  domain: 'DNS record',
+  cdn: 'CloudFront distribution',
+  api: 'API Gateway',
+  function: 'Lambda function',
+  bucket: 'S3 bucket',
+  table: 'DynamoDB table',
+  queue: 'SQS queue',
+  role: 'IAM role',
+  other: 'resource',
+};
+
+/** e.g. "DynamoDB table". Falls back to the catalog's display name for types we don't special-case. */
+export function getFriendlyTypeName(node: GraphNode): string {
+  const role = getResourceRole(node);
+  if (role === 'other') return node.resourceType?.displayName ?? FRIENDLY_NAMES.other;
+  return FRIENDLY_NAMES[role];
+}

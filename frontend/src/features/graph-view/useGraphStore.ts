@@ -2,7 +2,9 @@ import { create } from 'zustand';
 import type { Direction } from '../../core/graph/blastRadius';
 import { computePlanChanges } from '../../core/graph/planImpact';
 import type { Finding, Graph, PlanChange } from '../../core/graph/types';
+import { extractJourneys } from '../../core/journeys/extractJourneys';
 import { parsePlan } from '../../core/terraform/parsePlan';
+import { useTourStore } from '../tour-player/useTourStore';
 import { isDemoProject } from '../../config';
 import { fetchFindings, fetchGraph, uploadPlan } from '../../services/analysisService';
 
@@ -46,7 +48,9 @@ export const useGraphStore = create<GraphStoreState>((set, get) => ({
   planNotice: null,
 
   loadGraph: async (projectId) => {
-    // Start clean so a previous project's selection and plan never show on this one.
+    // Start clean so a previous project's selection, plan and tour never show on this one.
+    useTourStore.getState().endTour();
+    useTourStore.getState().setJourneys([]);
     set({
       projectId,
       status: 'loading',
@@ -62,6 +66,7 @@ export const useGraphStore = create<GraphStoreState>((set, get) => ({
       // Ignore a slow response for a project the user has already navigated away from.
       if (get().projectId !== projectId) return;
       set({ graph, findings, status: 'ready' });
+      useTourStore.getState().setJourneys(extractJourneys(graph, findings));
     } catch (error) {
       if (get().projectId !== projectId) return;
       set({ status: 'error', errorMessage: error instanceof Error ? error.message : 'Could not load the graph.' });

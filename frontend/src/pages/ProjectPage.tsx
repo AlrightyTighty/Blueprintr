@@ -8,6 +8,14 @@ import WorkspacePage from './WorkspacePage';
 
 const POLL_INTERVAL_MS = 2000;
 
+/** Where a file path in this project can be opened on GitHub, from its first linked repository. */
+function sourceBaseUrlFor(project: ProjectDetail): string | undefined {
+  const link = project.repositories[0];
+  if (!link) return undefined;
+  const rootPath = link.rootPath ? `/${link.rootPath.replace(/^\/+|\/+$/g, '')}` : '';
+  return `${link.repository.htmlUrl}/blob/${link.branch}${rootPath}`;
+}
+
 const STAGE_LABELS: Record<RunStage, string> = {
   fetching: 'Fetching the repository',
   parsing_terraform: 'Reading Terraform',
@@ -91,6 +99,7 @@ export default function ProjectPage() {
         key={phase.project.currentRunId ?? projectId}
         projectId={projectId}
         title={phase.project.name}
+        sourceBaseUrl={sourceBaseUrlFor(phase.project)}
         actions={
           canAnalyse && hasRepository ? (
             <button className={`${secondaryButtonClass} !px-3 !py-1`} disabled={isStarting} onClick={handleStartAnalysis}>

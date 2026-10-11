@@ -4,20 +4,23 @@ import { secondaryButtonClass } from '../components/ui';
 import { isDemoProject } from '../config';
 import AskPanel from '../features/ai/AskPanel';
 import PlanInsightsPanel from '../features/ai/PlanInsightsPanel';
-import FindingsPanel from '../features/findings/FindingsPanel';
 import GraphView from '../features/graph-view/GraphView';
 import { useGraphStore } from '../features/graph-view/useGraphStore';
 import PlanPanel from '../features/plan-overlay/PlanPanel';
+import TourDock from '../features/tour-player/TourDock';
+import TourPanel from '../features/tour-player/TourPanel';
 
 interface WorkspacePageProps {
   projectId: string;
   title: string;
   /** Extra header controls, e.g. a re-run button. */
   actions?: ReactNode;
+  /** e.g. https://github.com/acme/app/blob/main, so tour stops can link to the real code. */
+  sourceBaseUrl?: string;
 }
 
 /** The graph, findings and plan panels for one project (or the bundled demo). */
-export default function WorkspacePage({ projectId, title, actions }: WorkspacePageProps) {
+export default function WorkspacePage({ projectId, title, actions, sourceBaseUrl }: WorkspacePageProps) {
   const { direction, setDirection, status, errorMessage, loadGraph } = useGraphStore();
 
   useEffect(() => {
@@ -49,21 +52,24 @@ export default function WorkspacePage({ projectId, title, actions }: WorkspacePa
         </div>
       </TopBar>
       <div className="flex min-h-0 flex-1">
-        <FindingsPanel />
-        <main className="flex-1">
-          {status === 'ready' && <GraphView />}
-          {status === 'loading' && (
-            <div className="flex h-full items-center justify-center text-indigo-300">Loading graph…</div>
-          )}
-          {status === 'error' && (
-            <div className="flex h-full flex-col items-center justify-center gap-3">
-              <p className="max-w-md text-center text-rose-300">{errorMessage}</p>
-              <button className={secondaryButtonClass} onClick={() => void loadGraph(projectId)}>
-                Retry
-              </button>
-            </div>
-          )}
-        </main>
+        <TourPanel />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main className="min-h-0 flex-1">
+            {status === 'ready' && <GraphView />}
+            {status === 'loading' && (
+              <div className="flex h-full items-center justify-center text-indigo-300">Loading graph…</div>
+            )}
+            {status === 'error' && (
+              <div className="flex h-full flex-col items-center justify-center gap-3">
+                <p className="max-w-md text-center text-rose-300">{errorMessage}</p>
+                <button className={secondaryButtonClass} onClick={() => void loadGraph(projectId)}>
+                  Retry
+                </button>
+              </div>
+            )}
+          </main>
+          {status === 'ready' && <TourDock projectId={projectId} sourceBaseUrl={sourceBaseUrl} />}
+        </div>
         <aside className="flex w-80 flex-col overflow-y-auto border-l border-indigo-900 bg-slate-950">
           <PlanPanel />
           <PlanInsightsPanel />

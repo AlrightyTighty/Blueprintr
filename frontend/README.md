@@ -60,3 +60,21 @@ GitHub must be configured to redirect to `<site>/auth/github/callback`.
 
 All backend calls live in `src/services/`. The offline stand-ins for Gemini and ElevenLabs
 (used by `/demo`, or when a plan couldn't be sent to the backend) are in `src/services/mockAi.ts`.
+
+## Tours
+
+The workspace is a guided tour of the repo (see `claude.md`). Everything below runs in the browser from
+the graph; nothing here needs a journey endpoint on the backend.
+
+| Piece                       | Where                                                                   |
+| --------------------------- | ----------------------------------------------------------------------- |
+| Journey extraction          | `src/core/journeys/extractJourneys.ts` (first day, follow a request)    |
+| Disaster and change tours   | `src/core/journeys/impactJourneys.ts`, using `core/graph/cascade.ts`    |
+| Stop scripts                | `src/core/journeys/narration.ts`, `stops.ts` (offline, graph-grounded)  |
+| Tour player + code panel    | `src/features/tour-player/` (`TourDock`, `TourPanel`, `useTourStore`)   |
+| Voice and personalities     | `src/features/voice/` (browser speech today; see `narrator.ts`)         |
+
+Swap points for the backend: scripts come from `narration.ts` (replace with Gemini-written `Stop`s) and
+narration audio comes from `narrator.ts` (replace with ElevenLabs audio per persona). The `Stop` and
+`Journey` shapes in `src/core/journeys/types.ts` follow the contract in `claude.md`.
+

@@ -3,6 +3,9 @@ import type { AskResult } from '../../core/graph/types';
 import { getNodeDisplayName } from '../../core/graph/nodeDisplay';
 import { askQuestion, type AiResult } from '../../services/analysisService';
 import { useGraphStore } from '../graph-view/useGraphStore';
+import { useTourStore } from '../tour-player/useTourStore';
+import { speak } from '../voice/narrator';
+import { PERSONAS } from '../voice/personas';
 
 const EXAMPLE_QUESTION = 'What touches the orders table?';
 
@@ -18,8 +21,14 @@ export default function AskPanel() {
     if (!question.trim()) return;
     setIsAsking(true);
     setErrorMessage(null);
+    // Interrupting a tour: the guide stops talking and waits while the question is answered.
+    const { activeJourney, personaId, pause } = useTourStore.getState();
+    if (activeJourney) pause();
     try {
-      setAnswer(await askQuestion(question.trim(), { projectId, graph, planChanges, planId }));
+      const result = await askQuestion(question.trim(), { projectId, graph, planChanges, planId });
+      setAnswer(result);
+      // Mid-tour, the guide answers out loud in their own voice; the tour stays paused until Play.
+      if (activeJourney) speak(result.data.answer, PERSONAS[personaId], () => undefined);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Could not get an answer.');
     } finally {

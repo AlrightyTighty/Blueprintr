@@ -64,7 +64,7 @@ export default function FindingsPanel() {
   }
 
   return (
-    <aside className="flex w-80 flex-col gap-4 overflow-y-auto border-r border-indigo-900 bg-slate-950 p-4 text-sm">
+    <div className="flex flex-col gap-4 overflow-y-auto p-4 text-sm">
       {selectedNode ? (
         <section className="flex flex-col gap-3">
           <div>
@@ -119,6 +119,6 @@ export default function FindingsPanel() {
           ))}
         </ul>
       </section>
-    </aside>
+    </div>
   );
 }
