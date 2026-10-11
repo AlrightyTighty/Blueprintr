@@ -2,7 +2,7 @@
 // backend/openapi.yaml, or uses bundled demo data for the demo project (see config.ts).
 import { apiGet, apiPost } from '../api';
 import { isDemoProject } from '../config';
-import { mockFindings, mockGraph } from '../core/graph/mockGraph';
+import { demoFindings, demoGraph } from '../demo/demoData';
 import type {
   AskResult,
   Briefing,
@@ -31,12 +31,12 @@ export interface PlanContext {
 }
 
 export async function fetchGraph(projectId: string): Promise<Graph> {
-  if (isDemoProject(projectId)) return mockGraph;
+  if (isDemoProject(projectId)) return demoGraph;
   return apiGet<Graph>(`/projects/${projectId}/runs/current/graph`);
 }
 
 export async function fetchFindings(projectId: string, runId: string): Promise<Finding[]> {
-  if (isDemoProject(projectId)) return mockFindings;
+  if (isDemoProject(projectId)) return demoFindings;
 
   const findings: Finding[] = [];
   let cursor: string | null = null;

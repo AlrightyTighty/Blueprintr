@@ -12,7 +12,9 @@
     "build": "npm run build --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "deploy": "npm run build --workspace frontend && npm run deploy --workspace iac",
-    "check:tours": "tsx scripts/checkTours.mts"
+    "check:tours": "tsx scripts/checkTours.mts",
+    "snapshot:demo": "tsx scripts/snapshotDemo.mts",
+    "narrate:demo": "tsx scripts/generateDemoNarration.mts"
   },
   "allowScripts": {
     "esbuild@0.28.2": true

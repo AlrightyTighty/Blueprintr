@@ -1,0 +1,1074 @@
+{
+  "graph": {
+    "runId": "demo-run",
+    "commitSha": null,
+    "nodes": [
+      {
+        "id": "d2b40e2b-ebb0-474d-a72d-9980253468f5",
+        "kind": "resource",
+        "address": "aws_apigatewayv2_api.http",
+        "name": "http",
+        "terraformType": "aws_apigatewayv2_api",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 144,
+        "lineEnd": null,
+        "attributes": {
+          "name": "ripplemap-http",
+          "protocol_type": "HTTP"
+        }
+      },
+      {
+        "id": "7e60b8f1-2392-4b7e-a376-b2a92ba2bce8",
+        "kind": "resource",
+        "address": "aws_apigatewayv2_integration.api",
+        "name": "api",
+        "terraformType": "aws_apigatewayv2_integration",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 149,
+        "lineEnd": null,
+        "attributes": {}
+      },
+      {
+        "id": "e71b9cbf-77fa-4829-9bb7-9004bba92d2e",
+        "kind": "resource",
+        "address": "aws_cloudfront_distribution.site",
+        "name": "site",
+        "terraformType": "aws_cloudfront_distribution",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 155,
+        "lineEnd": null,
+        "attributes": {
+          "aliases": [
+            "${var.domain}"
+          ]
+        }
+      },
+      {
+        "id": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "kind": "resource",
+        "address": "aws_dynamodb_table.orders",
+        "name": "orders",
+        "terraformType": "aws_dynamodb_table",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 1,
+        "lineEnd": null,
+        "attributes": {
+          "billing_mode": "PAY_PER_REQUEST",
+          "hash_key": "id",
+          "name": "orders-prod"
+        }
+      },
+      {
+        "id": "41817913-c354-4f79-b221-a0ece02c8caf",
+        "kind": "resource",
+        "address": "aws_iam_policy.worker",
+        "name": "worker",
+        "terraformType": "aws_iam_policy",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 86,
+        "lineEnd": null,
+        "attributes": {
+          "name": "worker"
+        }
+      },
+      {
+        "id": "80513c24-00ab-4308-a756-b10fc02d7d88",
+        "kind": "resource",
+        "address": "aws_iam_role.api_role",
+        "name": "api_role",
+        "terraformType": "aws_iam_role",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 24,
+        "lineEnd": null,
+        "attributes": {
+          "name": "api-role"
+        }
+      },
+      {
+        "id": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
+        "kind": "resource",
+        "address": "aws_iam_role.worker_role",
+        "name": "worker_role",
+        "terraformType": "aws_iam_role",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 63,
+        "lineEnd": null,
+        "attributes": {
+          "name": "worker-role"
+        }
+      },
+      {
+        "id": "641985a8-37a5-448b-8e39-08597e39c1c7",
+        "kind": "resource",
+        "address": "aws_iam_role_policy.api_access",
+        "name": "api_access",
+        "terraformType": "aws_iam_role_policy",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 37,
+        "lineEnd": null,
+        "attributes": {
+          "name": "api-access"
+        }
+      },
+      {
+        "id": "f92bb483-2d43-4969-99ac-fe2bbf213926",
+        "kind": "resource",
+        "address": "aws_iam_role_policy_attachment.worker",
+        "name": "worker",
+        "terraformType": "aws_iam_role_policy_attachment",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 91,
+        "lineEnd": null,
+        "attributes": {}
+      },
+      {
+        "id": "2daf9ce3-e678-4a39-b6a3-e3904c8efbb1",
+        "kind": "resource",
+        "address": "aws_lambda_event_source_mapping.jobs",
+        "name": "jobs",
+        "terraformType": "aws_lambda_event_source_mapping",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 139,
+        "lineEnd": null,
+        "attributes": {}
+      },
+      {
+        "id": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "kind": "resource",
+        "address": "aws_lambda_function.api",
+        "name": "api",
+        "terraformType": "aws_lambda_function",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 102,
+        "lineEnd": null,
+        "attributes": {
+          "function_name": "api-prod",
+          "handler": "app.handler",
+          "runtime": "nodejs20.x",
+          "envVarNames": [
+            "BUCKET",
+            "QUEUE_URL",
+            "TABLE_NAME"
+          ]
+        }
+      },
+      {
+        "id": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "kind": "resource",
+        "address": "aws_lambda_function.worker",
+        "name": "worker",
+        "terraformType": "aws_lambda_function",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 124,
+        "lineEnd": null,
+        "attributes": {
+          "function_name": "worker-prod",
+          "handler": "main.handler",
+          "runtime": "python3.12",
+          "envVarNames": [
+            "QUEUE_URL",
+            "TABLE_NAME"
+          ]
+        }
+      },
+      {
+        "id": "4b3e9eb5-8d60-4c99-a7f9-fce4d44b91de",
+        "kind": "resource",
+        "address": "aws_route53_record.site",
+        "name": "site",
+        "terraformType": "aws_route53_record",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 165,
+        "lineEnd": null,
+        "attributes": {
+          "name": "demo.ripplemap.wiki",
+          "type": "A",
+          "zone_id": "Z123"
+        }
+      },
+      {
+        "id": "5d72b00e-a3c9-43f4-bd98-a28e5216bb07",
+        "kind": "resource",
+        "address": "aws_s3_bucket.site",
+        "name": "site",
+        "terraformType": "aws_s3_bucket",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 16,
+        "lineEnd": null,
+        "attributes": {
+          "bucket": "ripplemap-site-prod"
+        }
+      },
+      {
+        "id": "c73a6887-47b7-4df9-848d-8d5001ce9650",
+        "kind": "resource",
+        "address": "aws_s3_bucket.uploads",
+        "name": "uploads",
+        "terraformType": "aws_s3_bucket",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 12,
+        "lineEnd": null,
+        "attributes": {
+          "bucket": "ripplemap-uploads-prod"
+        }
+      },
+      {
+        "id": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "kind": "resource",
+        "address": "aws_sqs_queue.jobs",
+        "name": "jobs",
+        "terraformType": "aws_sqs_queue",
+        "parentId": null,
+        "filePath": "infra/main.tf",
+        "lineStart": 20,
+        "lineEnd": null,
+        "attributes": {
+          "name": "jobs-prod"
+        }
+      },
+      {
+        "id": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "kind": "code_file",
+        "address": "src/api/app.js",
+        "name": "app.js",
+        "terraformType": null,
+        "parentId": null,
+        "filePath": "src/api/app.js",
+        "lineStart": null,
+        "lineEnd": null,
+        "attributes": {}
+      },
+      {
+        "id": "68b27e51-b3aa-4c60-8b8a-55d538dff169",
+        "kind": "code_function",
+        "address": "src/api/app.js::handler",
+        "name": "handler",
+        "terraformType": null,
+        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "filePath": "src/api/app.js",
+        "lineStart": 35,
+        "lineEnd": 38,
+        "attributes": {}
+      },
+      {
+        "id": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
+        "kind": "code_file",
+        "address": "src/worker/main.py",
+        "name": "main.py",
+        "terraformType": null,
+        "parentId": null,
+        "filePath": "src/worker/main.py",
+        "lineStart": null,
+        "lineEnd": null,
+        "attributes": {}
+      },
+      {
+        "id": "6db6fe9c-2e0c-479f-bd13-9bb3f65d2f18",
+        "kind": "code_function",
+        "address": "src/worker/main.py::handler",
+        "name": "handler",
+        "terraformType": null,
+        "parentId": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
+        "filePath": "src/worker/main.py",
+        "lineStart": 16,
+        "lineEnd": 19,
+        "attributes": {}
+      },
+      {
+        "id": "995f7ea9-2c33-4637-be36-c3d8098dc100",
+        "kind": "code_function",
+        "address": "src/api/app.js::getOrder",
+        "name": "getOrder",
+        "terraformType": null,
+        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "filePath": "src/api/app.js",
+        "lineStart": 11,
+        "lineEnd": 14,
+        "attributes": {}
+      },
+      {
+        "id": "a7393ebf-9278-403f-92d8-7804a97ef73d",
+        "kind": "code_function",
+        "address": "src/api/app.js::saveOrder",
+        "name": "saveOrder",
+        "terraformType": null,
+        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "filePath": "src/api/app.js",
+        "lineStart": 16,
+        "lineEnd": 19,
+        "attributes": {}
+      },
+      {
+        "id": "7ead2231-4494-4205-9f09-0398430f5cc8",
+        "kind": "code_function",
+        "address": "src/api/app.js::cancelOrder",
+        "name": "cancelOrder",
+        "terraformType": null,
+        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "filePath": "src/api/app.js",
+        "lineStart": 22,
+        "lineEnd": 24,
+        "attributes": {}
+      },
+      {
+        "id": "e6cb2242-72b1-4ca7-bc98-beb40e022aca",
+        "kind": "code_function",
+        "address": "src/api/app.js::archiveReport",
+        "name": "archiveReport",
+        "terraformType": null,
+        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "filePath": "src/api/app.js",
+        "lineStart": 26,
+        "lineEnd": 29,
+        "attributes": {}
+      },
+      {
+        "id": "3d322bda-8d78-4355-8a71-484b7a771f6a",
+        "kind": "unmanaged_resource",
+        "address": "unmanaged:s3:legacy-reports",
+        "name": "legacy-reports",
+        "terraformType": "aws_s3_bucket",
+        "parentId": null,
+        "filePath": null,
+        "lineStart": null,
+        "lineEnd": null,
+        "attributes": {
+          "service": "s3",
+          "reason": "Named in code but not managed by Terraform."
+        }
+      },
+      {
+        "id": "bd44c0fb-a232-41fc-acfd-9c49bf96b86a",
+        "kind": "code_function",
+        "address": "src/api/app.js::storeUpload",
+        "name": "storeUpload",
+        "terraformType": null,
+        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "filePath": "src/api/app.js",
+        "lineStart": 31,
+        "lineEnd": 33,
+        "attributes": {}
+      },
+      {
+        "id": "d5ca15b5-35de-4a21-889b-1ec05115b21f",
+        "kind": "code_function",
+        "address": "src/worker/main.py::process",
+        "name": "process",
+        "terraformType": null,
+        "parentId": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
+        "filePath": "src/worker/main.py",
+        "lineStart": 11,
+        "lineEnd": 13,
+        "attributes": {}
+      }
+    ],
+    "edges": [
+      {
+        "id": "19e34c83-4759-4b2e-b458-ac161c0be07b",
+        "source": "7e60b8f1-2392-4b7e-a376-b2a92ba2bce8",
+        "target": "d2b40e2b-ebb0-474d-a72d-9980253468f5",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "api_id",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "0ef558ea-9fcb-449e-86f0-7e47a3873479",
+        "source": "7e60b8f1-2392-4b7e-a376-b2a92ba2bce8",
+        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "relation": "invokes",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "integration_uri",
+          "referencedAttribute": "invoke_arn"
+        },
+        "explanation": null
+      },
+      {
+        "id": "3d3b087d-dc6f-4995-a9d6-56b8affa803e",
+        "source": "e71b9cbf-77fa-4829-9bb7-9004bba92d2e",
+        "target": "5d72b00e-a3c9-43f4-bd98-a28e5216bb07",
+        "relation": "routes_to",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "origin.0.domain_name",
+          "referencedAttribute": "bucket_regional_domain_name"
+        },
+        "explanation": null
+      },
+      {
+        "id": "b609718a-bb3c-4a40-b390-afccd7534da8",
+        "source": "641985a8-37a5-448b-8e39-08597e39c1c7",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "policy",
+          "referencedAttribute": "arn"
+        },
+        "explanation": null
+      },
+      {
+        "id": "11b54ea6-bd43-47f7-8dba-892a6e23ce09",
+        "source": "641985a8-37a5-448b-8e39-08597e39c1c7",
+        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "policy",
+          "referencedAttribute": "arn"
+        },
+        "explanation": null
+      },
+      {
+        "id": "fe0a55ec-f860-47fd-ab25-860899941413",
+        "source": "641985a8-37a5-448b-8e39-08597e39c1c7",
+        "target": "80513c24-00ab-4308-a756-b10fc02d7d88",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "role",
+          "referencedAttribute": "id"
+        },
+        "explanation": null
+      },
+      {
+        "id": "3cc52c61-dd3b-4e9a-aa9f-2bfd6216c20f",
+        "source": "f92bb483-2d43-4969-99ac-fe2bbf213926",
+        "target": "41817913-c354-4f79-b221-a0ece02c8caf",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "policy_arn",
+          "referencedAttribute": "arn"
+        },
+        "explanation": null
+      },
+      {
+        "id": "73ee78fb-36ee-42f4-b1a2-08342a8ce350",
+        "source": "f92bb483-2d43-4969-99ac-fe2bbf213926",
+        "target": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "role",
+          "referencedAttribute": "name"
+        },
+        "explanation": null
+      },
+      {
+        "id": "ee82c064-b202-4a1b-bcf5-668f0824f0af",
+        "source": "2daf9ce3-e678-4a39-b6a3-e3904c8efbb1",
+        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "event_source_arn",
+          "referencedAttribute": "arn"
+        },
+        "explanation": null
+      },
+      {
+        "id": "f2918854-1439-48fd-a0e2-61464c4a412f",
+        "source": "2daf9ce3-e678-4a39-b6a3-e3904c8efbb1",
+        "target": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "relation": "invokes",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "function_name",
+          "referencedAttribute": "arn"
+        },
+        "explanation": null
+      },
+      {
+        "id": "43123bf0-61c1-447b-8930-3f531daedef0",
+        "source": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "target": "c73a6887-47b7-4df9-848d-8d5001ce9650",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "environment.0.variables.BUCKET",
+          "referencedAttribute": "bucket"
+        },
+        "explanation": null
+      },
+      {
+        "id": "b43d08b1-1332-4897-96d8-658f7ddb1017",
+        "source": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "environment.0.variables.QUEUE_URL",
+          "referencedAttribute": "url"
+        },
+        "explanation": null
+      },
+      {
+        "id": "4521477a-3ab0-4c2f-8d19-441f1e22bd07",
+        "source": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "environment.0.variables.TABLE_NAME",
+          "referencedAttribute": "name"
+        },
+        "explanation": null
+      },
+      {
+        "id": "1a21cf0f-e378-4eef-8a4b-e6c2cbb85eac",
+        "source": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "target": "80513c24-00ab-4308-a756-b10fc02d7d88",
+        "relation": "assumes_role",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "role",
+          "referencedAttribute": "arn"
+        },
+        "explanation": null
+      },
+      {
+        "id": "ac31e0f0-c398-4537-9657-7f5807293b03",
+        "source": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "environment.0.variables.QUEUE_URL",
+          "referencedAttribute": "url"
+        },
+        "explanation": null
+      },
+      {
+        "id": "5af0d0fd-cabf-476d-b0da-b5795a765f45",
+        "source": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "references",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "environment.0.variables.TABLE_NAME",
+          "referencedAttribute": "name"
+        },
+        "explanation": null
+      },
+      {
+        "id": "84953f37-a3ca-4cd4-8e80-470318450c85",
+        "source": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "target": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
+        "relation": "assumes_role",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "role",
+          "referencedAttribute": "arn"
+        },
+        "explanation": null
+      },
+      {
+        "id": "33e10640-cdd6-4c08-ab26-ef4489c4e239",
+        "source": "4b3e9eb5-8d60-4c99-a7f9-fce4d44b91de",
+        "target": "e71b9cbf-77fa-4829-9bb7-9004bba92d2e",
+        "relation": "routes_to",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "attribute": "alias.0.name",
+          "referencedAttribute": "domain_name"
+        },
+        "explanation": null
+      },
+      {
+        "id": "48a79764-2a5d-438d-abab-c55d4a95dca7",
+        "source": "80513c24-00ab-4308-a756-b10fc02d7d88",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "grants_access",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "actions": [
+            "dynamodb:GetItem",
+            "dynamodb:PutItem",
+            "dynamodb:Query"
+          ],
+          "policy": "aws_iam_role_policy.api_access"
+        },
+        "explanation": null
+      },
+      {
+        "id": "452c6d39-a6e4-4b7a-9656-30fc17181970",
+        "source": "80513c24-00ab-4308-a756-b10fc02d7d88",
+        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "relation": "grants_access",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "actions": [
+            "sqs:SendMessage"
+          ],
+          "policy": "aws_iam_role_policy.api_access"
+        },
+        "explanation": null
+      },
+      {
+        "id": "9d92c8cb-38c2-4bc5-8671-17355b852c52",
+        "source": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
+        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "relation": "grants_access",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "actions": [
+            "sqs:ReceiveMessage",
+            "sqs:DeleteMessage"
+          ],
+          "policy": "aws_iam_policy.worker"
+        },
+        "explanation": null
+      },
+      {
+        "id": "69ad77b3-6cbc-43a4-a0f6-6b0ca09e3c5b",
+        "source": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "grants_access",
+        "linkMethod": "declared_reference",
+        "confidence": "certain",
+        "evidence": {
+          "actions": [
+            "dynamodb:PutItem",
+            "dynamodb:UpdateItem"
+          ],
+          "policy": "aws_iam_policy.worker"
+        },
+        "explanation": null
+      },
+      {
+        "id": "9a8cf325-f1d5-4af4-90e2-c6492e2d62c4",
+        "source": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/api",
+          "handler": true
+        },
+        "explanation": null
+      },
+      {
+        "id": "0142d7c2-da63-437a-b27a-caaa006f9513",
+        "source": "68b27e51-b3aa-4c60-8b8a-55d538dff169",
+        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/api",
+          "handler": true
+        },
+        "explanation": null
+      },
+      {
+        "id": "96aa9164-e946-4ed7-9007-51d81987ef02",
+        "source": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
+        "target": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/worker",
+          "handler": true
+        },
+        "explanation": null
+      },
+      {
+        "id": "197332a2-91ee-4fd2-a596-366710c4c6bc",
+        "source": "6db6fe9c-2e0c-479f-bd13-9bb3f65d2f18",
+        "target": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/worker",
+          "handler": true
+        },
+        "explanation": null
+      },
+      {
+        "id": "c60f6d49-2370-407f-91d6-fa73f16790ac",
+        "source": "995f7ea9-2c33-4637-be36-c3d8098dc100",
+        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/api",
+          "handler": false
+        },
+        "explanation": null
+      },
+      {
+        "id": "d26be7ef-711b-436e-9749-d4741ac7bfb5",
+        "source": "995f7ea9-2c33-4637-be36-c3d8098dc100",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "reads",
+        "linkMethod": "env_var",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 12,
+          "envVar": "TABLE_NAME",
+          "operations": [
+            "dynamodb:GetItem"
+          ],
+          "locations": [
+            "src/api/app.js:12"
+          ]
+        },
+        "explanation": null
+      },
+      {
+        "id": "0279dd79-7427-4eb5-b79e-7c8684785dcd",
+        "source": "a7393ebf-9278-403f-92d8-7804a97ef73d",
+        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/api",
+          "handler": false
+        },
+        "explanation": null
+      },
+      {
+        "id": "5baa144b-3d41-426a-b5c4-0d1e0b90e6bb",
+        "source": "a7393ebf-9278-403f-92d8-7804a97ef73d",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "writes",
+        "linkMethod": "env_var",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 17,
+          "envVar": "TABLE_NAME",
+          "operations": [
+            "dynamodb:PutItem"
+          ],
+          "locations": [
+            "src/api/app.js:17"
+          ]
+        },
+        "explanation": null
+      },
+      {
+        "id": "8f0b3889-0e57-405b-9066-8c75838314c5",
+        "source": "a7393ebf-9278-403f-92d8-7804a97ef73d",
+        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "relation": "publishes",
+        "linkMethod": "env_var",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 18,
+          "envVar": "QUEUE_URL",
+          "operations": [
+            "sqs:SendMessage"
+          ],
+          "locations": [
+            "src/api/app.js:18"
+          ]
+        },
+        "explanation": null
+      },
+      {
+        "id": "9ff5fa79-e0fa-418e-9222-61a9c8d0071c",
+        "source": "7ead2231-4494-4205-9f09-0398430f5cc8",
+        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/api",
+          "handler": false
+        },
+        "explanation": null
+      },
+      {
+        "id": "7a9c1128-8970-457a-83bd-c936493ff77c",
+        "source": "7ead2231-4494-4205-9f09-0398430f5cc8",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "writes",
+        "linkMethod": "env_var",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 23,
+          "envVar": "TABLE_NAME",
+          "operations": [
+            "dynamodb:DeleteItem"
+          ],
+          "locations": [
+            "src/api/app.js:23"
+          ]
+        },
+        "explanation": null
+      },
+      {
+        "id": "a7d8fafb-2cd0-4a8a-b8ae-b2c7f0477e21",
+        "source": "e6cb2242-72b1-4ca7-bc98-beb40e022aca",
+        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/api",
+          "handler": false
+        },
+        "explanation": null
+      },
+      {
+        "id": "ceb9ad5e-82e3-4449-8450-6b94f8d3db09",
+        "source": "e6cb2242-72b1-4ca7-bc98-beb40e022aca",
+        "target": "3d322bda-8d78-4355-8a71-484b7a771f6a",
+        "relation": "writes",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 28,
+          "hardcoded": true,
+          "value": "legacy-reports",
+          "operations": [
+            "s3:PutObject"
+          ],
+          "locations": [
+            "src/api/app.js:28"
+          ]
+        },
+        "explanation": null
+      },
+      {
+        "id": "68ef4290-a9ed-43a1-920a-82311b4037ae",
+        "source": "bd44c0fb-a232-41fc-acfd-9c49bf96b86a",
+        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/api",
+          "handler": false
+        },
+        "explanation": null
+      },
+      {
+        "id": "fbcd949e-e674-4c28-9b0a-2351a6b7cd15",
+        "source": "bd44c0fb-a232-41fc-acfd-9c49bf96b86a",
+        "target": "c73a6887-47b7-4df9-848d-8d5001ce9650",
+        "relation": "writes",
+        "linkMethod": "env_var",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 32,
+          "envVar": "BUCKET",
+          "operations": [
+            "s3:PutObject"
+          ],
+          "locations": [
+            "src/api/app.js:32"
+          ]
+        },
+        "explanation": null
+      },
+      {
+        "id": "86f4da83-6763-41a7-8429-acb2b10eb7d2",
+        "source": "d5ca15b5-35de-4a21-889b-1ec05115b21f",
+        "target": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "relation": "runs_code",
+        "linkMethod": "code_mapping",
+        "confidence": "high",
+        "evidence": {
+          "sourceDir": "src/worker",
+          "handler": false
+        },
+        "explanation": null
+      },
+      {
+        "id": "513b65d1-831c-44b8-b5b3-f27517dcb954",
+        "source": "d5ca15b5-35de-4a21-889b-1ec05115b21f",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "writes",
+        "linkMethod": "env_var",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/worker/main.py",
+          "line": 13,
+          "envVar": "TABLE_NAME",
+          "operations": [
+            "dynamodb:PutItem"
+          ],
+          "locations": [
+            "src/worker/main.py:13"
+          ]
+        },
+        "explanation": null
+      },
+      {
+        "id": "45afba4f-1df4-43fb-8d30-657fd7c83870",
+        "source": "6db6fe9c-2e0c-479f-bd13-9bb3f65d2f18",
+        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "relation": "reads",
+        "linkMethod": "env_var",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/worker/main.py",
+          "line": 19,
+          "envVar": "QUEUE_URL",
+          "operations": [
+            "sqs:ReceiveMessage"
+          ],
+          "locations": [
+            "src/worker/main.py:19"
+          ]
+        },
+        "explanation": null
+      },
+      {
+        "id": "4f33e307-90cc-483b-a648-4e5cd8f4c4ab",
+        "source": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "references",
+        "linkMethod": "env_var",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/api/app.js",
+          "line": 9,
+          "envVar": "TABLE_NAME",
+          "note": "env var read"
+        },
+        "explanation": null
+      },
+      {
+        "id": "c19e1bf9-ddce-4b71-ba80-a1c421da687e",
+        "source": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
+        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "relation": "references",
+        "linkMethod": "env_var",
+        "confidence": "high",
+        "evidence": {
+          "file": "src/worker/main.py",
+          "line": 8,
+          "envVar": "TABLE_NAME",
+          "note": "env var read"
+        },
+        "explanation": null
+      }
+    ]
+  },
+  "findings": [
+    {
+      "kind": "permission_gap",
+      "severity": "high",
+      "title": "cancelOrder calls dynamodb:DeleteItem on orders, but aws_iam_role.api_role doesn't allow it",
+      "detail": "src/api/app.js:23 calls dynamodb:DeleteItem on aws_dynamodb_table.orders. The Lambda aws_lambda_function.api runs as aws_iam_role.api_role, whose policies don't grant that action on this resource, so the call fails with AccessDenied at runtime.",
+      "nodeId": "7ead2231-4494-4205-9f09-0398430f5cc8",
+      "relatedNodeId": "80513c24-00ab-4308-a756-b10fc02d7d88",
+      "evidence": {
+        "action": "dynamodb:DeleteItem",
+        "resource": "aws_dynamodb_table.orders",
+        "role": "aws_iam_role.api_role",
+        "location": "src/api/app.js:23",
+        "inferred": false
+      },
+      "fingerprint": "demo-finding-0",
+      "id": "demo-finding-0",
+      "runId": "demo-run"
+    },
+    {
+      "kind": "over_broad_iam",
+      "severity": "high",
+      "title": "aws_iam_role.api_role allows s3:* on everything, but the code uses only s3:PutObject on aws_s3_bucket.uploads, legacy-reports",
+      "detail": "aws_iam_role_policy.api_access (statement 2) grants s3:* on all resources (*). The code that runs as this role uses s3:PutObject on aws_s3_bucket.uploads, legacy-reports. Narrowing the policy to what is used limits the damage if the function is compromised.",
+      "nodeId": "80513c24-00ab-4308-a756-b10fc02d7d88",
+      "relatedNodeId": null,
+      "evidence": {
+        "policy": "aws_iam_role_policy.api_access",
+        "statement": 2,
+        "grants": [
+          "s3:*"
+        ],
+        "usedActions": [
+          "s3:PutObject"
+        ],
+        "usedResources": [
+          "aws_s3_bucket.uploads",
+          "legacy-reports"
+        ]
+      },
+      "fingerprint": "demo-finding-1",
+      "id": "demo-finding-1",
+      "runId": "demo-run"
+    },
+    {
+      "kind": "unmanaged_resource",
+      "severity": "medium",
+      "title": "\"legacy-reports\" (s3) is hardcoded in code but not managed by Terraform",
+      "detail": "src/api/app.js:28 (s3:PutObject). No Terraform resource of this type has that name, so changes to it can't be reviewed or reproduced and it may have drifted.",
+      "nodeId": "3d322bda-8d78-4355-8a71-484b7a771f6a",
+      "relatedNodeId": "e6cb2242-72b1-4ca7-bc98-beb40e022aca",
+      "evidence": {
+        "service": "s3",
+        "name": "legacy-reports",
+        "locations": [
+          "src/api/app.js:28"
+        ],
+        "actions": [
+          "s3:PutObject"
+        ]
+      },
+      "fingerprint": "demo-finding-2",
+      "id": "demo-finding-2",
+      "runId": "demo-run"
+    }
+  ],
+  "sourceFiles": {
+    "infra/main.tf": "resource \"aws_dynamodb_table\" \"orders\" {\r\n  name         = \"orders-${var.env}\"\r\n  billing_mode = \"PAY_PER_REQUEST\"\r\n  hash_key     = \"id\"\r\n\r\n  attribute {\r\n    name = \"id\"\r\n    type = \"S\"\r\n  }\r\n}\r\n\r\nresource \"aws_s3_bucket\" \"uploads\" {\r\n  bucket = \"ripplemap-uploads-${var.env}\"\r\n}\r\n\r\nresource \"aws_s3_bucket\" \"site\" {\r\n  bucket = \"ripplemap-site-${var.env}\"\r\n}\r\n\r\nresource \"aws_sqs_queue\" \"jobs\" {\r\n  name = \"jobs-${var.env}\"\r\n}\r\n\r\nresource \"aws_iam_role\" \"api_role\" {\r\n  name = \"api-role\"\r\n  assume_role_policy = jsonencode({\r\n    Version = \"2012-10-17\"\r\n    Statement = [{\r\n      Effect    = \"Allow\"\r\n      Action    = \"sts:AssumeRole\"\r\n      Principal = { Service = \"lambda.amazonaws.com\" }\r\n    }]\r\n  })\r\n}\r\n\r\n# Planted trap: s3:* on everything, while the code only writes one bucket.\r\nresource \"aws_iam_role_policy\" \"api_access\" {\r\n  name = \"api-access\"\r\n  role = aws_iam_role.api_role.id\r\n  # Planted trap: the code also calls dynamodb:DeleteItem, which is not allowed here.\r\n  policy = jsonencode({\r\n    Version = \"2012-10-17\"\r\n    Statement = [\r\n      {\r\n        Effect   = \"Allow\"\r\n        Action   = [\"dynamodb:GetItem\", \"dynamodb:PutItem\", \"dynamodb:Query\"]\r\n        Resource = [aws_dynamodb_table.orders.arn, \"${aws_dynamodb_table.orders.arn}/index/*\"]\r\n      },\r\n      {\r\n        Effect   = \"Allow\"\r\n        Action   = \"s3:*\"\r\n        Resource = \"*\"\r\n      },\r\n      {\r\n        Effect   = \"Allow\"\r\n        Action   = [\"sqs:SendMessage\"]\r\n        Resource = aws_sqs_queue.jobs.arn\r\n      }\r\n    ]\r\n  })\r\n}\r\n\r\nresource \"aws_iam_role\" \"worker_role\" {\r\n  name = \"worker-role\"\r\n  assume_role_policy = jsonencode({\r\n    Version = \"2012-10-17\"\r\n    Statement = [{\r\n      Effect    = \"Allow\"\r\n      Action    = \"sts:AssumeRole\"\r\n      Principal = { Service = \"lambda.amazonaws.com\" }\r\n    }]\r\n  })\r\n}\r\n\r\ndata \"aws_iam_policy_document\" \"worker\" {\r\n  statement {\r\n    actions   = [\"sqs:ReceiveMessage\", \"sqs:DeleteMessage\"]\r\n    resources = [aws_sqs_queue.jobs.arn]\r\n  }\r\n  statement {\r\n    actions   = [\"dynamodb:PutItem\", \"dynamodb:UpdateItem\"]\r\n    resources = [aws_dynamodb_table.orders.arn]\r\n  }\r\n}\r\n\r\nresource \"aws_iam_policy\" \"worker\" {\r\n  name   = \"worker\"\r\n  policy = data.aws_iam_policy_document.worker.json\r\n}\r\n\r\nresource \"aws_iam_role_policy_attachment\" \"worker\" {\r\n  role       = aws_iam_role.worker_role.name\r\n  policy_arn = aws_iam_policy.worker.arn\r\n}\r\n\r\ndata \"archive_file\" \"api\" {\r\n  type        = \"zip\"\r\n  source_dir  = \"${path.module}/../src/api\"\r\n  output_path = \"${path.module}/api.zip\"\r\n}\r\n\r\nresource \"aws_lambda_function\" \"api\" {\r\n  function_name = \"api-${var.env}\"\r\n  role          = aws_iam_role.api_role.arn\r\n  runtime       = \"nodejs20.x\"\r\n  handler       = \"app.handler\"\r\n  filename      = data.archive_file.api.output_path\r\n\r\n  environment {\r\n    variables = {\r\n      TABLE_NAME = aws_dynamodb_table.orders.name\r\n      BUCKET     = aws_s3_bucket.uploads.bucket\r\n      QUEUE_URL  = aws_sqs_queue.jobs.url\r\n    }\r\n  }\r\n}\r\n\r\ndata \"archive_file\" \"worker\" {\r\n  type        = \"zip\"\r\n  source_dir  = \"${path.module}/../src/worker\"\r\n  output_path = \"${path.module}/worker.zip\"\r\n}\r\n\r\nresource \"aws_lambda_function\" \"worker\" {\r\n  function_name = \"worker-${var.env}\"\r\n  role          = aws_iam_role.worker_role.arn\r\n  runtime       = \"python3.12\"\r\n  handler       = \"main.handler\"\r\n  filename      = data.archive_file.worker.output_path\r\n\r\n  environment {\r\n    variables = {\r\n      TABLE_NAME = aws_dynamodb_table.orders.name\r\n      QUEUE_URL  = aws_sqs_queue.jobs.url\r\n    }\r\n  }\r\n}\r\n\r\nresource \"aws_lambda_event_source_mapping\" \"jobs\" {\r\n  event_source_arn = aws_sqs_queue.jobs.arn\r\n  function_name    = aws_lambda_function.worker.arn\r\n}\r\n\r\nresource \"aws_apigatewayv2_api\" \"http\" {\r\n  name          = \"ripplemap-http\"\r\n  protocol_type = \"HTTP\"\r\n}\r\n\r\nresource \"aws_apigatewayv2_integration\" \"api\" {\r\n  api_id           = aws_apigatewayv2_api.http.id\r\n  integration_type = \"AWS_PROXY\"\r\n  integration_uri  = aws_lambda_function.api.invoke_arn\r\n}\r\n\r\nresource \"aws_cloudfront_distribution\" \"site\" {\r\n  enabled = true\r\n  aliases = [var.domain]\r\n\r\n  origin {\r\n    domain_name = aws_s3_bucket.site.bucket_regional_domain_name\r\n    origin_id   = \"site\"\r\n  }\r\n}\r\n\r\nresource \"aws_route53_record\" \"site\" {\r\n  zone_id = \"Z123\"\r\n  name    = var.domain\r\n  type    = \"A\"\r\n\r\n  alias {\r\n    name                   = aws_cloudfront_distribution.site.domain_name\r\n    zone_id                = aws_cloudfront_distribution.site.hosted_zone_id\r\n    evaluate_target_health = false\r\n  }\r\n}\r\n",
+    "infra/variables.tf": "variable \"env\" {\r\n  type    = string\r\n  default = \"prod\"\r\n}\r\n\r\nvariable \"domain\" {\r\n  type    = string\r\n  default = \"demo.ripplemap.wiki\"\r\n}\r\n",
+    "src/api/app.js": "const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');\r\nconst { DynamoDBDocumentClient, GetCommand, PutCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');\r\nconst { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');\r\nconst { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');\r\n\r\nconst db = DynamoDBDocumentClient.from(new DynamoDBClient({}));\r\nconst s3 = new S3Client({});\r\nconst sqs = new SQSClient({});\r\nconst TABLE = process.env.TABLE_NAME;\r\n\r\nasync function getOrder(id) {\r\n  const out = await db.send(new GetCommand({ TableName: TABLE, Key: { id } }));\r\n  return out.Item;\r\n}\r\n\r\nasync function saveOrder(order) {\r\n  await db.send(new PutCommand({ TableName: process.env.TABLE_NAME, Item: order }));\r\n  await sqs.send(new SendMessageCommand({ QueueUrl: process.env.QUEUE_URL, MessageBody: JSON.stringify(order) }));\r\n}\r\n\r\n// Planted trap: deleting needs dynamodb:DeleteItem, which the role does not grant.\r\nasync function cancelOrder(id) {\r\n  await db.send(new DeleteCommand({ TableName: TABLE, Key: { id } }));\r\n}\r\n\r\nasync function archiveReport(body) {\r\n  // Planted trap: this bucket is hardcoded and not in Terraform.\r\n  await s3.send(new PutObjectCommand({ Bucket: 'legacy-reports', Key: 'daily.csv', Body: body }));\r\n}\r\n\r\nasync function storeUpload(key, body) {\r\n  await s3.send(new PutObjectCommand({ Bucket: process.env.BUCKET, Key: key, Body: body }));\r\n}\r\n\r\nexports.handler = async (event) => {\r\n  if (event.requestContext.http.method === 'DELETE') return cancelOrder(event.pathParameters.id);\r\n  return getOrder(event.pathParameters.id);\r\n};\r\n\r\nmodule.exports = { saveOrder, archiveReport, storeUpload };\r\n",
+    "src/worker/main.py": "import json\r\nimport os\r\n\r\nimport boto3\r\n\r\ndynamodb = boto3.resource(\"dynamodb\")\r\nsqs = boto3.client(\"sqs\")\r\ntable = dynamodb.Table(os.environ[\"TABLE_NAME\"])\r\n\r\n\r\ndef process(record):\r\n    order = json.loads(record[\"body\"])\r\n    table.put_item(Item=order)\r\n\r\n\r\ndef handler(event, context):\r\n    for record in event[\"Records\"]:\r\n        process(record)\r\n    sqs.receive_message(QueueUrl=os.environ[\"QUEUE_URL\"], MaxNumberOfMessages=1)\r\n"
+  }
+}
