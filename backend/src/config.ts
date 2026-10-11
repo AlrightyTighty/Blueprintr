@@ -25,6 +25,12 @@ const envSchema = z.object({
   GITHUB_CLIENT_ID: optionalString,
   GITHUB_CLIENT_SECRET: optionalString,
   GITHUB_REDIRECT_URI: optionalString,
+  /**
+   * Optional token for reading PUBLIC repositories. Without it GitHub allows only 60 requests an hour
+   * per server address (about 20 analyses). Use a token with no scopes (or a fine-grained token limited
+   * to public repositories): it is only ever used for repositories that GitHub reports as public.
+   */
+  GITHUB_API_TOKEN: optionalString,
 
   GEMINI_API_KEY: optionalString,
   GEMINI_MODEL: z.string().default('gemini-3.8-flash'),

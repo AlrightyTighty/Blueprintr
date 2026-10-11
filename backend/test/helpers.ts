@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import type { SourceFile } from '../src/core/terraform/model.js';
 
 const FIXTURES = join(import.meta.dirname, 'fixtures');
@@ -12,7 +12,8 @@ export function loadFixture(name: string): SourceFile[] {
     for (const entry of readdirSync(dir)) {
       const full = join(dir, entry);
       if (statSync(full).isDirectory()) walk(full);
-      else files.push({ path: relative(root, full), content: readFileSync(full, 'utf8') });
+      // Always "/", as in a GitHub download. On Windows relative() gives "\", which broke mapping code to Terraform.
+      else files.push({ path: relative(root, full).split(sep).join('/'), content: readFileSync(full, 'utf8') });
     }
   };
   walk(root);

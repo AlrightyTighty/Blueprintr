@@ -39,10 +39,15 @@ export interface GithubClient {
   getProfile(accessToken: string): Promise<GithubProfile>;
   listRepositories(accessToken: string, options: { page: number; q?: string }): Promise<{ items: GithubRepo[]; nextPage: number | null }>;
   getRepository(accessToken: string, githubId: number): Promise<GithubRepo>;
-  /** Resolves a branch, tag or SHA to a full commit SHA. */
-  resolveCommit(accessToken: string, fullName: string, ref: string): Promise<string>;
-  /** Source files (Terraform and app code) at a commit, read from GitHub's tarball. Never executed. */
-  downloadFiles(accessToken: string, fullName: string, sha: string, options: DownloadOptions): Promise<RepoFile[]>;
+  /**
+   * Looks a repository up by "owner/repo". With a null token it sees only public repositories (what
+   * anyone can open in a browser); a repository that is private or missing is reported as not found.
+   */
+  getRepositoryByName(accessToken: string | null, fullName: string): Promise<GithubRepo>;
+  /** Resolves a branch, tag or SHA to a full commit SHA. A null token reads public repositories. */
+  resolveCommit(accessToken: string | null, fullName: string, ref: string): Promise<string>;
+  /** Source files (Terraform and app code) at a commit, read from GitHub's tarball. Never executed. A null token reads public repositories. */
+  downloadFiles(accessToken: string | null, fullName: string, sha: string, options: DownloadOptions): Promise<RepoFile[]>;
 }
 
 const API = 'https://api.github.com';
@@ -67,12 +72,17 @@ function headers(accessToken?: string, extra: Record<string, string> = {}): Reco
   };
 }
 
-async function github(path: string, accessToken: string, init: RequestInit = {}): Promise<Response> {
+/**
+ * Calls GitHub. A null token means "public only": the optional server token (GITHUB_API_TOKEN) is used if
+ * set, to raise the rate limit, otherwise the request is anonymous.
+ */
+async function github(path: string, accessToken: string | null, init: RequestInit = {}): Promise<Response> {
+  const token = accessToken ?? getConfig().GITHUB_API_TOKEN ?? undefined;
   let res: Response;
   try {
     res = await fetch(path.startsWith('http') ? path : `${API}${path}`, {
       ...init,
-      headers: { ...headers(accessToken), ...(init.headers as Record<string, string> | undefined) },
+      headers: { ...headers(token), ...(init.headers as Record<string, string> | undefined) },
       signal: AbortSignal.timeout(30_000),
     });
   } catch {
@@ -80,7 +90,10 @@ async function github(path: string, accessToken: string, init: RequestInit = {})
   }
   if (res.status === 401) throw conflict('github_token_invalid', 'GitHub rejected the stored token. Reconnect your GitHub account.');
   if (res.status === 403 || res.status === 429) {
-    throw new AppError(502, 'github_rate_limited', 'Upstream service failed', 'GitHub refused the request (rate limit or permissions).');
+    const detail = token
+      ? 'GitHub refused the request (rate limit or permissions).'
+      : 'GitHub refused the request. Anonymous access is limited to 60 requests an hour; try again later, or set GITHUB_API_TOKEN.';
+    throw new AppError(502, 'github_rate_limited', 'Upstream service failed', detail);
   }
   if (res.status === 404) throw notFound('The GitHub resource (it may not exist, or your account cannot see it)');
   if (!res.ok) throw badGateway('GitHub', `GitHub responded with ${res.status}.`);
@@ -177,14 +190,20 @@ export class HttpGithubClient implements GithubClient {
     return toRepo(await (await github(`/repositories/${githubId}`, accessToken)).json());
   }
 
-  async resolveCommit(accessToken: string, fullName: string, ref: string): Promise<string> {
+  async getRepositoryByName(accessToken: string | null, fullName: string): Promise<GithubRepo> {
+    const [owner, repo] = fullName.split('/');
+    if (!owner || !repo || fullName.split('/').length !== 2) throw notFound('The GitHub repository');
+    return toRepo(await (await github(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, accessToken)).json());
+  }
+
+  async resolveCommit(accessToken: string | null, fullName: string, ref: string): Promise<string> {
     const res = await github(`/repos/${fullName}/commits/${encodeURIComponent(ref)}`, accessToken, {
       headers: { Accept: 'application/vnd.github.sha' },
     });
     return (await res.text()).trim();
   }
 
-  async downloadFiles(accessToken: string, fullName: string, sha: string, options: DownloadOptions): Promise<RepoFile[]> {
+  async downloadFiles(accessToken: string | null, fullName: string, sha: string, options: DownloadOptions): Promise<RepoFile[]> {
     const root = options.rootPath.replace(/^\/+|\/+$/g, '');
     const prefix = root ? `${root}/` : '';
     const res = await github(`/repos/${fullName}/tarball/${sha}`, accessToken);

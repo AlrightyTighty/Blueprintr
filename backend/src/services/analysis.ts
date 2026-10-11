@@ -52,6 +52,17 @@ export async function startRun(actor: Actor, projectId: string, input: StartRunI
   return startRunInternal(db, projectId, actor.userId!, input);
 }
 
+/**
+ * The token to read a linked repository with. A public repository needs none, so it keeps working even if
+ * no account is attached (or the account was removed). A private one needs the account that linked it.
+ */
+async function tokenForLink(db: Db, link: links.ProjectRepositoryRow): Promise<string | null> {
+  const connection = link.linkedByConnectionId ? await connections.findById(db, link.linkedByConnectionId) : null;
+  if (connection) return githubTokenFor(db, connection);
+  if (!link.repository.isPrivate) return null;
+  throw conflict('no_github_connection', 'No GitHub connection is available for this repository. Link it again with a connected account.');
+}
+
 /** Resolves the commit, records the run, and hands it to the dispatcher. Returns before analysis starts. */
 export async function startRunInternal(db: Db, projectId: string, userId: string, input: StartRunInput) {
   const linked = await links.list(db, projectId);
@@ -63,9 +74,7 @@ export async function startRunInternal(db: Db, projectId: string, userId: string
     link = linked[0]!;
   }
 
-  const connection = link.linkedByConnectionId ? await connections.findById(db, link.linkedByConnectionId) : null;
-  if (!connection) throw conflict('no_github_connection', 'No GitHub connection is available for this repository. Link it again with a connected account.');
-  const token = await githubTokenFor(db, connection);
+  const token = await tokenForLink(db, link);
   const commitSha = await integrations().github.resolveCommit(token, link.repository.fullName, input.commitSha ?? link.branch);
 
   const run = await withTransaction(async (tx) => {
@@ -120,14 +129,23 @@ export async function executeRun(runId: string): Promise<void> {
     await runs.updateProgress(db, runId, { status: 'running', markStarted: true, stats: { stage: 'fetching' } });
 
     const link = run.repository ? await links.findByRepository(db, projectId, run.repository.id, run.rootPath) : null;
-    const connection = link?.linkedByConnectionId ? await connections.findById(db, link.linkedByConnectionId) : null;
-    if (!run.repository || !connection || !run.commitSha) {
+    if (!run.repository || !link || !run.commitSha) {
       throw new AppError(409, 'no_github_connection', 'Conflict', 'The repository is no longer linked with a usable GitHub connection.');
     }
-    const files = await integrations().github.downloadFiles(await githubTokenFor(db, connection), run.repository.fullName, run.commitSha, {
+    const files = await integrations().github.downloadFiles(await tokenForLink(db, link), run.repository.fullName, run.commitSha, {
       rootPath: run.rootPath,
       ...LIMITS,
     });
+    // Any repository can be linked, so say plainly when there is nothing to read rather than show an empty graph.
+    if (files.length === 0) {
+      const where = run.rootPath ? ` in "${run.rootPath}"` : '';
+      throw new AppError(
+        422,
+        'no_source_files',
+        'Validation failed',
+        `No Terraform, Python or JavaScript/TypeScript files were found${where}. If the infrastructure code is in a subfolder, link that folder instead.`,
+      );
+    }
 
     const output = await analyze({
       files,

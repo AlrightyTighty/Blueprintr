@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { badGateway, notFound } from '../src/http/errors.js';
 import type { ElevenLabsClient } from '../src/integrations/elevenlabs.js';
 import type { GeminiClient } from '../src/integrations/gemini.js';
 import type { GithubClient, GithubProfile, GithubRepo, RepoFile } from '../src/integrations/github.js';
@@ -58,10 +59,23 @@ export class FakeGithub implements GithubClient {
     if (!repo) throw new Error('not found');
     return repo;
   }
-  async resolveCommit(_token: string, _fullName: string, ref: string) {
-    return /^[0-9a-f]{40}$/.test(ref) ? ref : COMMIT;
+  async getRepositoryByName(token: string | null, fullName: string) {
+    const repo = this.repos.find((r) => r.fullName.toLowerCase() === fullName.toLowerCase());
+    // Like GitHub: a private repository looks like it does not exist to someone who cannot see it.
+    if (!repo || (repo.isPrivate && !token)) throw notFound('The GitHub repository');
+    return repo;
   }
-  async downloadFiles(_token: string, _fullName: string, _sha: string, options: { rootPath: string }) {
+  /** When set, only these branch names resolve; others fail like GitHub's "no commit found". */
+  branches: Set<string> | null = null;
+  /** The token each download used (null = a public, tokenless read). */
+  downloadTokens: (string | null)[] = [];
+  async resolveCommit(_token: string | null, _fullName: string, ref: string) {
+    const isSha = /^[0-9a-f]{40}$/.test(ref);
+    if (this.branches && !isSha && !this.branches.has(ref)) throw badGateway('GitHub', 'No commit found.');
+    return isSha ? ref : COMMIT;
+  }
+  async downloadFiles(token: string | null, _fullName: string, _sha: string, options: { rootPath: string }) {
+    this.downloadTokens.push(token);
     this.downloads++;
     const prefix = options.rootPath ? `${options.rootPath}/` : '';
     return this.files.filter((f) => f.path.startsWith(prefix)).map((f) => ({ ...f, path: f.path.slice(prefix.length) }));

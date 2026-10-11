@@ -113,7 +113,7 @@ export default function DashboardPage() {
             <p className="text-slate-300">{search ? 'No projects match that search.' : 'No projects yet.'}</p>
             {!search && (
               <p className="mt-1 text-sm text-slate-500">
-                Link a GitHub repo and Ripplemap will map its Terraform and code into one graph.
+                Paste a link to any public GitHub repo and Ripplemap will map its Terraform and code into one graph.
               </p>
             )}
           </div>

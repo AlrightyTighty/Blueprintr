@@ -2071,6 +2071,17 @@ components:
           properties:
             id: { type: string, format: uuid }
     LinkRepositoryRequest:
+      description: |
+        Either a repository picked from a connected GitHub account (`connectionId` + `githubRepoId`), or
+        any GitHub link (`url`).
+
+        With `url`, a **public** repository needs no GitHub account at all. If the link is not public, the
+        user's connected accounts are tried in turn, so a private repository they can see works too; if
+        none can see it the request fails with `422` on field `url`. Only github.com links are accepted.
+      oneOf:
+        - $ref: '#/components/schemas/LinkRepositoryByConnectionRequest'
+        - $ref: '#/components/schemas/LinkRepositoryByUrlRequest'
+    LinkRepositoryByConnectionRequest:
       type: object
       required: [connectionId, githubRepoId]
       properties:
@@ -2086,6 +2097,25 @@ components:
           type: string
           default: ''
           description: Subfolder to analyze (monorepos). Empty means the repository root.
+    LinkRepositoryByUrlRequest:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          maxLength: 500
+          description: |
+            A GitHub repository link: `https://github.com/owner/repo`, with or without `www`, a trailing
+            slash or `.git`; `github.com/owner/repo`; `git@github.com:owner/repo.git`; or `owner/repo`.
+            A `/tree/<branch>/<folder>` link also sets the branch and folder (branch names containing
+            slashes are resolved against GitHub); a `/blob/...` link uses the folder the file is in.
+          examples: [https://github.com/acme/orders-service/tree/main/infra]
+        branch:
+          type: string
+          description: Overrides any branch in the link. Defaults to the repository's default branch.
+        rootPath:
+          type: string
+          description: Overrides any folder in the link. Empty or omitted means the repository root.
     ProjectRepository:
       type: object
       required: [id, repository, branch, rootPath, createdAt]

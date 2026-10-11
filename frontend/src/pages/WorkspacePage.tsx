@@ -22,7 +22,7 @@ interface WorkspacePageProps {
 
 /** The graph, findings and plan panels for one project (or the bundled demo). */
 export default function WorkspacePage({ projectId, title, actions, sourceBaseUrl }: WorkspacePageProps) {
-  const { direction, setDirection, status, errorMessage, loadGraph } = useGraphStore();
+  const { direction, setDirection, status, errorMessage, loadGraph, graph } = useGraphStore();
 
   useEffect(() => {
     void loadGraph(projectId);
@@ -57,7 +57,19 @@ export default function WorkspacePage({ projectId, title, actions, sourceBaseUrl
         <TourPanel />
         <div className="flex min-w-0 flex-1 flex-col">
           <main className="min-h-0 flex-1">
-            {status === 'ready' && <GraphView />}
+            {status === 'ready' && graph.nodes.length > 0 && <GraphView />}
+            {status === 'ready' && graph.nodes.length === 0 && (
+              <div className="flex h-full items-center justify-center px-6">
+                <div className="max-w-md text-center">
+                  <p className="text-lg text-indigo-200">Nothing to draw yet</p>
+                  <p className="mt-2 text-sm text-slate-400">
+                    Ripplemap read this repository but found no AWS resources it supports (Lambda, S3, DynamoDB, SQS,
+                    IAM, API Gateway, CloudFront, Route 53), and no code that uses them. Terraform modules, count and
+                    for_each aren't supported yet. If the infrastructure lives in a subfolder, link that folder instead.
+                  </p>
+                </div>
+              </div>
+            )}
             {status === 'loading' && (
               <div className="flex h-full items-center justify-center text-indigo-300">Loading graph…</div>
             )}

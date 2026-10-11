@@ -4,12 +4,7 @@ import { actorOf, requireUser, userActor } from '../../http/context.js';
 import { pageQuery, parse, projectParams, projectRoleEnum, uuid } from '../../http/validation.js';
 import * as projects from '../../services/projects.js';
 
-const linkRepository = z.object({
-  connectionId: uuid,
-  githubRepoId: z.number().int().positive(),
-  branch: z.string().min(1).max(250).optional(),
-  rootPath: z.string().max(500).optional(),
-});
+import { linkRepositorySchema as linkRepository } from '../repositories/linkInput.js';
 
 const routes: FastifyPluginAsync = async (app) => {
   app.get('/projects', async (req) => {

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { actorOf, userActor } from '../../http/context.js';
 import { parse, projectParams, uuid } from '../../http/validation.js';
 import * as repositories from '../../services/repositories.js';
+import { linkRepositorySchema } from './linkInput.js';
 
 const linkParams = projectParams.extend({ linkId: uuid });
 
@@ -14,15 +15,7 @@ const routes: FastifyPluginAsync = async (app) => {
 
   app.post('/projects/:projectId/repositories', async (req, reply) => {
     const { projectId } = parse(projectParams, req.params);
-    const body = parse(
-      z.object({
-        connectionId: uuid,
-        githubRepoId: z.number().int().positive(),
-        branch: z.string().min(1).max(250).optional(),
-        rootPath: z.string().max(500).optional(),
-      }),
-      req.body,
-    );
+    const body = parse(linkRepositorySchema, req.body);
     return reply.code(201).send(await repositories.linkRepository(userActor(req), projectId, body));
   });
 

@@ -5,7 +5,7 @@ import { useAuthStore } from '../features/auth/useAuthStore';
 const STEPS = [
   {
     title: 'Link a repo',
-    body: 'Point Ripplemap at a GitHub repository. It reads your Terraform and your Python or JavaScript, and never runs either.',
+    body: 'Paste a link to any public GitHub repository, no GitHub login needed (connect GitHub only for private ones). It reads the Terraform and the Python or JavaScript, and never runs either.',
   },
   {
     title: 'See one graph',

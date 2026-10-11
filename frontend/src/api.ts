@@ -27,6 +27,11 @@ export class ApiError extends Error {
   ) {
     super(message);
   }
+
+  /** The most helpful sentence for a person: a field's own message ("We couldn't find that repository…") beats "The request failed validation." */
+  get friendlyMessage(): string {
+    return this.fieldErrors[0]?.message ?? this.message;
+  }
 }
 
 /** The backend returns errors as application/problem+json; prefer its detail over a bare status. */

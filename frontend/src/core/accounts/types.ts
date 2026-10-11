@@ -48,13 +48,24 @@ export interface Repository extends GithubRepository {
   id: string;
 }
 
-export interface LinkRepositoryRequest {
-  connectionId: string;
-  githubRepoId: number;
-  branch?: string;
-  /** Subfolder to analyze (monorepos). Empty means the repository root. */
-  rootPath?: string;
-}
+/**
+ * Either a repository picked from a connected GitHub account, or any GitHub link. A link to a public
+ * repository needs no GitHub account; a private one is read through the user's connected account.
+ */
+export type LinkRepositoryRequest =
+  | {
+      connectionId: string;
+      githubRepoId: number;
+      branch?: string;
+      /** Subfolder to analyze (monorepos). Empty means the repository root. */
+      rootPath?: string;
+    }
+  | {
+      /** e.g. https://github.com/owner/repo, or owner/repo. A /tree/<branch>/<folder> link sets the branch and folder. */
+      url: string;
+      branch?: string;
+      rootPath?: string;
+    };
 
 export interface ProjectRepository {
   id: string;
