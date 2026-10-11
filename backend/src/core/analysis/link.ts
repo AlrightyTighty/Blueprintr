@@ -435,7 +435,7 @@ export function linkGraph(model: TfModel, facts: CodeFacts): LinkResult {
         } else if (binding?.kind === 'literal') {
           literalTarget(call, binding.value, source, lambda, { ...location, envVar: envName });
         } else if (binding?.kind === 'unresolved') {
-          result.pending.push({ call, source, lambdas: [lambda], reason: `${envName} is set from an expression Blueprint can't resolve.` });
+          result.pending.push({ call, source, lambdas: [lambda], reason: `${envName} is set from an expression Ripplemap can't resolve.` });
         } else {
           result.missingEnv.push({ call, source, envVar: envName, lambda });
         }

@@ -1,6 +1,6 @@
-# Blueprint database
+# Ripplemap database
 
-PostgreSQL schema for Blueprint, kept as plain numbered `.sql` files. Target: an RDS Postgres
+PostgreSQL schema for Ripplemap, kept as plain numbered `.sql` files. Target: an RDS Postgres
 instance (tested on Postgres 16).
 
 ## Principles
@@ -170,7 +170,7 @@ Suggested `metadata`: `{"from":"viewer","to":"editor","user":"bob"}` for a role 
 Requires `psql` on the machine running the script.
 
 ```bash
-DATABASE_URL=postgres://blueprint_app:PASSWORD@HOST:5432/blueprint ./migrate.sh
+DATABASE_URL=postgres://ripplemap_app:PASSWORD@HOST:5432/ripplemap ./migrate.sh
 ```
 
 Already-applied files are skipped. Each file runs in a single transaction together with its
@@ -181,18 +181,18 @@ migrated dev database: `psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f smoke_test.sq
 Quick local database:
 
 ```bash
-docker run -d --name blueprint-pg -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres:16
+docker run -d --name ripplemap-pg -e POSTGRES_PASSWORD=dev -p 5432:5432 postgres:16
 DATABASE_URL=postgres://postgres:dev@localhost:5432/postgres ./migrate.sh
 ```
 
 ### On the shared RDS instance
 
-Give Blueprint its own database and login so it can't touch your other projects. Run as the
+Give Ripplemap its own database and login so it can't touch your other projects. Run as the
 instance's admin user:
 
 ```sql
-CREATE ROLE blueprint_app LOGIN PASSWORD '<generate a strong password>';
-CREATE DATABASE blueprint OWNER blueprint_app;
+CREATE ROLE ripplemap_app LOGIN PASSWORD '<generate a strong password>';
+CREATE DATABASE ripplemap OWNER ripplemap_app;
 ```
 
 The owner can create the `citext` extension itself (it is a trusted extension on PG13+).

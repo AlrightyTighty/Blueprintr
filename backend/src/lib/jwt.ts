@@ -5,7 +5,7 @@ import { AppError, unauthorized } from '../http/errors.js';
 /** What a token is for. A token of one type is never accepted as another. */
 export type TokenType = 'access' | 'voice_tool' | 'gh_state' | 'gh_register';
 
-const ISSUER = 'blueprint';
+const ISSUER = 'ripplemap';
 
 function secret(): Uint8Array {
   return new TextEncoder().encode(getConfig().JWT_SECRET);

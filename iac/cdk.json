@@ -5,7 +5,7 @@
     "exclude": ["node_modules", "cdk.out"]
   },
   "context": {
-    "projectName": "orion",
+    "projectName": "ripplemap",
     "@aws-cdk/core:defaultCrossStackReferences": "strong"
   }
 }

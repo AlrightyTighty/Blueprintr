@@ -20,8 +20,8 @@ lib/
 
 | Stack            | Resources                                                     | Outputs   |
 | ---------------- | ------------------------------------------------------------- | --------- |
-| `orion-backend`  | `NodejsFunction` (Node latest, arm64) behind an HTTP API, plus a private S3 bucket for voice briefing audio | `ApiUrl`  |
-| `orion-frontend` | Private S3 bucket, CloudFront distribution, `BucketDeployment` | `SiteUrl` |
+| `ripplemap-backend`  | `NodejsFunction` (Node latest, arm64) behind an HTTP API, plus a private S3 bucket for voice briefing audio | `ApiUrl`  |
+| `ripplemap-frontend` | Private S3 bucket, CloudFront distribution, `BucketDeployment` | `SiteUrl` |
 
 The frontend stack takes the backend's API URL as a prop and writes it to
 `config.json` in the bucket. Because of that dependency, CDK deploys the backend first automatically.

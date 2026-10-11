@@ -77,7 +77,7 @@ export async function githubAuthorize(intent: Intent, userId: string | null) {
   return { authorizeUrl: integrations().github.authorizeUrl(state), state };
 }
 
-/** GitHub logins allow "-" but not "_"; Blueprint usernames allow both. Make a valid, free suggestion. */
+/** GitHub logins allow "-" but not "_"; Ripplemap usernames allow both. Make a valid, free suggestion. */
 async function suggestUsername(db: Db, login: string): Promise<string> {
   let base = login.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 34);
   if (base.length < 3) base = `${base}user`.slice(0, 34);

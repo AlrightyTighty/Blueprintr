@@ -13,7 +13,7 @@ const MIGRATIONS = join(import.meta.dirname, '../../database');
  */
 export async function createTestDatabase(): Promise<() => Promise<void>> {
   const adminUrl = process.env.TEST_DATABASE_URL!;
-  const name = `blueprint_test_${randomBytes(4).toString('hex')}`;
+  const name = `ripplemap_test_${randomBytes(4).toString('hex')}`;
   const admin = new pg.Client({ connectionString: adminUrl });
   await admin.connect();
   await admin.query(`CREATE DATABASE ${name}`);

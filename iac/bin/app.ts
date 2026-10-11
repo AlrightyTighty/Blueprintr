@@ -8,7 +8,7 @@ const env = {
   account: process.env.CDK_DEFAULT_ACCOUNT,
   region: process.env.CDK_DEFAULT_REGION,
 };
-const prefix = app.node.tryGetContext('projectName') ?? 'orion';
+const prefix = app.node.tryGetContext('projectName') ?? 'ripplemap';
 
 const backend = new BackendStack(app, `${prefix}-backend`, { env });
 

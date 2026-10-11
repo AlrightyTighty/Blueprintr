@@ -60,7 +60,7 @@ export function isAnalyzablePath(path: string): boolean {
 function headers(accessToken?: string, extra: Record<string, string> = {}): Record<string, string> {
   return {
     Accept: 'application/vnd.github+json',
-    'User-Agent': 'blueprint-app',
+    'User-Agent': 'ripplemap-app',
     'X-GitHub-Api-Version': '2022-11-28',
     ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     ...extra,
@@ -122,7 +122,7 @@ export class HttpGithubClient implements GithubClient {
     try {
       res = await fetch('https://github.com/login/oauth/access_token', {
         method: 'POST',
-        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'blueprint-app' },
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'User-Agent': 'ripplemap-app' },
         body: JSON.stringify({ client_id: id, client_secret: secret, code, redirect_uri: redirect }),
         signal: AbortSignal.timeout(15_000),
       });

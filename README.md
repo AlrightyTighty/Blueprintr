@@ -1,4 +1,4 @@
-# Orion
+# Ripplemap
 ```
 .
 ├── backend/    Fastify API (runs locally as a server, deployed as a Lambda)

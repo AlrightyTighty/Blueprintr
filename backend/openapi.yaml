@@ -1,12 +1,12 @@
 openapi: 3.1.0
 info:
-  title: Blueprint API
+  title: Ripplemap API
   version: 0.1.0
   license:
     name: Proprietary
   summary: Blast-radius analysis across app code and Terraform infrastructure.
   description: |
-    Blueprint reads a repository's Terraform alongside its app code, links them into one graph,
+    Ripplemap reads a repository's Terraform alongside its app code, links them into one graph,
     and answers "what breaks if I change this?".
 
     ## Conventions
@@ -42,7 +42,7 @@ info:
       `repository_already_linked`, `integration_not_configured`, `rate_limited`.
     - **Never stored:** source code, GitHub tokens in the clear, and raw Terraform plan JSON.
       Uploaded plans are parsed in memory and discarded; only addresses, actions and attribute names
-      are kept. Blueprint never runs `terraform apply` or any repository code.
+      are kept. Ripplemap never runs `terraform apply` or any repository code.
 
     ## Roles
 
@@ -229,7 +229,7 @@ paths:
         The frontend's OAuth redirect route posts the `code` and `state` here. The result depends on
         the intent and on whether the GitHub account is already known:
 
-        - `authenticated`: a Blueprint user is linked to this GitHub account; they are signed in.
+        - `authenticated`: a Ripplemap user is linked to this GitHub account; they are signed in.
         - `registration_required`: new GitHub account. Username and email are pre-filled from the
           GitHub profile; the user must confirm them and set a password via `/auth/github/complete`.
         - `linked`: (intent `link`) the GitHub account was attached to the current user. Logs

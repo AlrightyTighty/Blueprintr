@@ -157,7 +157,7 @@ export function unresolvedCallFindings(link: LinkResult, unresolved: LinkResult[
     kind: 'unresolved_reference' as const,
     severity: 'low' as const,
     title: `Can't tell which ${call.op.service} resource ${source.name} targets with ${call.action}`,
-    detail: `${where(call)}: ${reason} Blueprint couldn't resolve it statically${link.facts ? '' : ''}, so this call is missing from the graph.`,
+    detail: `${where(call)}: ${reason} Ripplemap couldn't resolve it statically${link.facts ? '' : ''}, so this call is missing from the graph.`,
     nodeId: source.id,
     relatedNodeId: null,
     evidence: { action: call.action, location: where(call), reason },

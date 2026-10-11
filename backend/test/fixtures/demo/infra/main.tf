@@ -10,11 +10,11 @@ resource "aws_dynamodb_table" "orders" {
 }
 
 resource "aws_s3_bucket" "uploads" {
-  bucket = "blueprint-uploads-${var.env}"
+  bucket = "ripplemap-uploads-${var.env}"
 }
 
 resource "aws_s3_bucket" "site" {
-  bucket = "blueprint-site-${var.env}"
+  bucket = "ripplemap-site-${var.env}"
 }
 
 resource "aws_sqs_queue" "jobs" {
@@ -142,7 +142,7 @@ resource "aws_lambda_event_source_mapping" "jobs" {
 }
 
 resource "aws_apigatewayv2_api" "http" {
-  name          = "blueprint-http"
+  name          = "ripplemap-http"
   protocol_type = "HTTP"
 }
 

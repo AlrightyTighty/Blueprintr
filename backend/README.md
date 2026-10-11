@@ -64,7 +64,7 @@ migrations from `../database`, drives the whole API through `app.inject` with fa
 ElevenLabs and S3, and drops the database afterwards. A throwaway server:
 
 ```bash
-docker run -d --name blueprint-pg -e POSTGRES_PASSWORD=test -p 5432:5432 postgres:16
+docker run -d --name ripplemap-pg -e POSTGRES_PASSWORD=test -p 5432:5432 postgres:16
 ```
 
 `test/fixtures/demo` is a small repo (Terraform + a Node Lambda + a Python Lambda) with planted

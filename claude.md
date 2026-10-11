@@ -1,4 +1,4 @@
-# HACKATHON PROJECT BRIEF: "Guidr"
+# HACKATHON PROJECT BRIEF: "Ripplemap"
 
 ## Context
 - MLH-style hackathon, team of 2, 24 hours, started Sat Oct 10, 2026. We use Claude to write most of the code, so the limiting factors are ideas, demo quality, and debugging time, not learning SDKs.
@@ -14,7 +14,7 @@ Best Pitch/Demo and Best Overall are opportunistic, not the focus.
 Deliberately skipped (no honest fit): Tiger Data, Backboard, Vultr, Solana, Best Environment Hack. Principle: don't bolt on sponsor tools, because judges and sponsor reps notice.
 
 ## The idea in one sentence
-Guidr is a narrated, interruptible, walkable tour of a repo's application code and Terraform infrastructure: it links the two into one graph, turns real request paths into guided journeys, and lets you rehearse an outage or a change before it happens.
+Ripplemap is a narrated, interruptible, walkable tour of a repo's application code and Terraform infrastructure: it links the two into one graph, turns real request paths into guided journeys, and lets you rehearse an outage or a change before it happens.
 
 Tagline: "A guided tour of your cloud, including the outage before it happens."
 
@@ -79,7 +79,7 @@ The env var is the bridge between the IaC world and the code world. Inferred hop
 - Disaster tour tone: gentle tour guide narrating a cascading failure (the contrast is a deliberate laugh)
 
 **GoDaddy**
-- Registration prize, so the work is the name and domain fit. Name is Guidr; check guidr.* availability on the TLDs the track offers and register early. Fallbacks: another TLD, or a prefix like useguidr / tryguidr. Availability is NOT yet verified.
+- Registration prize, so the work is the name and domain fit. Name is Ripplemap; check ripplemap.* availability on the TLDs the track offers and register early. Fallbacks: another TLD, or a prefix like useripplemap / tryripplemap. Availability is NOT yet verified.
 - Domains-as-graph-nodes ties the domain into the product story: every tour starts at the front door.
 
 ## Scope (keep it narrow and working)
@@ -206,7 +206,7 @@ Cache demo-repo results and keep a backup recording in case of Wi-Fi or API fail
 Heat/Air Guardian, Hackathon Pulse, Mistake Museum, Keepsake, StudyPal, and the URL-based accessibility scanner. Earlier Blueprint and Blueprintr variants (architecture map with voice tour, design-system extraction and wireframes, time-travel git slider, learning path, design drift detector, accessibility lens) are deprioritized. They lean on Tiger Data or Backboard, or dilute the focus. The earlier blast-radius-first framing was dropped after finding that blastmap.dev and other tools overlap with it. Add dropped ideas back only if time remains.
 
 ## Immediate next steps (not yet started)
-1. Check guidr.* availability on the GoDaddy-offered TLDs and register
+1. Check ripplemap.* availability on the GoDaddy-offered TLDs and register
 2. Run the 15-minute competitor search for code-aware journeys plus IaC plus a voiced guide
 3. Lock the graph and tour types above
 4. Build the demo repo with planted traps and hand-written expected journeys
