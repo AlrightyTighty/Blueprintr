@@ -2,17 +2,18 @@ import { useMemo } from 'react';
 import { Background, Controls, ReactFlow, type Edge, type Node } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { blastRadius } from '../../core/graph/blastRadius';
-import { computePlanImpact } from '../../core/graph/planImpact';
-import type { GraphNode } from '../../core/graph/types';
+import { getNodeCategory, getNodeDisplayName, type NodeCategory } from '../../core/graph/nodeDisplay';
+import type { PlanChange } from '../../core/graph/types';
 import { layoutGraph, NODE_WIDTH } from './layoutGraph';
 import { useGraphStore } from './useGraphStore';
 
 // Dark surface with blue/purple accents; text is always light so it stays readable.
-const TYPE_COLORS: Record<GraphNode['type'], string> = {
+const CATEGORY_COLORS: Record<NodeCategory, string> = {
   code: '#818cf8',
   resource: '#60a5fa',
   iam_role: '#c084fc',
   domain: '#a5b4fc',
+  unmanaged: '#64748b',
   unresolved: '#64748b',
 };
 
@@ -30,40 +31,41 @@ const EDGE_COLOR = '#475a85';
 const EDGE_COLOR_ON_PATH = '#a78bfa';
 
 export default function GraphView() {
-  const { graph, selectedNodeId, direction, selectNode, planActionsByNodeId } = useGraphStore();
+  const { graph, selectedNodeId, direction, selectNode, planChanges } = useGraphStore();
 
   const positions = useMemo(() => layoutGraph(graph), [graph]);
   const highlightedIds = useMemo(
-    () => (selectedNodeId ? blastRadius(graph, selectedNodeId, direction) : new Set<string>()),
+    () => (selectedNodeId ? blastRadius(graph, selectedNodeId, direction) : new Map<string, number>()),
     [graph, selectedNodeId, direction],
   );
-
-  const planImpact = useMemo(
-    () => computePlanImpact(graph, planActionsByNodeId),
-    [graph, planActionsByNodeId],
+  const planChangeByNodeId = useMemo(
+    () => new Map<string, PlanChange>(planChanges.flatMap((change) => (change.nodeId ? [[change.nodeId, change]] : []))),
+    [planChanges],
   );
-  const isPlanActive = planActionsByNodeId.size > 0;
+  const isPlanActive = planChangeByNodeId.size > 0;
 
   const flowNodes: Node[] = graph.nodes.map((node) => {
     const isSelected = node.id === selectedNodeId;
     const isHighlighted = highlightedIds.has(node.id);
-    const planAction = planImpact.changedNodeIds.get(node.id);
-    const isDownstream = planImpact.downstreamNodeIds.has(node.id);
+    const planChange = planChangeByNodeId.get(node.id);
+    const isDirectlyChanged = planChange?.impact === 'direct';
+    const isDownstream = planChange?.impact === 'downstream';
 
     // With a plan loaded, plan colors take over; otherwise show the click-to-highlight view.
-    const isPlanDimmed = isPlanActive && !planAction && !isDownstream;
+    const isPlanDimmed = isPlanActive && !planChange;
     const isSelectionDimmed = !isPlanActive && selectedNodeId !== null && !isSelected && !isHighlighted;
 
-    let borderColor = isSelected ? '#ddd6fe' : TYPE_COLORS[node.type];
+    const categoryColor = CATEGORY_COLORS[getNodeCategory(node)];
+    let borderColor = isSelected ? '#ddd6fe' : categoryColor;
     let background = isSelected
       ? NODE_BACKGROUND_SELECTED
       : isHighlighted
         ? NODE_BACKGROUND_HIGHLIGHTED
         : NODE_BACKGROUND;
-    if (planAction === 'replace' || planAction === 'destroy') {
+    if (isDirectlyChanged && (planChange.action === 'replace' || planChange.action === 'destroy')) {
       borderColor = PLAN_COLORS.dangerBorder;
       background = PLAN_COLORS.dangerBackground;
-    } else if (planAction === 'modify') {
+    } else if (isDirectlyChanged) {
       borderColor = PLAN_COLORS.warningBorder;
       background = NODE_BACKGROUND;
     } else if (isDownstream) {
@@ -71,18 +73,18 @@ export default function GraphView() {
       background = PLAN_COLORS.warningBackground;
     }
 
+    const displayName = getNodeDisplayName(node);
     return {
       id: node.id,
       position: positions.get(node.id)!,
-      data: { label: planAction ? `${node.label} (${planAction})` : node.label },
+      data: { label: isDirectlyChanged ? `${displayName} (${planChange.action})` : displayName },
       style: {
         width: NODE_WIDTH,
         fontSize: 12,
         color: '#f1f5f9',
         border: `2px solid ${borderColor}`,
         background,
-        boxShadow:
-          isHighlighted || isSelected || planAction || isDownstream ? `0 0 12px ${borderColor}88` : undefined,
+        boxShadow: isHighlighted || isSelected || planChange ? `0 0 12px ${borderColor}88` : undefined,
         opacity: isPlanDimmed || isSelectionDimmed ? 0.3 : 1,
       },
     };

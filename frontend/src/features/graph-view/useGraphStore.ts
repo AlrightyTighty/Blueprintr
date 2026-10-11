@@ -1,17 +1,17 @@
 import { create } from 'zustand';
-import { mockGraph } from '../../core/graph/mockGraph';
 import type { Direction } from '../../core/graph/blastRadius';
-import type { Graph, PlanAction } from '../../core/graph/types';
+import { mockFindings, mockGraph } from '../../core/graph/mockGraph';
+import { computePlanChanges } from '../../core/graph/planImpact';
+import type { Finding, Graph, PlanChange } from '../../core/graph/types';
 import { parsePlan } from '../../core/terraform/parsePlan';
 
 interface GraphStoreState {
   graph: Graph;
+  findings: Finding[];
   selectedNodeId: string | null;
   direction: Direction;
-  /** Plan changes that matched a node in the graph, keyed by node id. Empty when no plan is loaded. */
-  planActionsByNodeId: Map<string, PlanAction>;
-  /** Plan addresses that matched no node (e.g. resource types the graph doesn't model). */
-  unmatchedPlanAddresses: string[];
+  /** Empty when no plan is loaded. */
+  planChanges: PlanChange[];
   selectNode: (nodeId: string | null) => void;
   setDirection: (direction: Direction) => void;
   /** Returns an error message, or null on success. */
@@ -21,28 +21,20 @@ interface GraphStoreState {
 
 export const useGraphStore = create<GraphStoreState>((set, get) => ({
   graph: mockGraph,
+  findings: mockFindings,
   selectedNodeId: null,
   direction: 'dependents',
-  planActionsByNodeId: new Map(),
-  unmatchedPlanAddresses: [],
+  planChanges: [],
   selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
   setDirection: (direction) => set({ direction }),
   applyPlan: (planJsonText) => {
     try {
-      const actionsByAddress = parsePlan(planJsonText);
-      const nodeIdsByLabel = new Map(get().graph.nodes.map((node) => [node.label, node.id]));
-      const planActionsByNodeId = new Map<string, PlanAction>();
-      const unmatchedPlanAddresses: string[] = [];
-      for (const [address, action] of actionsByAddress) {
-        const nodeId = nodeIdsByLabel.get(address);
-        if (nodeId) planActionsByNodeId.set(nodeId, action);
-        else unmatchedPlanAddresses.push(address);
-      }
-      set({ planActionsByNodeId, unmatchedPlanAddresses });
+      const parsedChanges = parsePlan(planJsonText);
+      set({ planChanges: computePlanChanges(get().graph, parsedChanges) });
       return null;
     } catch (error) {
       return error instanceof Error ? error.message : 'Could not read the plan.';
     }
   },
-  clearPlan: () => set({ planActionsByNodeId: new Map(), unmatchedPlanAddresses: [] }),
+  clearPlan: () => set({ planChanges: [] }),
 }));

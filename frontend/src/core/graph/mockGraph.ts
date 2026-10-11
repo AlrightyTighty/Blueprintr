@@ -1,72 +1,113 @@
-import type { Graph, GraphEdge, GraphNode } from './types';
+import type { Finding, Graph, GraphEdge, GraphNode } from './types';
 
-function createNode(
-  id: string,
-  type: GraphNode['type'],
-  label: string,
-  overrides: Partial<GraphNode> = {},
-): GraphNode {
-  return { id, type, label, plan: 'none', findings: [], ...overrides };
+const MOCK_RUN_ID = 'demo-run';
+
+function createResourceNode(id: string, terraformType: string, name: string, displayName = name): GraphNode {
+  return { id, kind: 'resource', address: `${terraformType}.${name}`, name: displayName, terraformType };
+}
+
+function createCodeNode(id: string, filePath: string): GraphNode {
+  return { id, kind: 'code_file', address: filePath, name: filePath, filePath };
 }
 
 function createEdge(
   source: string,
   target: string,
-  kind: GraphEdge['kind'],
+  relation: GraphEdge['relation'],
+  linkMethod: GraphEdge['linkMethod'],
   confidence: GraphEdge['confidence'],
+  extras: Partial<GraphEdge> = {},
 ): GraphEdge {
-  return { id: `${source}->${target}`, source, target, kind, confidence };
+  return { id: `${source}->${target}`, source, target, relation, linkMethod, confidence, ...extras };
+}
+
+function createFinding(
+  id: string,
+  kind: Finding['kind'],
+  severity: Finding['severity'],
+  title: string,
+  detail: string,
+  nodeId: string,
+): Finding {
+  return { id, runId: MOCK_RUN_ID, kind, severity, title, detail, nodeId, fingerprint: id };
 }
 
 // Mirrors the planned demo repo, including its planted traps.
 export const mockGraph: Graph = {
+  runId: MOCK_RUN_ID,
   nodes: [
-    createNode('domain.site', 'domain', 'app.example.com', { resourceType: 'aws_route53_record' }),
-    createNode('cdn', 'resource', 'aws_cloudfront_distribution.site', {
-      resourceType: 'aws_cloudfront_distribution',
-    }),
-    createNode('bucket.site', 'resource', 'aws_s3_bucket.site', { resourceType: 'aws_s3_bucket' }),
-    createNode('api', 'resource', 'aws_api_gateway_rest_api.api', {
-      resourceType: 'aws_api_gateway_rest_api',
-    }),
-    createNode('fn.orders', 'resource', 'aws_lambda_function.orders', {
-      resourceType: 'aws_lambda_function',
-    }),
-    createNode('fn.notify', 'resource', 'aws_lambda_function.notify', {
-      resourceType: 'aws_lambda_function',
-    }),
-    createNode('table.orders', 'resource', 'aws_dynamodb_table.orders', {
-      resourceType: 'aws_dynamodb_table',
-    }),
-    createNode('queue.events', 'resource', 'aws_sqs_queue.events', { resourceType: 'aws_sqs_queue' }),
-    createNode('role.orders', 'iam_role', 'aws_iam_role.orders_role', {
-      resourceType: 'aws_iam_role',
-      findings: [{ kind: 'over_broad_iam', message: 'Allows s3:* but code only reads one bucket.' }],
-    }),
-    createNode('code.orders', 'code', 'src/orders/handler.py'),
-    createNode('code.notify', 'code', 'src/notify/handler.ts', {
-      findings: [
-        { kind: 'permission_gap', message: 'Calls dynamodb:DeleteItem; role does not allow it.' },
-      ],
-    }),
-    createNode('bucket.hardcoded', 'unresolved', 'legacy-uploads-bucket', {
-      findings: [{ kind: 'unmanaged_resource', message: 'Hardcoded in code, not in Terraform.' }],
-    }),
+    createResourceNode('domain.site', 'aws_route53_record', 'site', 'app.example.com'),
+    createResourceNode('cdn', 'aws_cloudfront_distribution', 'site'),
+    createResourceNode('bucket.site', 'aws_s3_bucket', 'site'),
+    createResourceNode('api', 'aws_api_gateway_rest_api', 'api'),
+    createResourceNode('fn.orders', 'aws_lambda_function', 'orders'),
+    createResourceNode('fn.notify', 'aws_lambda_function', 'notify'),
+    createResourceNode('table.orders', 'aws_dynamodb_table', 'orders'),
+    createResourceNode('queue.events', 'aws_sqs_queue', 'events'),
+    createResourceNode('role.orders', 'aws_iam_role', 'orders_role'),
+    createCodeNode('code.orders', 'src/orders/handler.py'),
+    createCodeNode('code.notify', 'src/notify/handler.ts'),
+    {
+      id: 'bucket.hardcoded',
+      kind: 'unmanaged_resource',
+      address: 'legacy-uploads-bucket',
+      name: 'legacy-uploads-bucket',
+    },
   ],
   edges: [
-    createEdge('domain.site', 'cdn', 'references', 'certain'),
-    createEdge('cdn', 'bucket.site', 'references', 'certain'),
-    createEdge('cdn', 'api', 'references', 'certain'),
-    createEdge('api', 'fn.orders', 'references', 'certain'),
-    createEdge('fn.orders', 'role.orders', 'references', 'certain'),
-    createEdge('fn.orders', 'table.orders', 'env', 'high'),
-    createEdge('fn.orders', 'queue.events', 'env', 'high'),
-    createEdge('fn.notify', 'queue.events', 'env', 'high'),
-    createEdge('fn.notify', 'table.orders', 'references', 'certain'),
-    createEdge('code.orders', 'fn.orders', 'references', 'high'),
-    createEdge('code.orders', 'table.orders', 'writes', 'high'),
-    createEdge('code.notify', 'fn.notify', 'references', 'high'),
-    createEdge('code.notify', 'table.orders', 'writes', 'inferred'),
-    createEdge('code.orders', 'bucket.hardcoded', 'reads', 'inferred'),
+    createEdge('domain.site', 'cdn', 'references', 'declared_reference', 'certain'),
+    createEdge('cdn', 'bucket.site', 'routes_to', 'declared_reference', 'certain'),
+    createEdge('cdn', 'api', 'routes_to', 'declared_reference', 'certain'),
+    createEdge('api', 'fn.orders', 'invokes', 'declared_reference', 'certain'),
+    createEdge('fn.orders', 'role.orders', 'assumes_role', 'declared_reference', 'certain'),
+    createEdge('role.orders', 'table.orders', 'grants_access', 'declared_reference', 'certain'),
+    createEdge('fn.orders', 'table.orders', 'references', 'env_var', 'high', {
+      evidence: { envVar: 'TABLE_NAME', file: 'src/orders/handler.py', line: 12 },
+    }),
+    createEdge('fn.orders', 'queue.events', 'references', 'env_var', 'high', {
+      evidence: { envVar: 'QUEUE_URL', file: 'src/orders/handler.py', line: 14 },
+    }),
+    createEdge('fn.notify', 'queue.events', 'references', 'env_var', 'high', {
+      evidence: { envVar: 'QUEUE_URL', file: 'src/notify/handler.ts', line: 6 },
+    }),
+    createEdge('fn.notify', 'table.orders', 'references', 'declared_reference', 'certain'),
+    createEdge('code.orders', 'fn.orders', 'runs_code', 'code_mapping', 'high'),
+    createEdge('code.orders', 'table.orders', 'writes', 'env_var', 'high', {
+      evidence: { envVar: 'TABLE_NAME', file: 'src/orders/handler.py', line: 12 },
+    }),
+    createEdge('code.notify', 'fn.notify', 'runs_code', 'code_mapping', 'high'),
+    createEdge('code.notify', 'table.orders', 'writes', 'gemini_inference', 'inferred', {
+      explanation: 'The table name is built from config, and the only table in this stack is orders.',
+    }),
+    createEdge('code.orders', 'bucket.hardcoded', 'reads', 'gemini_inference', 'inferred', {
+      explanation: 'The bucket name is a string literal that matches no Terraform resource.',
+    }),
   ],
 };
+
+export const mockFindings: Finding[] = [
+  createFinding(
+    'finding.iam',
+    'over_broad_iam',
+    'medium',
+    'Role allows more than the code uses',
+    'Allows s3:* but the code only reads one bucket.',
+    'role.orders',
+  ),
+  createFinding(
+    'finding.gap',
+    'permission_gap',
+    'high',
+    'Code calls an action the role does not allow',
+    'Calls dynamodb:DeleteItem; the role does not allow it.',
+    'code.notify',
+  ),
+  createFinding(
+    'finding.drift',
+    'unmanaged_resource',
+    'medium',
+    'Bucket is not managed by Terraform',
+    'Hardcoded in code but missing from Terraform, so it can drift.',
+    'bucket.hardcoded',
+  ),
+];

@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { computePlanImpact } from '../../core/graph/planImpact';
 import { useGraphStore } from '../graph-view/useGraphStore';
 import { SAMPLE_PLAN_JSON } from './samplePlan';
 
 export default function PlanPanel() {
-  const { graph, planActionsByNodeId, unmatchedPlanAddresses, applyPlan, clearPlan } = useGraphStore();
+  const { planChanges, applyPlan, clearPlan } = useGraphStore();
   const [planText, setPlanText] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const isPlanLoaded = planActionsByNodeId.size > 0;
-  const impact = computePlanImpact(graph, planActionsByNodeId);
-  const labelOf = (nodeId: string) => graph.nodes.find((node) => node.id === nodeId)?.label ?? nodeId;
+  const directChanges = planChanges.filter((change) => change.impact === 'direct' && change.nodeId);
+  const downstreamChanges = planChanges
+    .filter((change) => change.impact === 'downstream')
+    .sort((first, second) => first.distance - second.distance);
+  const unmatchedAddresses = planChanges.filter((change) => !change.nodeId).map((change) => change.address);
+  const isPlanLoaded = planChanges.length > 0;
 
   function handleApply(text: string) {
     setErrorMessage(applyPlan(text));
@@ -65,25 +67,31 @@ export default function PlanPanel() {
           <section>
             <h3 className="mb-1 font-medium text-rose-300">Changed directly</h3>
             <ul className="space-y-1">
-              {[...impact.changedNodeIds].map(([nodeId, action]) => (
-                <li key={nodeId} className="text-slate-200">
-                  <span className="mr-2 rounded bg-rose-950 px-1.5 py-0.5 text-xs uppercase text-rose-300">{action}</span>
-                  {labelOf(nodeId)}
+              {directChanges.map((change) => (
+                <li key={change.id} className="text-slate-200">
+                  <span className="mr-2 rounded bg-rose-950 px-1.5 py-0.5 text-xs uppercase text-rose-300">
+                    {change.action}
+                  </span>
+                  {change.address}
                 </li>
               ))}
+              {directChanges.length === 0 && <li className="text-slate-500">None of these are in the graph.</li>}
             </ul>
           </section>
           <section>
-            <h3 className="mb-1 font-medium text-amber-300">Affected downstream ({impact.downstreamNodeIds.size})</h3>
+            <h3 className="mb-1 font-medium text-amber-300">Affected downstream ({downstreamChanges.length})</h3>
             <ul className="space-y-1 text-slate-300">
-              {[...impact.downstreamNodeIds].map((nodeId) => (
-                <li key={nodeId}>{labelOf(nodeId)}</li>
+              {downstreamChanges.map((change) => (
+                <li key={change.id}>
+                  {change.address}
+                  <span className="ml-2 text-xs text-slate-500">{change.distance} hop{change.distance === 1 ? '' : 's'}</span>
+                </li>
               ))}
-              {impact.downstreamNodeIds.size === 0 && <li className="text-slate-500">Nothing depends on these.</li>}
+              {downstreamChanges.length === 0 && <li className="text-slate-500">Nothing depends on these.</li>}
             </ul>
           </section>
-          {unmatchedPlanAddresses.length > 0 && (
-            <p className="text-xs text-slate-500">Not in graph: {unmatchedPlanAddresses.join(', ')}</p>
+          {unmatchedAddresses.length > 0 && (
+            <p className="text-xs text-slate-500">Not in graph: {unmatchedAddresses.join(', ')}</p>
           )}
         </div>
       )}

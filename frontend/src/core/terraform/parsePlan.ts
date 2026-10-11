@@ -1,11 +1,18 @@
 import type { PlanAction } from '../graph/types';
 
-interface PlanResourceChange {
+export interface ParsedPlanChange {
   address: string;
-  change: { actions: string[] };
+  terraformType: string | null;
+  /** Raw Terraform actions, e.g. `["delete", "create"]`. */
+  actions: string[];
+  action: PlanAction;
 }
 
-export type PlanActionsByAddress = Map<string, PlanAction>;
+interface PlanResourceChange {
+  address: string;
+  type?: string;
+  change?: { actions?: string[] };
+}
 
 /** Terraform lists a replace as both a delete and a create, in either order. */
 function toPlanAction(terraformActions: string[]): PlanAction {
@@ -13,15 +20,16 @@ function toPlanAction(terraformActions: string[]): PlanAction {
   const hasCreate = terraformActions.includes('create');
   if (hasDelete && hasCreate) return 'replace';
   if (hasDelete) return 'destroy';
-  if (terraformActions.includes('update')) return 'modify';
-  return 'none';
+  if (hasCreate) return 'create';
+  if (terraformActions.includes('update')) return 'update';
+  return 'noop';
 }
 
 /**
- * Reads the output of `terraform show -json plan.out`.
+ * Reads the output of `terraform show -json plan.out`. Resources with no change are left out.
  * Throws an Error with a user-readable message if the input isn't a plan.
  */
-export function parsePlan(planJsonText: string): PlanActionsByAddress {
+export function parsePlan(planJsonText: string): ParsedPlanChange[] {
   let parsedPlan: { resource_changes?: PlanResourceChange[] };
   try {
     parsedPlan = JSON.parse(planJsonText);
@@ -32,10 +40,17 @@ export function parsePlan(planJsonText: string): PlanActionsByAddress {
     throw new Error('No "resource_changes" found. Paste the output of `terraform show -json plan.out`.');
   }
 
-  const actionsByAddress: PlanActionsByAddress = new Map();
+  const parsedChanges: ParsedPlanChange[] = [];
   for (const resourceChange of parsedPlan.resource_changes) {
-    const action = toPlanAction(resourceChange.change?.actions ?? []);
-    if (action !== 'none') actionsByAddress.set(resourceChange.address, action);
+    const actions = resourceChange.change?.actions ?? [];
+    const action = toPlanAction(actions);
+    if (action === 'noop') continue;
+    parsedChanges.push({
+      address: resourceChange.address,
+      terraformType: resourceChange.type ?? null,
+      actions,
+      action,
+    });
   }
-  return actionsByAddress;
+  return parsedChanges;
 }

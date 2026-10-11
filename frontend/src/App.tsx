@@ -14,7 +14,7 @@ export default function App() {
   return (
     <div className="flex h-full flex-col bg-slate-950 text-slate-100">
       <header className="flex items-center justify-between border-b border-indigo-900 px-4 py-2">
-        <h1 className="text-lg font-semibold text-indigo-200">Blueprint</h1>
+        <h1 className="text-lg font-semibold text-indigo-200">Ripplemap</h1>
         <div className="flex gap-2 text-sm">
           <button className={toggleClass(direction === 'dependents')} onClick={() => setDirection('dependents')}>
             What breaks?

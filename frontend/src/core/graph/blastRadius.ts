@@ -6,23 +6,25 @@ import type { Graph } from './types';
  */
 export type Direction = 'dependents' | 'dependencies';
 
-/** Ids reachable from `startId` in the given direction, excluding the start node. */
-export function blastRadius(graph: Graph, startId: string, direction: Direction): Set<string> {
-  const next = new Map<string, string[]>();
+/** Reachable node ids from `startId` in the given direction, mapped to their hop distance. Excludes the start node. */
+export function blastRadius(graph: Graph, startId: string, direction: Direction): Map<string, number> {
+  const neighboursByNodeId = new Map<string, string[]>();
   for (const edge of graph.edges) {
     const [from, to] = direction === 'dependents' ? [edge.target, edge.source] : [edge.source, edge.target];
-    next.set(from, [...(next.get(from) ?? []), to]);
+    neighboursByNodeId.set(from, [...(neighboursByNodeId.get(from) ?? []), to]);
   }
 
-  const seen = new Set<string>();
+  const distanceByNodeId = new Map<string, number>();
   const queue = [startId];
+  const distanceOf = (nodeId: string) => (nodeId === startId ? 0 : distanceByNodeId.get(nodeId)!);
   while (queue.length > 0) {
-    for (const id of next.get(queue.shift()!) ?? []) {
-      if (id !== startId && !seen.has(id)) {
-        seen.add(id);
-        queue.push(id);
+    const currentId = queue.shift()!;
+    for (const neighbourId of neighboursByNodeId.get(currentId) ?? []) {
+      if (neighbourId !== startId && !distanceByNodeId.has(neighbourId)) {
+        distanceByNodeId.set(neighbourId, distanceOf(currentId) + 1);
+        queue.push(neighbourId);
       }
     }
   }
-  return seen;
+  return distanceByNodeId;
 }
