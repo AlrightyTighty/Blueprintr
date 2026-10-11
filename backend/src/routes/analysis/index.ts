@@ -1,3 +1,4 @@
+import { perUserLimit } from '../../http/rateLimits.js';
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { actorOf, userActor } from '../../http/context.js';
@@ -13,7 +14,7 @@ const routes: FastifyPluginAsync = async (app) => {
     return analysis.listRuns(actorOf(req, { allowShare: true }), projectId, query);
   });
 
-  app.post('/projects/:projectId/runs', async (req, reply) => {
+  app.post('/projects/:projectId/runs', perUserLimit(6), async (req, reply) => {
     const { projectId } = parse(projectParams, req.params);
     const body = parse(
       z.object({

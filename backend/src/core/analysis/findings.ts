@@ -164,3 +164,17 @@ export function unresolvedCallFindings(link: LinkResult, unresolved: LinkResult[
     fingerprint: fingerprint('unresolved_reference', 'call', source.address, call.action, String(call.line)),
   }));
 }
+
+/** One low-key finding per code file that was not read, so a missing function is never a mystery. */
+export function skippedFileFindings(skipped: { path: string; reason: string }[]): NewFinding[] {
+  return skipped.map((file) => ({
+    kind: 'unresolved_reference' as const,
+    severity: 'low' as const,
+    title: `Skipped ${file.path}`,
+    detail: `Not analysed because ${file.reason}. Code in this file is missing from the graph.`,
+    nodeId: null,
+    relatedNodeId: null,
+    evidence: { file: file.path },
+    fingerprint: fingerprint('unresolved_reference', 'skipped', file.path),
+  }));
+}

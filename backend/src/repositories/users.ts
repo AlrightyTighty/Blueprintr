@@ -11,10 +11,12 @@ export interface UserRow {
   displayName: string | null;
   avatarUrl: string | null;
   createdAt: string;
+  /** Login tokens issued before this moment are no longer accepted. Null if none were ever revoked. */
+  sessionsValidAfter: string | null;
 }
 
 const COLUMNS = `id, username::text AS username, email::text AS email, email_verified_at, password_hash,
-  display_name, avatar_url, created_at`;
+  display_name, avatar_url, created_at, sessions_valid_after`;
 
 function map(row: Record<string, any>): UserRow {
   return {
@@ -26,6 +28,7 @@ function map(row: Record<string, any>): UserRow {
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
     createdAt: iso(row.created_at),
+    sessionsValidAfter: isoOrNull(row.sessions_valid_after),
   };
 }
 
@@ -95,8 +98,17 @@ export async function update(db: Db, id: string, patch: UserPatch): Promise<User
   return rows[0] ? map(rows[0]) : null;
 }
 
-export async function setPassword(db: Db, id: string, passwordHash: string): Promise<void> {
-  await db.query('UPDATE users SET password_hash = $2 WHERE id = $1', [id, passwordHash]);
+/**
+ * Sets a new password, which also ends every existing sign-in: a stolen login must not survive the password
+ * being changed. The cut-off time comes from this server's clock, the same one that stamps each token.
+ */
+export async function setPassword(db: Db, id: string, passwordHash: string, now = new Date()): Promise<void> {
+  await db.query('UPDATE users SET password_hash = $2, sessions_valid_after = $3 WHERE id = $1', [id, passwordHash, now]);
+}
+
+/** Ends every existing sign-in without touching the password ("sign out everywhere"). */
+export async function revokeSessions(db: Db, id: string, now = new Date()): Promise<void> {
+  await db.query('UPDATE users SET sessions_valid_after = $2 WHERE id = $1', [id, now]);
 }
 
 export async function markEmailVerified(db: Db, id: string): Promise<void> {

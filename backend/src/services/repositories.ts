@@ -1,5 +1,6 @@
 import { getPool, withTransaction, type Db } from '../db/pool.js';
 import { UNIQUE_VIOLATION, pgErrorCode } from '../db/util.js';
+import { getConfig } from '../config.js';
 import { AppError, conflict, notFound, validationError } from '../http/errors.js';
 import { integrations } from '../integrations/registry.js';
 import { parseGithubRepoUrl } from '../lib/githubUrl.js';
@@ -32,6 +33,18 @@ export interface VerifiedRepo {
   repo: Omit<githubRepos.RepositoryRow, 'id'>;
   branch: string;
   rootPath: string;
+}
+
+const megabytes = (kb: number) => `${Math.round(kb / 1024)} MB`;
+
+/** Refuses a repository too big to be worth downloading, saying so up front rather than failing mid-analysis. */
+function assertNotTooLarge(repo: { fullName: string; sizeKb?: number }, field: string): void {
+  const limit = getConfig().MAX_REPOSITORY_KB;
+  if (repo.sizeKb !== undefined && repo.sizeKb > limit) {
+    throw validationError([
+      { field, message: `${repo.fullName} is too large to analyse (${megabytes(repo.sizeKb)}; the limit is ${megabytes(limit)}). Try a smaller repository.` },
+    ]);
+  }
 }
 
 const NOT_FOUND_BY_URL =
@@ -94,6 +107,7 @@ async function verifyByUrl(db: Db, userId: string, input: { url: string; branch?
     }
   }
   if (!repo) throw validationError([{ field: 'url', message: NOT_FOUND_BY_URL }]);
+  assertNotTooLarge(repo, 'url');
 
   let branch = input.branch?.trim() || undefined;
   let folder = input.rootPath;
@@ -111,6 +125,7 @@ export async function verifyRepository(db: Db, userId: string, input: LinkInput)
   const connection = await connections.findByIdForUser(db, input.connectionId, userId);
   if (!connection) throw validationError([{ field: 'connectionId', message: 'Not one of your GitHub connections.' }]);
   const repo = await integrations().github.getRepository(await githubTokenFor(db, connection), input.githubRepoId);
+  assertNotTooLarge(repo, 'githubRepoId');
   return { connectionId: connection.id, repo, branch: input.branch?.trim() || repo.defaultBranch, rootPath: normalizeRootPath(input.rootPath) };
 }
 

@@ -87,8 +87,13 @@ When the domain is ready, the usual setup is:
 `cdk deploy` passes these variables from your shell into the Lambda (any that are unset are skipped):
 `DATABASE_URL`, `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `FRONTEND_URL`, `CORS_ORIGIN`, `GITHUB_CLIENT_ID`,
 `GITHUB_CLIENT_SECRET`, `GITHUB_REDIRECT_URI`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `ELEVENLABS_API_KEY`,
-`ELEVENLABS_VOICE_ID`, `ELEVENLABS_AGENT_ID`. See `backend/.env.example` for what each means. `AUDIO_BUCKET`
-is set by the stack. If `database/certs/global-bundle.pem` exists (see `database/README.md`), it is
+`ELEVENLABS_VOICE_ID`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_MODEL_ID`, `GITHUB_API_TOKEN`, `JWT_TTL_SECONDS`,
+`MAIL_FROM`, `MAX_PLAN_BYTES`, `MAX_REPOSITORY_KB`, `NARRATION_DAILY_CHARACTER_BUDGET`, `NARRATION_MAX_CHARACTERS`,
+`ANALYSIS_STALE_MINUTES`, `TRUST_PROXY`. See `backend/.env.example` for what each means (a test fails if the backend
+gains a setting this list lacks). `NODE_ENV=production` and `AUDIO_BUCKET` are set by the stack. When `MAIL_FROM` is set the
+function may send through SES, and that address must be verified in SES (new SES accounts start in sandbox mode, which
+only delivers to verified recipients; request production access before inviting real people). Failed analyses are not
+retried by Lambda, and the API is throttled to 50 requests/second (burst 100). If `database/certs/global-bundle.pem` exists (see `database/README.md`), it is
 bundled into the Lambda and used to verify the RDS certificate.
 
 The function runs analyses by invoking itself asynchronously, so its role may invoke itself, and its timeout is

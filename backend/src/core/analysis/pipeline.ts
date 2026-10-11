@@ -4,7 +4,7 @@ import type { NewFinding } from '../../repositories/findings.js';
 import { addCloudFormationTemplates } from '../cloudformation/index.js';
 import { scanCode, languageOf } from '../code/scan.js';
 import { parseTerraform, type SourceFile } from '../terraform/model.js';
-import { computeFindings, unresolvedCallFindings } from './findings.js';
+import { computeFindings, skippedFileFindings, unresolvedCallFindings } from './findings.js';
 import { inferPendingCalls, type InferenceStats } from './inference.js';
 import { linkGraph } from './link.js';
 
@@ -56,13 +56,14 @@ export async function analyze(input: PipelineInput): Promise<PipelineOutput> {
   const inference = await inferPendingCalls(link, input.gemini ?? null);
 
   await stage('findings');
-  const findings = [...computeFindings(link), ...unresolvedCallFindings(link, inference.unresolved)];
+  const findings = [...computeFindings(link), ...unresolvedCallFindings(link, inference.unresolved), ...skippedFileFindings(facts.skipped)];
 
   const nodes = [...link.builder.nodes.values()];
   const edges = link.builder.edges;
   const stats = {
     terraformFiles: input.files.filter((f) => f.path.endsWith('.tf')).length,
     codeFiles: facts.files.length,
+    skippedCodeFiles: facts.skipped.length,
     cloudFormationTemplates: cloudFormation.templates,
     infrastructureResources: model.resources.length,
     nodes: nodes.length,

@@ -115,6 +115,29 @@ paths:
                 properties:
                   status: { type: string, const: ok }
 
+  /health/ready:
+    get:
+      tags: [System]
+      operationId: getReadiness
+      summary: Readiness check (the database answers)
+      description: Unlike `/health`, this runs a query, so it fails (`503`) when the database is unreachable.
+      security: []
+      responses:
+        '200':
+          description: Ready.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, const: ok }
+        '503':
+          description: The database is not reachable.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
   /resource-types:
     get:
       tags: [System]
@@ -440,7 +463,9 @@ paths:
       tags: [Account]
       operationId: changePassword
       summary: Change password
-      description: Logs `user.password_changed`.
+      description: |
+        Ends every other sign-in of this account (a stolen login must not survive a password change) and
+        returns a fresh session so this device stays signed in. Logs `user.password_changed`.
       requestBody:
         required: true
         content:
@@ -452,9 +477,30 @@ paths:
                 currentPassword: { type: string }
                 newPassword: { $ref: '#/components/schemas/Password' }
       responses:
-        '204': { description: Password changed. }
+        '200':
+          description: Password changed. Use the new session from now on; the old token no longer works.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/ValidationError' }
+
+  /me/sessions/revoke:
+    post:
+      tags: [Account]
+      operationId: revokeSessions
+      summary: Sign out everywhere
+      description: |
+        Ends every sign-in of this account, including the one making the request, and returns a fresh session
+        for this device. Tokens issued before this moment answer `401` with code `session_revoked`.
+        Logs `user.sessions_revoked`.
+      responses:
+        '200':
+          description: All other sign-ins ended.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 
   /me/activity:
     get:
@@ -989,7 +1035,11 @@ paths:
       tags: [Sharing]
       operationId: acceptInvite
       summary: Accept an invitation
-      description: Logs `invite.accepted` and `member.added`.
+      description: |
+        Only the invited email address can accept: a different signed-in account gets `403` with code
+        `invite_email_mismatch`, so a forwarded link does not let anyone else in. When the server can send
+        email, the account's address must also be verified (`403` `email_not_verified`).
+        Logs `invite.accepted` and `member.added`.
       responses:
         '200':
           description: Joined. Returns the project.
@@ -2223,8 +2273,11 @@ components:
       allOf:
         - $ref: '#/components/schemas/ProjectInvite'
         - type: object
-          required: [inviteUrl]
+          required: [inviteUrl, emailSent]
           properties:
+            emailSent:
+              type: boolean
+              description: Whether the invitation was emailed to the invitee. False when the server has no mail service set up or sending failed; copy the link instead.
             inviteUrl:
               type: string
               format: uri
@@ -2235,7 +2288,10 @@ components:
       properties:
         projectName: { type: string }
         role: { $ref: '#/components/schemas/InvitableRole' }
-        email: { type: string, format: email }
+        email:
+          type: string
+          description: The invited address with most of it hidden (`j***@example.com`). Only that address can accept.
+          examples: ['j***@example.com']
         invitedBy:
           oneOf:
             - $ref: '#/components/schemas/UserSummary'

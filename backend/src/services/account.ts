@@ -7,7 +7,7 @@ import * as activity from '../repositories/activity.js';
 import * as connections from '../repositories/githubConnections.js';
 import * as members from '../repositories/projectMembers.js';
 import * as users from '../repositories/users.js';
-import { githubTokenFor, sendVerificationEmail } from './auth.js';
+import { createSession, githubTokenFor, sendVerificationEmail } from './auth.js';
 import { toGithubConnection, toUser } from './presenters.js';
 
 async function currentUser(userId: string) {
@@ -50,7 +50,8 @@ export async function updateMe(
   return toUser(updated ?? before);
 }
 
-export async function changePassword(userId: string, input: { currentPassword: string; newPassword: string }): Promise<void> {
+/** Changes the password and ends every other sign-in; returns a fresh session so this device stays signed in. */
+export async function changePassword(userId: string, input: { currentPassword: string; newPassword: string }) {
   const user = await currentUser(userId);
   if (!(await verifyPassword(input.currentPassword, user.passwordHash))) {
     throw unauthorized('The current password is wrong.', 'invalid_credentials');
@@ -60,6 +61,16 @@ export async function changePassword(userId: string, input: { currentPassword: s
     await users.setPassword(tx, userId, hash);
     await activity.insert(tx, { actorUserId: userId, action: 'user.password_changed', targetType: 'user', targetId: userId, metadata: { via: 'settings' } });
   });
+  return createSession(await currentUser(userId));
+}
+
+/** "Sign out everywhere": ends every sign-in, this one included, and returns a fresh session for this device. */
+export async function signOutEverywhere(userId: string) {
+  await withTransaction(async (tx) => {
+    await users.revokeSessions(tx, userId);
+    await activity.insert(tx, { actorUserId: userId, action: 'user.sessions_revoked', targetType: 'user', targetId: userId, metadata: {} });
+  });
+  return createSession(await currentUser(userId));
 }
 
 export async function deleteMe(userId: string, password: string): Promise<void> {

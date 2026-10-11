@@ -141,6 +141,8 @@ export interface ProjectInvite {
 /** Returned once, when an invite is made: the link to send. The token is never shown again. */
 export interface InviteCreated extends ProjectInvite {
   inviteUrl: string;
+  /** Whether the server emailed the invitation; if not, the owner has to send the link. */
+  emailSent: boolean;
 }
 
 export interface InvitePreview {

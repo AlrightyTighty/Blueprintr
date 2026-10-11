@@ -6,6 +6,7 @@ import { getPool } from './db/pool.js';
 import { AppError, tooManyRequests, unauthorized } from './http/errors.js';
 import { createDefaultIntegrations, setIntegrations, type Integrations } from './integrations/registry.js';
 import { verifyToken } from './lib/jwt.js';
+import { redactUrl } from './lib/redact.js';
 import * as users from './repositories/users.js';
 import accountRoutes from './routes/account/index.js';
 import activityRoutes from './routes/activity/index.js';
@@ -21,7 +22,34 @@ import sharingRoutes from './routes/sharing/index.js';
 import systemRoutes from './routes/system/index.js';
 import { executeRun } from './services/analysis.js';
 
+/**
+ * Which websites may call the API from a browser. An explicit CORS_ORIGIN wins. Otherwise, in production,
+ * only the frontend's own address; anywhere else (a laptop) any origin, for convenience.
+ */
+export function corsOriginFor(settings: { CORS_ORIGIN?: string; NODE_ENV: string; FRONTEND_URL: string }): string | boolean {
+  if (settings.CORS_ORIGIN) return settings.CORS_ORIGIN;
+  return settings.NODE_ENV === 'production' ? new URL(settings.FRONTEND_URL).origin : true;
+}
+
+/** Reads TRUST_PROXY: unset or "false" trusts nothing; "true" trusts every hop; a number trusts that many proxies. */
+export function parseTrustProxy(value: string | undefined): boolean | number {
+  if (!value || value === 'false') return false;
+  if (value === 'true') return true;
+  const hops = Number(value);
+  return Number.isInteger(hops) && hops > 0 ? hops : false;
+}
+
+/**
+ * What Fastify's trustProxy option wants: true/false as they are, and a hop count as a function that trusts
+ * the nearest `hops` addresses (Fastify accepts the number itself at runtime, but its types only allow this).
+ */
+export function toFastifyTrustProxy(setting: boolean | number): boolean | ((address: string, hop: number) => boolean) {
+  return typeof setting === 'number' ? (_address, hop) => hop < setting : setting;
+}
+
 export interface BuildAppOptions {
+  /** Overrides TRUST_PROXY. Tests set it so they can tell requests apart with X-Forwarded-For. */
+  trustProxy?: boolean | number;
   /** Replace the outside world (GitHub, Gemini, ElevenLabs, S3, mail, job dispatch). Used by tests. */
   integrations?: Integrations;
   logger?: boolean;
@@ -48,8 +76,18 @@ const PROBLEM_TYPE = 'application/problem+json';
 export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   const config = getConfig();
   const app = Fastify({
-    logger: options.logger ?? true,
-    trustProxy: true, // behind API Gateway / CloudFront; needed for per-IP rate limits
+    logger:
+      options.logger === false
+        ? false
+        : {
+            serializers: {
+              // The default request log line includes the full URL, which can contain a link's secret.
+              req: (req) => ({ method: req.method, url: redactUrl(req.url ?? ''), host: req.host, remoteAddress: req.ip }),
+            },
+          },
+    // Believing X-Forwarded-For lets any client pick its own address and so dodge every per-IP rate limit,
+    // which is why this is off unless TRUST_PROXY says a proxy we control is in front.
+    trustProxy: toFastifyTrustProxy(options.trustProxy ?? parseTrustProxy(config.TRUST_PROXY)),
   });
 
   setIntegrations(
@@ -57,7 +95,7 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
   );
 
   app.register(cors, {
-    origin: config.CORS_ORIGIN ?? true,
+    origin: corsOriginFor(config),
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     exposedHeaders: ['Location', 'Retry-After'],
   });
@@ -77,9 +115,14 @@ export function buildApp(options: BuildAppOptions = {}): FastifyInstance {
     // A bad token must not break public endpoints; it is held back and reported by routes that need a user.
     try {
       if (!header.startsWith('Bearer ')) throw unauthorized('Use an "Authorization: Bearer <token>" header.', 'invalid_token');
-      const claims = await verifyToken(header.slice(7), 'access');
+      const claims = await verifyToken<{ iat?: number; iatMs?: number }>(header.slice(7), 'access');
       const user = claims.sub ? await users.findById(getPool(), claims.sub) : null;
       if (!user) throw unauthorized('This account no longer exists.', 'invalid_token');
+      // A password change (or "sign out everywhere") ends every sign-in made before it.
+      const issuedAtMs = typeof claims.iatMs === 'number' ? claims.iatMs : (claims.iat ?? 0) * 1000; // tokens from before iatMs existed
+      if (user.sessionsValidAfter && issuedAtMs < Date.parse(user.sessionsValidAfter)) {
+        throw unauthorized('Your session has ended. Sign in again.', 'session_revoked');
+      }
       req.userId = user.id;
     } catch (err) {
       if (!(err instanceof AppError)) throw err;

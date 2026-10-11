@@ -1,3 +1,4 @@
+import { perUserLimit } from '../../http/rateLimits.js';
 import type { FastifyPluginAsync } from 'fastify';
 import { getConfig } from '../../config.js';
 import { actorOf, userActor } from '../../http/context.js';
@@ -8,7 +9,7 @@ const planParams = projectParams.extend({ planId: uuid });
 
 const routes: FastifyPluginAsync = async (app) => {
   // Plans can be several MB, so this route alone accepts a larger body than the default.
-  app.post('/projects/:projectId/runs/:runId/plans', { bodyLimit: getConfig().MAX_PLAN_BYTES }, async (req, reply) => {
+  app.post('/projects/:projectId/runs/:runId/plans', { bodyLimit: getConfig().MAX_PLAN_BYTES, ...perUserLimit(20) }, async (req, reply) => {
     const { projectId, runId } = parse(projectParams.extend({ runId: runRef }), req.params);
     return reply.code(201).send(await plans.uploadPlan(userActor(req), projectId, runId, req.body));
   });

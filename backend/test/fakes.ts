@@ -4,14 +4,25 @@ import type { ElevenLabsClient } from '../src/integrations/elevenlabs.js';
 import type { GeminiClient } from '../src/integrations/gemini.js';
 import type { GithubClient, GithubProfile, GithubRepo, RepoFile } from '../src/integrations/github.js';
 import type { Integrations } from '../src/integrations/registry.js';
-import type { Mailer } from '../src/lib/mailer.js';
+import type { InvitationDetails, Mailer } from '../src/lib/mailer.js';
 import { executeRun } from '../src/services/analysis.js';
 import { loadFixture } from './helpers.js';
 
 export const COMMIT = 'a'.repeat(40);
 
 export class FakeMailer implements Mailer {
+  /** Set true to act like a real mail service, which makes invitations require a verified email. */
+  deliverable = false;
+  isDeliverable() {
+    return this.deliverable;
+  }
   sent: { kind: 'verify' | 'reset'; to: string; link: string }[] = [];
+  invitations: ({ to: string } & InvitationDetails)[] = [];
+  failInvitations = false;
+  async sendInvitation(to: string, details: InvitationDetails) {
+    if (this.failInvitations) throw new Error('mail service down');
+    this.invitations.push({ to, ...details });
+  }
   async sendEmailVerification(to: string, link: string) {
     this.sent.push({ kind: 'verify', to, link });
   }
@@ -32,6 +43,7 @@ export class FakeGithub implements GithubClient {
   repos: GithubRepo[] = [
     { githubId: 5000, fullName: 'acme/orders', defaultBranch: 'main', htmlUrl: 'https://github.com/acme/orders', isPrivate: true },
     { githubId: 5001, fullName: 'acme/website', defaultBranch: 'main', htmlUrl: 'https://github.com/acme/website', isPrivate: false },
+    { githubId: 5002, fullName: 'acme/huge', defaultBranch: 'main', htmlUrl: 'https://github.com/acme/huge', isPrivate: false, sizeKb: 900_000 },
   ];
   files: RepoFile[] = loadFixture('demo');
   downloads = 0;

@@ -1,4 +1,5 @@
 import { LogMailer, type Mailer } from '../lib/mailer.js';
+import { SesMailer } from '../lib/sesMailer.js';
 import { S3AudioStorage, type AudioStorage } from './audioStorage.js';
 import { getConfig } from '../config.js';
 import { LocalAudioStorage } from './localAudioStorage.js';
@@ -32,7 +33,7 @@ export type DefaultIntegrationsInput = { executeRun: (runId: string) => Promise<
 
 export function createDefaultIntegrations({ executeRun, log }: DefaultIntegrationsInput): Integrations {
   return {
-    mailer: new LogMailer(log),
+    mailer: getConfig().MAIL_FROM ? new SesMailer(getConfig().MAIL_FROM!) : new LogMailer(log),
     github: new HttpGithubClient(),
     gemini: new HttpGeminiClient(),
     elevenlabs: new HttpElevenLabsClient(),

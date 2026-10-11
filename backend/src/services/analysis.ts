@@ -1,6 +1,8 @@
 import { getPool, withTransaction, type Db } from '../db/pool.js';
 import { AppError, conflict, notFound, validationError } from '../http/errors.js';
 import { PARSER_VERSION, analyze, type AnalysisStage } from '../core/analysis/pipeline.js';
+import { getConfig } from '../config.js';
+import { AnalysisLimitError } from '../core/code/scan.js';
 import { integrations } from '../integrations/registry.js';
 import * as activity from '../repositories/activity.js';
 import * as runs from '../repositories/analysisRuns.js';
@@ -63,8 +65,28 @@ async function tokenForLink(db: Db, link: links.ProjectRepositoryRow): Promise<s
   throw conflict('no_github_connection', 'No GitHub connection is available for this repository. Link it again with a connected account.');
 }
 
+const STALE_RUN_MESSAGE = 'The analysis stopped before it finished (it timed out, or the server restarted). Try again.';
+
+/**
+ * Fails any of the project's analyses that have stopped making progress, so the page stops waiting and a new
+ * one can start. Called wherever runs are read or started; cheap when there is nothing to do.
+ */
+export async function expireStaleRuns(db: Db, projectId: string | null): Promise<void> {
+  const expired = await runs.failStale(db, projectId, getConfig().ANALYSIS_STALE_MINUTES, STALE_RUN_MESSAGE);
+  for (const run of expired) {
+    await activity
+      .insert(db, { projectId: run.projectId, actorUserId: null, action: 'analysis.failed', targetType: 'analysis_run', targetId: run.id, metadata: { commitSha: run.commitSha, error: STALE_RUN_MESSAGE } })
+      .catch(() => undefined);
+  }
+}
+
 /** Resolves the commit, records the run, and hands it to the dispatcher. Returns before analysis starts. */
 export async function startRunInternal(db: Db, projectId: string, userId: string, input: StartRunInput) {
+  await expireStaleRuns(db, projectId);
+  // One analysis at a time per project: starting many would only pile up work (and Lambda cost).
+  if (await runs.hasActive(db, projectId)) {
+    throw conflict('analysis_in_progress', 'An analysis is already running for this project. Wait for it to finish.');
+  }
   const linked = await links.list(db, projectId);
   if (linked.length === 0) throw validationError([{ field: 'repositoryLinkId', message: 'Link a GitHub repository to this project first.' }], 'No repository is linked.');
   let link = input.repositoryLinkId ? linked.find((l) => l.id === input.repositoryLinkId) : undefined;
@@ -175,7 +197,8 @@ export async function executeRun(runId: string): Promise<void> {
     });
   } catch (err) {
     console.error(`analysis run ${runId} failed`, err);
-    const message = err instanceof AppError ? err.detail ?? err.title : 'The analysis failed unexpectedly.';
+    const message =
+      err instanceof AppError ? err.detail ?? err.title : err instanceof AnalysisLimitError ? err.message : 'The analysis failed unexpectedly.';
     await runs.updateProgress(db, runId, { status: 'failed', error: message, markFinished: true }).catch(() => undefined);
     await activity
       .insert(db, { projectId, actorUserId: actorId, action: 'analysis.failed', targetType: 'analysis_run', targetId: runId, metadata: { commitSha: run.commitSha, error: message } })
@@ -188,6 +211,7 @@ export async function executeRun(runId: string): Promise<void> {
 export async function listRuns(actor: Actor, projectId: string, query: { commitSha?: string; status?: RunStatus; limit: number; cursor?: string }) {
   const db = getPool();
   await requireProject(db, projectId, actor, { allowShare: true });
+  await expireStaleRuns(db, projectId);
   const page = await runs.list(db, projectId, query);
   return { items: page.items.map(toRun), nextCursor: page.nextCursor };
 }
@@ -195,6 +219,7 @@ export async function listRuns(actor: Actor, projectId: string, query: { commitS
 export async function getRun(actor: Actor, projectId: string, runRef: string) {
   const db = getPool();
   const { project } = await requireProject(db, projectId, actor, { allowShare: true });
+  await expireStaleRuns(db, projectId);
   return toRun(await resolveRun(db, project, runRef));
 }
 

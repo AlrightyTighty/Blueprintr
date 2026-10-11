@@ -1,6 +1,8 @@
 node_modules/
 dist/
 cdk.out/
+# ...except the synthesised templates the CloudFormation tests read (backend/test/fixtures/*/cdk.out).
+!backend/test/fixtures/**/cdk.out/
 *.tsbuildinfo
 .env
 .env.*

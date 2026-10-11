@@ -4,6 +4,7 @@ import type { GraphNode } from '../../core/graph/types';
 // bright colours meant for dark backgrounds) from the aws-svg-icons package. Vite turns each import
 // into an image URL. The folders aren't named consistently ("64" vs "Arch_64"), so each path is explicit.
 import apiGatewayIcon from 'aws-svg-icons/lib/Architecture-Service-Icons_07302021/Arch_App-Integration/Arch_64/Arch_Amazon-API-Gateway_64.svg';
+import snsIcon from 'aws-svg-icons/lib/Architecture-Service-Icons_07302021/Arch_App-Integration/Arch_64/Arch_Amazon-Simple-Notification-Service_64.svg';
 import sqsIcon from 'aws-svg-icons/lib/Architecture-Service-Icons_07302021/Arch_App-Integration/Arch_64/Arch_Amazon-Simple-Queue-Service_64.svg';
 import lambdaIcon from 'aws-svg-icons/lib/Architecture-Service-Icons_07302021/Arch_Compute/64/Arch_AWS-Lambda_64.svg';
 import dynamoDbIcon from 'aws-svg-icons/lib/Architecture-Service-Icons_07302021/Arch_Database/64/Arch_Amazon-DynamoDB_64.svg';
@@ -20,6 +21,7 @@ export const ICON_URL_BY_KEY: Record<string, string> = {
   'aws/s3': s3Icon,
   'aws/dynamodb': dynamoDbIcon,
   'aws/sqs': sqsIcon,
+  'aws/sns': snsIcon,
   'aws/iam-role': iamRoleIcon,
   'aws/iam-policy': iamPermissionsIcon,
   'aws/api-gateway': apiGatewayIcon,
@@ -32,6 +34,7 @@ const ICON_KEY_BY_UNMANAGED_SERVICE: Record<string, string> = {
   s3: 'aws/s3',
   dynamodb: 'aws/dynamodb',
   sqs: 'aws/sqs',
+  sns: 'aws/sns',
 };
 
 interface DrawnIconProps {

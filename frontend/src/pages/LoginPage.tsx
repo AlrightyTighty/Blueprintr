@@ -61,6 +61,9 @@ export default function LoginPage() {
             autoComplete="current-password"
             required
           />
+          <Link to="/forgot-password" className="mt-1 inline-block text-xs text-indigo-300 hover:text-indigo-200">
+            Forgot password?
+          </Link>
         </div>
         {errorMessage && <p className="text-sm text-rose-300">{errorMessage}</p>}
         <button type="submit" className={primaryButtonClass} disabled={isSubmitting}>

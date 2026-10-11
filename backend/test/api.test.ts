@@ -49,7 +49,7 @@ describe.skipIf(!enabled)('API (end to end against Postgres)', () => {
 
   beforeAll(async () => {
     dropDatabase = await createTestDatabase();
-    app = buildApp({ integrations: fakes.integrations, logger: false });
+    app = buildApp({ integrations: fakes.integrations, logger: false, trustProxy: true });
     await app.ready();
   });
 
@@ -140,7 +140,9 @@ describe.skipIf(!enabled)('API (end to end against Postgres)', () => {
 
     it('changes the password after checking the current one', async () => {
       expect((await api('POST', '/me/password', { token: alice.token, body: { currentPassword: 'wrong', newPassword: 'a long new passphrase' } })).status).toBe(401);
-      expect((await api('POST', '/me/password', { token: alice.token, body: { currentPassword: 'correct horse battery', newPassword: 'a long new passphrase' } })).status).toBe(204);
+      const changed = await api('POST', '/me/password', { token: alice.token, body: { currentPassword: 'correct horse battery', newPassword: 'a long new passphrase' } });
+      expect(changed.status).toBe(200);
+      alice.token = changed.body.token; // changing the password ends the old sign-in; this is the fresh one
       expect((await api('POST', '/auth/login', { body: { identifier: 'alice', password: 'a long new passphrase' } })).status).toBe(200);
     });
   });

@@ -14,6 +14,32 @@ export interface CodeSource {
   content: string;
 }
 
+// ---- limits ----------------------------------------------------------------------------------------------
+// Anyone can link a repository, so every file is untrusted. These keep one hostile file from taking the
+// analyzer (or the server it shares a thread with) hostage: nothing below may do work proportional to the
+// square of a file's size.
+
+/** A line longer than this means minified or generated code, which is skipped rather than half-understood. */
+export const MAX_LINE_LENGTH = 4000;
+/** How much of a call's arguments is ever looked at. Real SDK calls are far shorter. */
+const MAX_ARGS_CHARS = 8000;
+/** Per file, so a file made of millions of tiny calls cannot make the later steps slow. */
+const MAX_CALLS_PER_FILE = 2000;
+const MAX_FUNCTIONS_PER_FILE = 3000;
+/** How many source lines of a function are kept as context for inference (only the first ~4000 characters are used). */
+const MAX_CONTEXT_LINES = 200;
+/** Last-resort look-ahead for a bracket the one-pass index did not see (one inside a string literal). */
+const FALLBACK_BRACKET_SPAN = 2000;
+const MAX_FALLBACK_SCANS_PER_FILE = 5000;
+/** Total time for scanning every file. Not reached by ordinary repositories. */
+export const SCAN_BUDGET_MS = 20_000;
+
+/** The analysis stopped because it hit a safety limit; the message is fit to show the user. */
+export class AnalysisLimitError extends Error {}
+
+/** Looks a key up in a table of known names, ignoring the built-ins every object inherits (toString, valueOf, constructor...). */
+const own = <T>(table: Record<string, T>, key: string): T | undefined => (Object.hasOwn(table, key) ? table[key] : undefined);
+
 export interface CodeFunction {
   file: string;
   name: string;
@@ -47,7 +73,14 @@ export interface SdkCall {
   context: string;
 }
 
+export interface SkippedFile {
+  path: string;
+  reason: string;
+}
+
 export interface CodeFacts {
+  /** Files that were not read, and why. */
+  skipped: SkippedFile[];
   files: string[];
   functions: CodeFunction[];
   envReads: EnvRead[];
@@ -118,12 +151,18 @@ function lineAt(starts: number[], offset: number): number {
   return lo + 1;
 }
 
-/** Index just past the bracket that closes the one at `open`, skipping string literals. */
-function matchBracket(src: string, open: number): number {
-  const opener = src[open]!;
-  const closer = opener === '(' ? ')' : opener === '{' ? '}' : ']';
-  let depth = 0;
-  for (let i = open; i < src.length; i++) {
+const UNCLOSED = -1;
+
+/**
+ * For every ( { [ outside a string literal, the index just past its closing bracket (UNCLOSED if it never
+ * closes); 0 for every other position. One pass over the file, so asking about any bracket is instant. The
+ * old way rescanned from each bracket to the end of the file, which made a file of unclosed brackets take minutes.
+ */
+function buildBracketIndex(src: string): Int32Array {
+  const closes = new Int32Array(src.length);
+  const open: Record<string, number[]> = { '(': [], '{': [], '[': [] };
+  const openerOf: Record<string, string> = { ')': '(', '}': '{', ']': '[' };
+  for (let i = 0; i < src.length; i++) {
     const c = src[i]!;
     if (c === '"' || c === "'" || c === '`') {
       i++;
@@ -131,10 +170,50 @@ function matchBracket(src: string, open: number): number {
         if (src[i] === '\\') i++;
         i++;
       }
-    } else if (c === opener) depth++;
+    } else if (c === '(' || c === '{' || c === '[') {
+      open[c]!.push(i);
+    } else if (c === ')' || c === '}' || c === ']') {
+      const start = open[openerOf[c]!]!.pop();
+      if (start !== undefined) closes[start] = i + 1;
+    }
+  }
+  for (const stack of Object.values(open)) for (const start of stack) closes[start] = UNCLOSED;
+  return closes;
+}
+
+// The scanner works on one file at a time, so the index of the file in hand is kept between calls.
+let indexedSource: string | null = null;
+let bracketIndex: Int32Array = new Int32Array(0);
+let fallbackScans = 0;
+
+/** Index just past the bracket that closes the one at `open`, skipping string literals. */
+function matchBracket(src: string, open: number): number {
+  if (src !== indexedSource) {
+    indexedSource = src;
+    bracketIndex = buildBracketIndex(src);
+    fallbackScans = 0;
+  }
+  const close = bracketIndex[open]!;
+  if (close > 0) return close;
+  if (close === UNCLOSED) return src.length;
+
+  // Not a bracket the index saw: it sits inside a string literal. Look a short way ahead, a bounded number of times.
+  if (++fallbackScans > MAX_FALLBACK_SCANS_PER_FILE) return Math.min(open + 1, src.length);
+  const opener = src[open]!;
+  const closer = opener === '(' ? ')' : opener === '{' ? '}' : ']';
+  const limit = Math.min(src.length, open + FALLBACK_BRACKET_SPAN);
+  let depth = 0;
+  for (let i = open; i < limit; i++) {
+    const c = src[i]!;
+    if (c === opener) depth++;
     else if (c === closer && --depth === 0) return i + 1;
   }
-  return src.length;
+  return limit;
+}
+
+/** The text between a call's parentheses, capped so one enormous call cannot be copied over and over. */
+function argsBetween(src: string, openParen: number): string {
+  return src.slice(openParen + 1, Math.min(matchBracket(src, openParen) - 1, openParen + 1 + MAX_ARGS_CHARS));
 }
 
 // ---- value resolution --------------------------------------------------------------------------------------
@@ -177,8 +256,8 @@ function collectConsts(src: string, lang: Language): Consts {
   const consts: Consts = { env: new Map(), literal: new Map() };
   const assign =
     lang === 'js'
-      ? /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]+)?=\s*([^;\n]+)/g
-      : /^[ \t]*([A-Za-z_]\w*)\s*(?::[^=\n]+)?=\s*([^\n]+)/gm;
+      ? /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]{1,200})?=\s*([^;\n]{1,500})/g
+      : /^[ \t]*([A-Za-z_]\w*)\s*(?::[^=\n]{1,200})?=\s*([^\n]{1,500})/gm;
   for (const m of src.matchAll(assign)) {
     const name = m[1]!;
     const target = resolveExpr(m[2]!.split(/\s*(?:\|\||\?\?|\bor\b)\s*/)[0]!, { env: new Map(), literal: new Map() });
@@ -245,13 +324,13 @@ function findFunctions(path: string, src: string, lang: Language, starts: number
       }
       found.push({ file: path, name: m[2]!, qualified: `${path}::${m[2]}`, lineStart: i + 1, lineEnd: end + 1 });
     }
-    return found;
+    return found.slice(0, MAX_FUNCTIONS_PER_FILE);
   }
 
   const patterns: RegExp[] = [
     /\bfunction\s*\*?\s+([A-Za-z_$][\w$]*)\s*\(/g,
-    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]+)?=\s*(?:async\s*)?(?:function\b[^(]*\(|\([^)]*\)\s*(?::[^=\n{]+)?=>|[A-Za-z_$][\w$]*\s*=>)/g,
-    /\b(?:module\.)?exports\.([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:function\b[^(]*\(|\([^)]*\)\s*=>|[A-Za-z_$][\w$]*\s*=>)/g,
+    /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*(?::[^=\n]{1,200})?=\s*(?:async\s*)?(?:function\b[^(]{0,100}\(|\([^)]{0,300}\)\s*(?::[^=\n{]{1,200})?=>|[A-Za-z_$][\w$]*\s*=>)/g,
+    /\b(?:module\.)?exports\.([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:function\b[^(]{0,100}\(|\([^)]{0,300}\)\s*=>|[A-Za-z_$][\w$]*\s*=>)/g,
   ];
   const seen = new Set<string>();
   for (const pattern of patterns) {
@@ -275,6 +354,7 @@ function findFunctions(path: string, src: string, lang: Language, starts: number
       if (seen.has(key)) continue;
       seen.add(key);
       add(name, startOffset, endOffset);
+      if (found.length >= MAX_FUNCTIONS_PER_FILE) return found;
     }
   }
   return found;
@@ -304,7 +384,7 @@ function findEnvReads(path: string, src: string, lang: Language, starts: number[
 
   if (lang === 'js') {
     // const { A, B: alias } = process.env
-    for (const m of src.matchAll(/\{([^}]*)\}\s*=\s*process\.env\b/g)) {
+    for (const m of src.matchAll(/\{([^}]{0,400})\}\s*=\s*process\.env\b/g)) {
       for (const part of m[1]!.split(',')) {
         const name = part.split(':')[0]!.split('=')[0]!.trim();
         if (/^[A-Za-z_]\w*$/.test(name)) push(name, m.index!);
@@ -328,11 +408,12 @@ function findSdkCalls(
   const lines = src.split('\n');
 
   const record = (op: SdkOperation, offset: number, args: string, receiverTarget: CallTarget | null) => {
+    if (calls.length >= MAX_CALLS_PER_FILE) return;
     const line = lineAt(starts, offset);
     const fn = enclosing(functions, line);
     const field = TARGET_FIELD[op.service];
     const target = readField(args, field, lang, consts) ?? receiverTarget ?? { kind: 'unknown' as const, hint: null };
-    const contextLines = fn ? lines.slice(fn.lineStart - 1, fn.lineEnd) : lines.slice(Math.max(0, line - 16), line + 15);
+    const contextLines = fn ? lines.slice(fn.lineStart - 1, Math.min(fn.lineEnd, fn.lineStart - 1 + MAX_CONTEXT_LINES)) : lines.slice(Math.max(0, line - 16), line + 15);
     calls.push({
       file: path,
       line,
@@ -344,24 +425,24 @@ function findSdkCalls(
     });
   };
 
-  const argsAt = (openParen: number) => src.slice(openParen + 1, matchBracket(src, openParen) - 1);
+  const argsAt = (openParen: number) => argsBetween(src, openParen);
 
   if (lang === 'js') {
     for (const m of src.matchAll(/\bnew\s+([A-Za-z0-9_]+Command)\s*\(/g)) {
-      const op = JS_COMMANDS[m[1]!];
+      const op = own(JS_COMMANDS, m[1]!);
       if (op) record(op, m.index!, argsAt(m.index! + m[0].length - 1), null);
     }
     for (const m of src.matchAll(/\.\s*([A-Za-z0-9_]+)\s*\(/g)) {
       const name = m[1]!;
       const open = m.index! + m[0].length - 1;
-      const unambiguous = JS_METHODS[name];
+      const unambiguous = own(JS_METHODS, name);
       if (unambiguous) {
         const args = argsAt(open);
         // Method names like `publish`/`invoke`/`upload` are common; require the SDK's target field, or at least an object argument.
         if (new RegExp(`\\b${TARGET_FIELD[unambiguous.service]}\\b`).test(args) || /^\s*\{/.test(args)) record(unambiguous, m.index!, args, null);
         continue;
       }
-      const ambiguous = JS_AMBIGUOUS_DYNAMO_METHODS[name];
+      const ambiguous = own(JS_AMBIGUOUS_DYNAMO_METHODS, name);
       if (ambiguous) {
         const args = argsAt(open);
         if (/\bTableName\b/.test(args)) record(ambiguous, m.index!, args, null);
@@ -372,18 +453,18 @@ function findSdkCalls(
 
   // Python: variables bound to a resource (Table(...), Bucket(...), get_queue_by_name(...)).
   const receivers = new Map<string, { kind: 'table' | 'other'; target: CallTarget }>();
-  for (const m of src.matchAll(/([A-Za-z_]\w*)\s*=\s*[\w.]*(?:\([^)]*\))?\s*\.\s*(Table|Bucket|get_queue_by_name)\s*\(/g)) {
+  for (const m of src.matchAll(/\b([A-Za-z_]\w*)\s*=\s*[\w.]{0,100}(?:\([^)]{0,300}\))?\s*\.\s*(Table|Bucket|get_queue_by_name)\s*\(/g)) {
     const open = m.index! + m[0].length - 1;
     const args = argsAt(open);
     const first = m[2] === 'get_queue_by_name' ? readField(args, 'QueueName', 'py', consts) : resolveExpr(args.split(',')[0]!, consts);
     receivers.set(m[1]!, { kind: m[2] === 'Table' ? 'table' : 'other', target: first ?? { kind: 'unknown', hint: null } });
   }
-  for (const m of src.matchAll(/(?:([A-Za-z_]\w*)|\))\s*\.\s*([A-Za-z0-9_]+)\s*\(/g)) {
+  for (const m of src.matchAll(/(?:\b([A-Za-z_]\w*)|\))\s*\.\s*([A-Za-z0-9_]+)\s*\(/g)) {
     const receiverName = m[1];
     const method = m[2]!;
     const open = m.index! + m[0].length - 1;
     const receiver = receiverName ? receivers.get(receiverName) : undefined;
-    const op = PY_METHODS[method] ?? (receiver?.kind === 'table' ? PY_TABLE_METHODS[method] : undefined);
+    const op = own(PY_METHODS, method) ?? (receiver?.kind === 'table' ? own(PY_TABLE_METHODS, method) : undefined);
     if (!op) continue;
     const args = argsAt(open);
     // `publish`/`invoke`/`upload_*` etc. are generic words; require an SDK-looking call (known receiver or the target kwarg).
@@ -396,11 +477,32 @@ function findSdkCalls(
 
 // ---- entry point ----------------------------------------------------------------------------------------------------
 
-export function scanCode(sources: CodeSource[]): CodeFacts {
-  const facts: CodeFacts = { files: [], functions: [], envReads: [], sdkCalls: [] };
+/** Whether any line is long enough to mean minified or generated code. Found without splitting the file. */
+function hasVeryLongLine(content: string): boolean {
+  let lineStart = 0;
+  for (let i = 0; i <= content.length; i++) {
+    if (i === content.length || content.charCodeAt(i) === 10) {
+      if (i - lineStart > MAX_LINE_LENGTH) return true;
+      lineStart = i + 1;
+    }
+  }
+  return false;
+}
+
+export function scanCode(sources: CodeSource[], options: { budgetMs?: number } = {}): CodeFacts {
+  const budgetMs = options.budgetMs ?? SCAN_BUDGET_MS;
+  const facts: CodeFacts = { skipped: [], files: [], functions: [], envReads: [], sdkCalls: [] };
+  const startedAt = performance.now();
   for (const source of sources) {
     const lang = languageOf(source.path);
     if (!lang) continue;
+    if (performance.now() - startedAt > budgetMs) {
+      throw new AnalysisLimitError('This repository took too long to analyse. Link a smaller folder (for example just the infrastructure and the code it runs).');
+    }
+    if (hasVeryLongLine(source.content)) {
+      facts.skipped.push({ path: source.path, reason: `it has a line over ${MAX_LINE_LENGTH} characters, so it looks minified or generated` });
+      continue;
+    }
     const src = stripComments(source.content, lang);
     const starts = lineStarts(src);
     const consts = collectConsts(src, lang);

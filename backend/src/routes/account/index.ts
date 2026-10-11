@@ -1,3 +1,4 @@
+import { perUserLimit } from '../../http/rateLimits.js';
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { requireUser } from '../../http/context.js';
@@ -28,11 +29,12 @@ const routes: FastifyPluginAsync = async (app) => {
     return reply.code(204).send();
   });
 
-  app.post('/me/password', async (req, reply) => {
+  app.post('/me/password', async (req) => {
     const body = parse(z.object({ currentPassword: z.string().min(1), newPassword: password }), req.body);
-    await account.changePassword(requireUser(req), body);
-    return reply.code(204).send();
+    return account.changePassword(requireUser(req), body);
   });
+
+  app.post('/me/sessions/revoke', async (req) => account.signOutEverywhere(requireUser(req)));
 
   app.get('/me/activity', async (req) => account.listMyActivity(requireUser(req), parse(pageQuery, req.query)));
 
@@ -44,7 +46,7 @@ const routes: FastifyPluginAsync = async (app) => {
     return reply.code(204).send();
   });
 
-  app.get('/me/github-connections/:connectionId/repositories', async (req) => {
+  app.get('/me/github-connections/:connectionId/repositories', perUserLimit(60), async (req) => {
     const { connectionId } = parse(z.object({ connectionId: uuid }), req.params);
     const query = parse(z.object({ q: z.string().max(100).optional(), cursor: z.string().max(10).optional() }), req.query);
     return account.listGithubRepositories(requireUser(req), connectionId, query);

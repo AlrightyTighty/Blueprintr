@@ -16,7 +16,9 @@ import { toGithubConnection, toUser } from './presenters.js';
 const HOUR = 60 * 60 * 1000;
 
 export async function createSession(user: UserRow) {
-  const { token, expiresAt } = await signToken('access', {}, getConfig().JWT_TTL_SECONDS, user.id);
+  // iatMs: when this token was made, to the millisecond. The standard iat claim is whole seconds, too coarse to
+  // tell a sign-in made just before a password change from one made just after it.
+  const { token, expiresAt } = await signToken('access', { iatMs: Date.now() }, getConfig().JWT_TTL_SECONDS, user.id);
   return { token, expiresAt: expiresAt.toISOString(), user: toUser(user) };
 }
 

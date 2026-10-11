@@ -1,7 +1,9 @@
 import { getPool, withTransaction } from '../db/pool.js';
 import { UNIQUE_VIOLATION, pgErrorCode } from '../db/util.js';
-import { conflict, gone, notFound, unauthorized } from '../http/errors.js';
+import { AppError, conflict, gone, notFound, unauthorized } from '../http/errors.js';
+import { integrations } from '../integrations/registry.js';
 import { hashToken, randomToken } from '../lib/crypto.js';
+import { maskEmail } from '../lib/maskEmail.js';
 import { frontendUrl } from '../lib/mailer.js';
 import * as activity from '../repositories/activity.js';
 import * as invites from '../repositories/projectInvites.js';
@@ -138,7 +140,23 @@ export async function createInvite(actor: Actor, projectId: string, input: { ema
     await activity.insert(tx, { projectId, actorUserId: actor.userId, action: 'invite.created', targetType: 'invite', targetId: created.id, metadata: { email, role: input.role } });
     return created;
   });
-  return { ...toInvite(invite), inviteUrl: frontendUrl(`/invites/${token}`) };
+  const inviteUrl = frontendUrl(`/invites/${token}`);
+  const emailSent = await emailInvitation(actor, projectId, email, input.role, inviteUrl);
+  return { ...toInvite(invite), inviteUrl, emailSent };
+}
+
+/** Emails the invitation. A mail failure never fails the invitation: the owner can still copy the link. */
+async function emailInvitation(actor: Actor, projectId: string, email: string, role: string, link: string): Promise<boolean> {
+  const mailer = integrations().mailer;
+  if (!mailer.isDeliverable()) return false;
+  try {
+    const db = getPool();
+    const [inviter, project] = await Promise.all([users.findById(db, actor.userId!), projects.findById(db, projectId)]);
+    await mailer.sendInvitation(email, { inviterName: inviter?.username ?? 'A teammate', projectName: project?.name ?? 'a project', role, link });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function revokeInvite(actor: Actor, projectId: string, inviteId: string): Promise<void> {
@@ -163,13 +181,32 @@ async function usableInvite(token: string): Promise<InviteRow> {
 
 export async function previewInvite(token: string) {
   const invite = await usableInvite(token);
-  return { projectName: invite.projectName, role: invite.role, email: invite.email, invitedBy: invite.invitedBy, expiresAt: invite.expiresAt };
+  // Anyone holding the link can preview it, so show only enough of the address to know which one to use.
+  return { projectName: invite.projectName, role: invite.role, email: maskEmail(invite.email), invitedBy: invite.invitedBy, expiresAt: invite.expiresAt };
 }
 
 export async function acceptInvite(userId: string | null, token: string) {
   if (!userId) throw unauthorized('Sign in to accept this invitation.');
   const invite = await usableInvite(token);
   const db = getPool();
+
+  // An invitation is for one email address. Holding the link is not enough: forwarding it must not let someone else in.
+  const account = await users.findById(db, userId);
+  if (!account) throw unauthorized('Sign in to accept this invitation.');
+  if (account.email.toLowerCase() !== invite.email.toLowerCase()) {
+    throw new AppError(
+      403,
+      'invite_email_mismatch',
+      'Forbidden',
+      `This invitation was sent to ${maskEmail(invite.email)}. You are signed in with a different email address.`,
+    );
+  }
+  // Once mail can really be delivered, an address only counts after its owner has clicked the verification link;
+  // otherwise anyone could sign up with a known address and walk in.
+  if (integrations().mailer.isDeliverable() && !account.emailVerifiedAt) {
+    throw new AppError(403, 'email_not_verified', 'Forbidden', 'Verify your email address first (check your inbox for the link), then open the invitation again.');
+  }
+
   await withTransaction(async (tx) => {
     if (await members.find(tx, invite.projectId, userId)) throw conflict('already_member', 'You are already on this project.');
     const user = await users.findById(tx, userId);

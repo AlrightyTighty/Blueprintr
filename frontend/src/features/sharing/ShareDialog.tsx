@@ -57,6 +57,7 @@ export default function ShareDialog({ project, onClose, onProjectChanged, onLeft
   const [invites, setInvites] = useState<ProjectInvite[]>([]);
   const [sharing, setSharingState] = useState<Sharing | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState<PendingConfirm | null>(null);
 
@@ -103,6 +104,7 @@ export default function ShareDialog({ project, onClose, onProjectChanged, onLeft
       const created = await createInvite(project.id, email.trim(), role);
       setLinkByInviteId((links) => ({ ...links, [created.id]: created.inviteUrl }));
       setInvites((current) => [created, ...current]);
+      setNoticeMessage(created.emailSent ? `We emailed the invitation to ${created.email}.` : 'Copy the invitation link below and send it to them yourself.');
       setEmail('');
     });
   }
@@ -160,6 +162,7 @@ export default function ShareDialog({ project, onClose, onProjectChanged, onLeft
       <Modal title={`Share “${project.name}”`} onClose={onClose} wide>
         <div className="flex flex-col gap-7 text-sm">
           {errorMessage && <p className="rounded border border-rose-900 bg-rose-950/40 px-3 py-2 text-rose-300">{errorMessage}</p>}
+          {noticeMessage && !errorMessage && <p className="rounded border border-indigo-900 bg-indigo-950/40 px-3 py-2 text-indigo-200">{noticeMessage}</p>}
 
           <section>
             <h3 className="mb-2 font-medium text-indigo-200">People with access</h3>
@@ -261,8 +264,9 @@ export default function ShareDialog({ project, onClose, onProjectChanged, onLeft
                 </button>
               </form>
               <p className="mt-2 text-xs text-slate-500">
-                {ROLE_HELP} Ripplemap doesn't send email: copy the invite link and send it yourself. The link is shown only
-                once, here.
+                {ROLE_HELP} An invitation only works for the email address you enter: they have to sign in or sign up with
+                that address, so forwarding the link doesn't let anyone else in. Copy the link and send it to them; it is
+                shown only once, here.
               </p>
 
               {invites.length > 0 && (
@@ -296,7 +300,7 @@ export default function ShareDialog({ project, onClose, onProjectChanged, onLeft
 
           {isOwner && (
             <section>
-              <h3 className="mb-2 font-medium text-indigo-200">Anyone with the link can view</h3>
+              <h3 className="mb-2 font-medium text-indigo-200">Public read-only link</h3>
               <label className="flex items-center gap-2 text-slate-200">
                 <input
                   type="checkbox"
@@ -307,7 +311,9 @@ export default function ShareDialog({ project, onClose, onProjectChanged, onLeft
                 Turn on the read-only link
               </label>
               <p className="mt-1 text-xs text-slate-500">
-                People with the link can see the graph, findings and tours without an account. They can't change anything or use the AI features.
+                <strong className="text-amber-300">Anyone who has this link can view the project, with no sign-in and no email check.</strong>{' '}
+                They can see the graph, findings and tours, but can't change anything or use the AI features. To share with
+                specific people only, leave this off and invite them above.
               </p>
               {isLinkOn && sharing?.shareUrl && (
                 <div className="mt-3 flex flex-col gap-2">

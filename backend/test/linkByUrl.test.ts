@@ -46,7 +46,7 @@ describe.skipIf(!enabled)('linking a repository by GitHub link', () => {
 
   beforeAll(async () => {
     dropDatabase = await createTestDatabase();
-    app = buildApp({ integrations: fakes.integrations, logger: false });
+    app = buildApp({ integrations: fakes.integrations, logger: false, trustProxy: true });
     await app.ready();
   });
   afterAll(async () => {

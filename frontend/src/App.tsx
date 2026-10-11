@@ -2,7 +2,10 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import RequireAuth from './components/RequireAuth';
 import { DEMO_PROJECT_ID } from './config';
 import DashboardPage from './pages/DashboardPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import GithubCallbackPage from './pages/GithubCallbackPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import NewProjectPage from './pages/NewProjectPage';
@@ -18,6 +21,9 @@ export default function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/auth/github/callback" element={<GithubCallbackPage />} />
       {/* Reachable without an account: what an invitation is for, and a project shared by read-only link. */}
       <Route path="/invites/:token" element={<InvitePage />} />

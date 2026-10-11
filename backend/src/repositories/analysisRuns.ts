@@ -149,3 +149,45 @@ export async function findProjectId(db: Db, runId: string): Promise<string | nul
   const { rows } = await db.query('SELECT project_id FROM analysis_runs WHERE id = $1', [runId]);
   return rows[0]?.project_id ?? null;
 }
+
+/** Whether an analysis is queued or running for the project. */
+export async function hasActive(db: Db, projectId: string): Promise<boolean> {
+  const { rows } = await db.query(
+    `SELECT 1 FROM analysis_runs WHERE project_id = $1 AND status IN ('pending', 'running') LIMIT 1`,
+    [projectId],
+  );
+  return rows.length > 0;
+}
+
+/**
+ * Fails runs that never finished: still pending or running more than `olderThanMinutes` after they began
+ * (their server restarted, or the Lambda timed out and the run could not record that). Limited to one
+ * project, or every project when `projectId` is null. Returns what it changed, for the activity log.
+ */
+export async function failStale(
+  db: Db,
+  projectId: string | null,
+  olderThanMinutes: number,
+  message: string,
+): Promise<{ id: string; projectId: string; commitSha: string | null }[]> {
+  const { rows } = await db.query(
+    `UPDATE analysis_runs
+        SET status = 'failed', error = $3, finished_at = now()
+      WHERE status IN ('pending', 'running')
+        AND COALESCE(started_at, created_at) < now() - make_interval(mins => $2::int)
+        AND ($1::uuid IS NULL OR project_id = $1)
+      RETURNING id, project_id, commit_sha`,
+    [projectId, olderThanMinutes, message],
+  );
+  return rows.map((row) => ({ id: row.id, projectId: row.project_id, commitSha: row.commit_sha }));
+}
+
+/** Fails every run that is pending or running, whatever its age. For a server that has just restarted. */
+export async function failAllActive(db: Db, message: string): Promise<number> {
+  const result = await db.query(
+    `UPDATE analysis_runs SET status = 'failed', error = $1, finished_at = now() WHERE status IN ('pending', 'running')`,
+    [message],
+  );
+  return result.rowCount ?? 0;
+}
+

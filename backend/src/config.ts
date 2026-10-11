@@ -20,7 +20,16 @@ const envSchema = z.object({
   TOKEN_ENCRYPTION_KEY: z.string().min(1),
 
   FRONTEND_URL: z.string().default('http://localhost:5173'),
+  /**
+   * Whether to believe the X-Forwarded-For header for the client's address (it feeds the rate limits).
+   * Leave it unset: on Lambda the real address already comes from API Gateway, and a client can send any
+   * X-Forwarded-For it likes. Set a number (1) only when exactly that many trusted proxies sit in front,
+   * or "true" to trust every hop (for tests).
+   */
+  TRUST_PROXY: optionalString,
   CORS_ORIGIN: optionalString,
+  /** Sender address for email (verification, password reset, invitations), verified in Amazon SES. Unset: links are only logged. */
+  MAIL_FROM: optionalString,
 
   GITHUB_CLIENT_ID: optionalString,
   GITHUB_CLIENT_SECRET: optionalString,
@@ -51,6 +60,18 @@ const envSchema = z.object({
    * the account's credits. Counted per server process; repeat lines are served from a cache for free.
    */
   NARRATION_DAILY_CHARACTER_BUDGET: z.coerce.number().int().min(0).default(4000),
+
+  /**
+   * An analysis still "pending" or "running" after this many minutes is treated as dead (its server restarted,
+   * or the Lambda timed out) and marked failed, so nobody waits on it forever. Keep it above the job's timeout.
+   */
+  ANALYSIS_STALE_MINUTES: z.coerce.number().int().min(1).default(10),
+
+  /**
+   * Largest repository (GitHub's reported size, in KB, history included) that can be linked. GitHub only
+   * serves a whole-repository download, so a huge repository would be streamed for nothing.
+   */
+  MAX_REPOSITORY_KB: z.coerce.number().int().min(1).default(500_000),
 
   /** Largest accepted Terraform plan upload, in bytes. */
   MAX_PLAN_BYTES: z.coerce.number().int().default(6 * 1024 * 1024),

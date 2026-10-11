@@ -24,6 +24,8 @@ export class ApiError extends Error {
     message: string,
     readonly status: number,
     readonly fieldErrors: FieldError[] = [],
+    /** The backend's stable error code, e.g. `invite_email_mismatch`. */
+    readonly code: string | null = null,
   ) {
     super(message);
   }
@@ -38,14 +40,16 @@ export class ApiError extends Error {
 async function describeFailure(method: string, path: string, res: Response): Promise<ApiError> {
   let detail = '';
   let fieldErrors: FieldError[] = [];
+  let code: string | null = null;
   try {
-    const problem = (await res.json()) as { title?: string; detail?: string; errors?: FieldError[] };
+    const problem = (await res.json()) as { title?: string; detail?: string; errors?: FieldError[]; code?: string };
     detail = problem.detail ?? problem.title ?? '';
     fieldErrors = problem.errors ?? [];
+    code = problem.code ?? null;
   } catch {
     // Not JSON; fall back to the status line below.
   }
-  return new ApiError(detail || `${method} ${path} failed: ${res.status}`, res.status, fieldErrors);
+  return new ApiError(detail || `${method} ${path} failed: ${res.status}`, res.status, fieldErrors, code);
 }
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';

@@ -12,6 +12,11 @@ export interface RegisterRequest {
   displayName?: string;
 }
 
+/** Sends a fresh verification link to the signed-in user's address. */
+export function resendVerificationEmail(): Promise<void> {
+  return apiPost<void>('/auth/email/resend');
+}
+
 export function register(request: RegisterRequest): Promise<AuthSession> {
   return apiPost<AuthSession>('/auth/register', request);
 }

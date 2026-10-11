@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { ArnFormat, CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
-import { HttpApi } from 'aws-cdk-lib/aws-apigatewayv2';
+import { CfnStage, HttpApi } from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
@@ -29,6 +29,16 @@ const PASSTHROUGH_ENV = [
   'ELEVENLABS_API_KEY',
   'ELEVENLABS_VOICE_ID',
   'ELEVENLABS_AGENT_ID',
+  'ELEVENLABS_MODEL_ID',
+  'GITHUB_API_TOKEN',
+  'JWT_TTL_SECONDS',
+  'MAIL_FROM',
+  'MAX_PLAN_BYTES',
+  'MAX_REPOSITORY_KB',
+  'NARRATION_DAILY_CHARACTER_BUDGET',
+  'NARRATION_MAX_CHARACTERS',
+  'ANALYSIS_STALE_MINUTES',
+  'TRUST_PROXY',
 ] as const;
 
 /** Where the RDS CA bundle is expected (see database/README.md, "TLS"). Bundled into the Lambda if present. */
@@ -51,6 +61,7 @@ export class BackendStack extends Stack {
     });
 
     const environment: Record<string, string> = {
+      NODE_ENV: 'production',
       AUDIO_BUCKET: audioBucket.bucketName,
       // One pooled connection per Lambda instance keeps a burst of requests from exhausting RDS.
       DB_POOL_MAX: '1',
@@ -93,6 +104,14 @@ export class BackendStack extends Stack {
 
     audioBucket.grantReadWrite(fn);
 
+    // The sender address is configured, so the function may send mail (SES also requires it to be verified there).
+    if (environment.MAIL_FROM) {
+      fn.addToRolePolicy(new PolicyStatement({ actions: ['ses:SendEmail'], resources: ['*'] }));
+    }
+
+    // An analysis that fails should fail once, not be run again by Lambda's automatic async retries.
+    fn.configureAsyncInvoke({ retryAttempts: 0 });
+
     // Self-invoke: starting an analysis returns 202 straight away, then the function invokes itself
     // asynchronously to do the work (a Lambda is frozen once it responds). The ARN is built from the
     // fixed function name, because referencing `fn` from its own role policy would be a cycle.
@@ -108,6 +127,10 @@ export class BackendStack extends Stack {
     const api = new HttpApi(this, 'HttpApi', {
       defaultIntegration: new HttpLambdaIntegration('ApiIntegration', fn),
     });
+
+    // A ceiling on request volume for the whole API, so a flood cannot run up the Lambda and AI bills.
+    const stage = api.defaultStage?.node.defaultChild as CfnStage | undefined;
+    if (stage) stage.defaultRouteSettings = { throttlingRateLimit: 50, throttlingBurstLimit: 100 };
 
     this.apiUrl = api.apiEndpoint;
 

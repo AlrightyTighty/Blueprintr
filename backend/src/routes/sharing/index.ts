@@ -1,3 +1,4 @@
+import { perUserLimit } from '../../http/rateLimits.js';
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { actorOf, requireUser, userActor } from '../../http/context.js';
@@ -19,7 +20,7 @@ const routes: FastifyPluginAsync = async (app) => {
     return sharing.setSharing(userActor(req), projectId, visibility);
   });
 
-  app.post('/projects/:projectId/sharing/rotate', async (req) => {
+  app.post('/projects/:projectId/sharing/rotate', perUserLimit(10), async (req) => {
     const { projectId } = parse(projectParams, req.params);
     return sharing.rotateShareToken(userActor(req), projectId);
   });
@@ -53,7 +54,7 @@ const routes: FastifyPluginAsync = async (app) => {
     return sharing.listInvites(userActor(req), projectId);
   });
 
-  app.post('/projects/:projectId/invites', async (req, reply) => {
+  app.post('/projects/:projectId/invites', perUserLimit(20), async (req, reply) => {
     const { projectId } = parse(projectParams, req.params);
     const body = parse(z.object({ email, role: invitableRoleEnum }), req.body);
     return reply.code(201).send(await sharing.createInvite(userActor(req), projectId, body));

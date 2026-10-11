@@ -12,6 +12,8 @@ export interface GithubProfile {
 }
 
 export interface GithubRepo {
+  /** GitHub's reported size of the repository in KB, history included. Unknown if GitHub did not say. */
+  sizeKb?: number;
   githubId: number;
   fullName: string;
   defaultBranch: string;
@@ -112,6 +114,7 @@ function toRepo(raw: any): GithubRepo {
     defaultBranch: raw.default_branch ?? 'main',
     htmlUrl: raw.html_url,
     isPrivate: Boolean(raw.private),
+    ...(typeof raw.size === 'number' ? { sizeKb: raw.size } : {}),
   };
 }
 
