@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import ConfirmDialog from '../components/ConfirmDialog';
+import SharedWarning from '../features/sharing/SharedWarning';
 import TopBar from '../components/TopBar';
 import { primaryButtonClass, secondaryButtonClass } from '../components/ui';
 import type { AnalysisRun, ProjectDetail, RunStage } from '../core/accounts/types';
@@ -70,6 +71,7 @@ function ProjectActions({ project, onChanged }: { project: ProjectDetail; onChan
             “{project.name}” disappears for you and everyone it's shared with. You can bring it back from the Trash tab on
             your projects page, or delete it forever from there.
           </p>
+          <SharedWarning projectId={project.id} />
         </ConfirmDialog>
       )}
     </>

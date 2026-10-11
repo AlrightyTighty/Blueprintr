@@ -86,7 +86,7 @@ export default function TourPanel({ canUsePlans = true }: { canUsePlans?: boolea
             <h3 className="font-medium text-rose-300">Disaster tour</h3>
             {selectedNode ? (
               <>
-                <p className="text-slate-300 [overflow-wrap:anywhere]">
+                <p className="text-slate-300 wrap-anywhere">
                   Lose <SoftBreak text={getNodeDisplayName(selectedNode)} />?
                 </p>
                 <button className={primaryButtonClass} onClick={() => startDisaster(graph, findings, selectedNode.id)}>

@@ -176,7 +176,7 @@ export default function ShareDialog({ project, onClose, onProjectChanged, onLeft
                   return (
                     <li key={member.user.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
                       <div className="min-w-0">
-                        <p className="text-slate-100 [overflow-wrap:anywhere]">
+                        <p className="text-slate-100 wrap-anywhere">
                           {displayName(member)}
                           {isYou && <span className="ml-2 text-xs text-slate-500">(you)</span>}
                         </p>
@@ -274,7 +274,7 @@ export default function ShareDialog({ project, onClose, onProjectChanged, onLeft
                   {invites.map((invite) => (
                     <li key={invite.id} className="rounded border border-indigo-900 p-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-slate-100 [overflow-wrap:anywhere]">
+                        <p className="text-slate-100 wrap-anywhere">
                           <SoftBreak text={invite.email} />{' '}
                           <span className="text-xs text-slate-500">
                             as {ROLE_LABELS[invite.role]} · expires {formatDateTime(invite.expiresAt)}

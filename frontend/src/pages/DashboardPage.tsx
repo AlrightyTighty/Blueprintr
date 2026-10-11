@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError } from '../api';
 import ConfirmDialog from '../components/ConfirmDialog';
+import SharedWarning from '../features/sharing/SharedWarning';
 import { formatDateTime, primaryButtonClass, secondaryButtonClass, inputClass } from '../components/ui';
 import SoftBreak from '../components/SoftBreak';
 import TopBar from '../components/TopBar';
@@ -63,14 +64,14 @@ function CardBody({ project }: { project: Project }) {
   return (
     <>
       <div className="flex items-start justify-between gap-2">
-        <h2 className="font-semibold text-slate-100 [overflow-wrap:anywhere]">{project.name}</h2>
+        <h2 className="font-semibold text-slate-100 wrap-anywhere">{project.name}</h2>
         {project.myRole && (
           <span className="rounded bg-indigo-900 px-1.5 py-0.5 text-xs text-indigo-200">{project.myRole}</span>
         )}
       </div>
       {project.description && <p className="text-sm text-slate-400">{project.description}</p>}
       {repository && (
-        <p className="text-sm text-blue-300 [overflow-wrap:anywhere]">
+        <p className="text-sm text-blue-300 wrap-anywhere">
           <SoftBreak text={repository.fullName} />
           {run?.branch && <span className="text-slate-500"> · {run.branch}</span>}
         </p>
@@ -308,6 +309,7 @@ export default function DashboardPage() {
               or delete it forever from there.
             </p>
           )}
+          {(pending.action === 'delete' || pending.action === 'purge') && <SharedWarning projectId={pending.project.id} />}
         </ConfirmDialog>
       )}
     </div>

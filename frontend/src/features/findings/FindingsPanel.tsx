@@ -57,7 +57,7 @@ export default function FindingsPanel() {
           onClick={() => selectNode(connectedNodeId)}
           title={evidenceText}
         >
-          <span className="text-slate-200 [overflow-wrap:anywhere]">
+          <span className="text-slate-200 wrap-anywhere">
             <SoftBreak text={displayNameOf(connectedNodeId)} />
           </span>
           <span className="ml-2 text-xs text-slate-400">{edge.relation.replace('_', ' ')}</span>
@@ -74,7 +74,7 @@ export default function FindingsPanel() {
           <div className="flex items-center gap-3">
             <NodeIcon node={selectedNode} size={40} className="shrink-0" />
             <div className="min-w-0">
-              <h2 className="font-semibold text-indigo-200 [overflow-wrap:anywhere]">
+              <h2 className="font-semibold text-indigo-200 wrap-anywhere">
                 <SoftBreak text={getNodeDisplayName(selectedNode)} />
               </h2>
               <p className="text-xs text-slate-400">
@@ -122,7 +122,7 @@ export default function FindingsPanel() {
               >
                 {renderFindingBadges(finding.kind, finding.severity)}
                 {finding.nodeId && (
-                  <p className="mt-1 text-xs text-slate-400 [overflow-wrap:anywhere]">
+                  <p className="mt-1 text-xs text-slate-400 wrap-anywhere">
                     <SoftBreak text={displayNameOf(finding.nodeId)} />
                   </p>
                 )}

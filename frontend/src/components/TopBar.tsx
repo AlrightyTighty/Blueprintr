@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../features/auth/useAuthStore';
+import Logo from './Logo';
 import { secondaryButtonClass } from './ui';
 
 interface TopBarProps {
@@ -16,7 +17,8 @@ export default function TopBar({ title, children }: TopBarProps) {
   return (
     <header className="flex items-center justify-between border-b border-indigo-900 px-4 py-2">
       <div className="flex items-center gap-3">
-        <Link to={session ? '/projects' : '/'} className="text-lg font-semibold text-indigo-200">
+        <Link to={session ? '/projects' : '/'} className="flex items-center gap-2 text-lg font-semibold text-indigo-200">
+          <Logo size={26} />
           Ripplemap
         </Link>
         {title && <span className="text-slate-400">/</span>}
@@ -27,7 +29,7 @@ export default function TopBar({ title, children }: TopBarProps) {
         {session ? (
           <>
             <span className="text-slate-400">{session.user.displayName ?? session.user.username}</span>
-            <button className={`${secondaryButtonClass} !px-3 !py-1`} onClick={signOut}>
+            <button className={`${secondaryButtonClass} px-3! py-1!`} onClick={signOut}>
               Sign out
             </button>
           </>

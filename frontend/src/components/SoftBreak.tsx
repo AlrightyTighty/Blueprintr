@@ -5,7 +5,7 @@ const PIECE = /[^/._:-]+[/._:-]?|[/._:-]/g;
 
 /**
  * Text that wraps at natural points (`src/api/` then `app.js`) instead of mid-word. A line only breaks
- * at these points when it has to, so short text looks unchanged. Pair with `[overflow-wrap:anywhere]` on
+ * at these points when it has to, so short text looks unchanged. Pair with `wrap-anywhere` on
  * the container for the rare token with no break point at all.
  */
 export default function SoftBreak({ text }: { text: string }) {

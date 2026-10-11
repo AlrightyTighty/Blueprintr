@@ -1,6 +1,26 @@
 import { Link } from 'react-router-dom';
+import Logo from '../components/Logo';
 import { primaryButtonClass, secondaryButtonClass } from '../components/ui';
 import { useAuthStore } from '../features/auth/useAuthStore';
+
+const BENEFITS = [
+  {
+    audience: 'New hires',
+    body: 'Skip weeks of asking around. See how a real request travels through the code and the cloud on your first day.',
+  },
+  {
+    audience: 'Small teams',
+    body: 'The system lives in a few heads. Ripplemap writes it down as a tour anyone can take, and keeps it true to the repo.',
+  },
+  {
+    audience: 'Reviewers and on-call',
+    body: 'Before you apply a Terraform plan, see exactly which functions and permissions it touches, and what breaks if a resource goes down.',
+  },
+  {
+    audience: 'Students and open-source contributors',
+    body: 'Learn how a real cloud project fits together, with the code next to the infrastructure that runs it.',
+  },
+];
 
 const STEPS = [
   {
@@ -109,13 +129,16 @@ export default function LandingPage() {
   return (
     <div className="min-h-full bg-slate-950 text-slate-100">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-        <span className="text-lg font-semibold text-indigo-200">Ripplemap</span>
+        <Link to="/" className="flex items-center gap-2 text-lg font-semibold text-indigo-200">
+          <Logo size={30} />
+          Ripplemap
+        </Link>
         <nav className="flex items-center gap-4 text-sm">
           <Link to="/demo" className="text-indigo-300 hover:text-indigo-200">
             Demo
           </Link>
           {session ? (
-            <Link to="/projects" className={`${primaryButtonClass} !px-3 !py-1`}>
+            <Link to="/projects" className={`${primaryButtonClass} px-3! py-1!`}>
               Open dashboard
             </Link>
           ) : (
@@ -123,7 +146,7 @@ export default function LandingPage() {
               <Link to="/login" className="text-indigo-300 hover:text-indigo-200">
                 Sign in
               </Link>
-              <Link to="/register" className={`${primaryButtonClass} !px-3 !py-1`}>
+              <Link to="/register" className={`${primaryButtonClass} px-3! py-1!`}>
                 Get started
               </Link>
             </>
@@ -153,6 +176,24 @@ export default function LandingPage() {
           </div>
           <div className="flex justify-center">
             <RippleIllustration />
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-5xl px-4 py-14">
+          <h2 className="text-2xl font-semibold">Why it helps</h2>
+          <p className="mt-4 max-w-3xl text-slate-300">
+            Cloud systems are split in two: the code says what happens, and the Terraform says where it runs. Nobody
+            sees both at once, so the answer to &ldquo;what breaks if I change this?&rdquo; lives in someone&rsquo;s
+            memory. Ripplemap connects the two from the repo alone, with nothing to install and nothing run, so
+            understanding the system stops depending on who happens to be around.
+          </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {BENEFITS.map((benefit) => (
+              <div key={benefit.audience} className="rounded-lg border border-indigo-900 bg-indigo-950/40 p-5">
+                <h3 className="font-medium text-indigo-100">{benefit.audience}</h3>
+                <p className="mt-2 text-sm text-slate-400">{benefit.body}</p>
+              </div>
+            ))}
           </div>
         </section>
 
