@@ -4,7 +4,6 @@ import type { Journey } from '../../core/journeys/types';
 import { primaryButtonClass, secondaryButtonClass } from '../../components/ui';
 import FindingsPanel from '../findings/FindingsPanel';
 import { useGraphStore } from '../graph-view/useGraphStore';
-import PersonaSelect from '../voice/PersonaSelect';
 import { useTourStore } from './useTourStore';
 
 type Tab = 'tours' | 'details';
@@ -74,11 +73,6 @@ export default function TourPanel() {
 
       {tab === 'tours' && (
         <div className="flex flex-col gap-5 overflow-y-auto p-4 text-sm">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-slate-400">Your guide</span>
-            <PersonaSelect />
-          </div>
-
           <JourneyList title="First day" journeys={journeys.filter((journey) => journey.kind === 'first_day')} />
           <JourneyList title="Follow a request" journeys={journeys.filter((journey) => journey.kind === 'request')} />
           {journeys.length === 0 && (

@@ -3,7 +3,6 @@ import type { Finding, Graph, PlanChange } from '../../core/graph/types';
 import { buildChangeJourney, buildDisasterJourney } from '../../core/journeys/impactJourneys';
 import type { Journey } from '../../core/journeys/types';
 import { stopSpeaking } from '../voice/narrator';
-import { DEFAULT_PERSONA_ID, type PersonaId } from '../voice/personas';
 
 export type TourStatus = 'idle' | 'playing' | 'paused' | 'finished';
 
@@ -13,7 +12,6 @@ interface TourStoreState {
   activeJourney: Journey | null;
   stopIndex: number;
   status: TourStatus;
-  personaId: PersonaId;
   setJourneys: (journeys: Journey[]) => void;
   startJourney: (journey: Journey) => void;
   startDisaster: (graph: Graph, findings: Finding[], failedNodeId: string) => void;
@@ -24,7 +22,6 @@ interface TourStoreState {
   play: () => void;
   pause: () => void;
   endTour: () => void;
-  setPersona: (personaId: PersonaId) => void;
 }
 
 export const useTourStore = create<TourStoreState>((set, get) => ({
@@ -32,7 +29,6 @@ export const useTourStore = create<TourStoreState>((set, get) => ({
   activeJourney: null,
   stopIndex: 0,
   status: 'idle',
-  personaId: DEFAULT_PERSONA_ID,
 
   setJourneys: (journeys) => set({ journeys }),
 
@@ -78,5 +74,4 @@ export const useTourStore = create<TourStoreState>((set, get) => ({
     set({ activeJourney: null, stopIndex: 0, status: 'idle' });
   },
 
-  setPersona: (personaId) => set({ personaId }),
 }));

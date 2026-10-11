@@ -4,8 +4,6 @@ import type { CodeRef } from '../../core/journeys/types';
 import { secondaryButtonClass } from '../../components/ui';
 import { useGraphStore } from '../graph-view/useGraphStore';
 import { speak, stopSpeaking, type VoiceSource } from '../voice/narrator';
-import PersonaSelect from '../voice/PersonaSelect';
-import { PERSONAS } from '../voice/personas';
 import { spokenTextFor } from '../voice/spokenText';
 import { findBlockEndLine, getSourceLines, getSourceUrl } from './sourceSnippets';
 import { useTourStore } from './useTourStore';
@@ -63,7 +61,7 @@ interface TourDockProps {
 
 /** The tour player: caption, controls, and the real code beside the Terraform block for the current stop. */
 export default function TourDock({ projectId, sourceBaseUrl }: TourDockProps) {
-  const { activeJourney, stopIndex, status, personaId, next, previous, play, pause, endTour } = useTourStore();
+  const { activeJourney, stopIndex, status, next, previous, play, pause, endTour } = useTourStore();
   const graph = useGraphStore((state) => state.graph);
   const [voiceSource, setVoiceSource] = useState<VoiceSource | null>(null);
 
@@ -74,13 +72,11 @@ export default function TourDock({ projectId, sourceBaseUrl }: TourDockProps) {
       stopSpeaking();
       return;
     }
-    const persona = PERSONAS[personaId];
-    const text = spokenTextFor(activeJourney, stopIndex, persona);
+    const text = spokenTextFor(activeJourney, stopIndex);
 
     let advanceTimer: ReturnType<typeof setTimeout> | undefined;
     speak(
       text,
-      persona,
       () => {
         advanceTimer = setTimeout(() => useTourStore.getState().next(), PAUSE_BETWEEN_STOPS_MS);
       },
@@ -90,7 +86,7 @@ export default function TourDock({ projectId, sourceBaseUrl }: TourDockProps) {
       clearTimeout(advanceTimer);
       stopSpeaking();
     };
-  }, [activeJourney, stopIndex, status, personaId]);
+  }, [activeJourney, stopIndex, status]);
 
   if (!activeJourney) return null;
 
@@ -116,11 +112,10 @@ export default function TourDock({ projectId, sourceBaseUrl }: TourDockProps) {
             Stop {stopIndex + 1} of {activeJourney.stops.length}
             {node && ` · ${getNodeDisplayName(node)}`}
             {status === 'finished' && ' · Tour finished'}
-            {status === 'playing' && voiceSource && ` · Voice: ${voiceSource === 'elevenlabs' ? 'ElevenLabs' : 'browser'}`}
+            {status === 'playing' && voiceSource && ` · Voice: ${voiceSource === 'elevenlabs' ? 'ElevenLabs' : 'captions only'}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <PersonaSelect />
           <button className={iconButtonClass} onClick={previous} disabled={stopIndex === 0} aria-label="Previous stop">
             Back
           </button>

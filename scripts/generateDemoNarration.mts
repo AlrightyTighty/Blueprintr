@@ -1,4 +1,5 @@
-// Generates the guide's voice for the demo tours with ElevenLabs and saves the clips under
+// Generates the guide's voice for the demo tours and example answers with ElevenLabs, in the ONE voice
+// set as ELEVENLABS_VOICE_ID in backend/.env, and saves the clips under
 // frontend/public/narration, so the site plays them with no key in the browser and no network at
 // show time. Reads the key from backend/.env (never printed, never committed).
 //
@@ -8,7 +9,7 @@
 //
 // Run `npm run snapshot:demo` first if the demo repo changed. Clips are named after the exact words,
 // so changing a script just means running this again.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { computePlanChanges } from '../frontend/src/core/graph/planImpact.ts';
@@ -18,7 +19,9 @@ import type { Journey } from '../frontend/src/core/journeys/types.ts';
 import { parsePlan } from '../frontend/src/core/terraform/parsePlan.ts';
 import { SAMPLE_PLAN_JSON } from '../frontend/src/features/plan-overlay/samplePlan.ts';
 import { narrationKey } from '../frontend/src/features/voice/narrationKey.ts';
-import { PERSONAS, type PersonaId } from '../frontend/src/features/voice/personas.ts';
+import { GUIDE } from '../frontend/src/features/voice/personas.ts';
+import { DEMO_EXAMPLE_QUESTIONS } from '../frontend/src/demo/exampleQuestions.ts';
+import { answerOffline } from '../frontend/src/services/mockAi.ts';
 import { spokenTextFor } from '../frontend/src/features/voice/spokenText.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -56,65 +59,40 @@ if (changeJourney) journeys.push(changeJourney);
 
 interface Clip {
   key: string;
-  personaId: PersonaId;
   text: string;
 }
 const clips = new Map<string, Clip>();
-for (const personaId of Object.keys(PERSONAS) as PersonaId[]) {
-  for (const journey of journeys) {
-    journey.stops.forEach((_stop, stopIndex) => {
-      const text = spokenTextFor(journey, stopIndex, PERSONAS[personaId]);
-      clips.set(narrationKey(personaId, text), { key: narrationKey(personaId, text), personaId, text });
-    });
-  }
+function addClip(text: string) {
+  const key = narrationKey(GUIDE.id, text);
+  clips.set(key, { key, text });
+}
+for (const journey of journeys) {
+  journey.stops.forEach((_stop, stopIndex) => addClip(spokenTextFor(journey, stopIndex, GUIDE)));
+}
+// Answers to the example questions offered on the demo.
+for (const question of DEMO_EXAMPLE_QUESTIONS) addClip(answerOffline(graph, question).answer);
+
+// ---- The voice: always the one chosen in backend/.env ----
+const voiceId = env.ELEVENLABS_VOICE_ID;
+if (!voiceId) {
+  console.error('ELEVENLABS_VOICE_ID is not set in backend/.env.');
+  process.exit(1);
 }
 
-// ---- Voices ----
-// Defaults are premade voices that fit each personality; override with ELEVENLABS_VOICE_ID_CALM and
-// ELEVENLABS_VOICE_ID_EXCITED in backend/.env. (ELEVENLABS_VOICE_ID is the backend's own voice for plan
-// briefings and is left alone.)
-const DEFAULT_VOICE_NAMES: Record<PersonaId, string> = {
-  calm_docent: 'Daniel',
-  overexcited_guide: 'Laura',
-};
-
-async function listVoices(): Promise<{ voice_id: string; name: string }[]> {
-  const response = await fetch(`${API}/voices`, { headers: { 'xi-api-key': apiKey } });
-  if (!response.ok) throw new Error(`Could not list voices (${response.status}).`);
-  return ((await response.json()) as { voices: { voice_id: string; name: string }[] }).voices;
+async function describeVoice(): Promise<string> {
+  const response = await fetch(`${API}/voices/${voiceId}`, { headers: { 'xi-api-key': apiKey } });
+  return response.ok ? ((await response.json()) as { name: string }).name : '(name unavailable)';
 }
 
-async function chooseVoices(): Promise<Record<PersonaId, { id: string; name: string }>> {
-  const voices = await listVoices();
-  const overrides: Record<PersonaId, string | undefined> = {
-    calm_docent: env.ELEVENLABS_VOICE_ID_CALM,
-    overexcited_guide: env.ELEVENLABS_VOICE_ID_EXCITED,
-  };
+// Steady and a touch slower: the unhurried on-call engineer from the brief.
+const VOICE_SETTINGS = { stability: 0.75, similarity_boost: 0.75, speed: 0.95 };
 
-  const choose = (personaId: PersonaId) => {
-    const overrideId = overrides[personaId];
-    const match = overrideId
-      ? voices.find((voice) => voice.voice_id === overrideId)
-      : voices.find((voice) => voice.name.startsWith(DEFAULT_VOICE_NAMES[personaId]));
-    if (overrideId) return { id: overrideId, name: match?.name ?? '(custom voice)' };
-    if (!match) throw new Error(`No voice named "${DEFAULT_VOICE_NAMES[personaId]}" in this account. Set the voice id in backend/.env.`);
-    return { id: match.voice_id, name: match.name };
-  };
-  return { calm_docent: choose('calm_docent'), overexcited_guide: choose('overexcited_guide') };
-}
-
-// Calm: steady and a touch slower. Excited: looser, more expressive, a touch faster.
-const VOICE_SETTINGS: Record<PersonaId, object> = {
-  calm_docent: { stability: 0.75, similarity_boost: 0.75, speed: 0.95 },
-  overexcited_guide: { stability: 0.3, similarity_boost: 0.75, style: 0.6, use_speaker_boost: true, speed: 1.1 },
-};
-
-async function synthesize(voiceId: string, personaId: PersonaId, text: string): Promise<Buffer> {
+async function synthesize(text: string): Promise<Buffer> {
   for (let attempt = 1; attempt <= 4; attempt += 1) {
     const response = await fetch(`${API}/text-to-speech/${voiceId}?output_format=mp3_44100_128`, {
       method: 'POST',
       headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
-      body: JSON.stringify({ text, model_id: modelId, voice_settings: VOICE_SETTINGS[personaId] }),
+      body: JSON.stringify({ text, model_id: modelId, voice_settings: VOICE_SETTINGS }),
     });
     if (response.ok) return Buffer.from(await response.arrayBuffer());
     if (response.status === 429 || response.status >= 500) {
@@ -127,31 +105,34 @@ async function synthesize(voiceId: string, personaId: PersonaId, text: string): 
 }
 
 // ---- Run ----
-const voices = await chooseVoices();
+const voiceName = await describeVoice();
+const wantedFiles = new Set([...clips.keys()].map((key) => `${key}.mp3`));
+const staleFiles = existsSync(outputDirectory)
+  ? readdirSync(outputDirectory).filter((file) => file.endsWith('.mp3') && !wantedFiles.has(file))
+  : [];
 const needed = [...clips.values()].filter((clip) => shouldForce || !existsSync(join(outputDirectory, `${clip.key}.mp3`)));
 const characterCount = needed.reduce((total, clip) => total + clip.text.length, 0);
 
-console.log(`Tours to voice: ${journeys.length}  |  distinct clips: ${clips.size}  |  to generate: ${needed.length}`);
+console.log(`Voice: "${voiceName}" (from ELEVENLABS_VOICE_ID), model ${modelId}`);
+console.log(`Tours: ${journeys.length}  |  clips wanted: ${clips.size}  |  to generate: ${needed.length}  |  stale to delete: ${staleFiles.length}`);
 console.log(`Characters to send: ${characterCount}`);
-for (const personaId of Object.keys(PERSONAS) as PersonaId[]) {
-  console.log(`  ${PERSONAS[personaId].name}: voice "${voices[personaId].name}"`);
-}
 if (isDryRun) {
-  console.log('Dry run: nothing generated.');
+  console.log('Dry run: nothing generated or deleted.');
   process.exit(0);
 }
 
 mkdirSync(outputDirectory, { recursive: true });
 let done = 0;
 for (const clip of needed) {
-  const audio = await synthesize(voices[clip.personaId].id, clip.personaId, clip.text);
-  writeFileSync(join(outputDirectory, `${clip.key}.mp3`), audio);
+  writeFileSync(join(outputDirectory, `${clip.key}.mp3`), await synthesize(clip.text));
   done += 1;
   console.log(`  [${done}/${needed.length}] ${clip.key}`);
 }
+for (const file of staleFiles) unlinkSync(join(outputDirectory, file));
 
 writeFileSync(
   join(outputDirectory, 'index.json'),
-  `${JSON.stringify({ clips: [...clips.keys()].filter((key) => existsSync(join(outputDirectory, `${key}.mp3`))).sort() }, null, 2)}\n`,
+  `${JSON.stringify({ clips: [...clips.keys()].filter((key) => existsSync(join(outputDirectory, `${key}.mp3`))).sort() }, null, 2)}
+`,
 );
-console.log(`Saved ${done} clips and the index to ${outputDirectory}`);
+console.log(`Saved ${done} clips, removed ${staleFiles.length} stale ones, wrote the index.`);
