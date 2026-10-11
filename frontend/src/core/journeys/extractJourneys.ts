@@ -1,4 +1,4 @@
-import { getResourceRole } from '../graph/nodeDisplay';
+import { getEntityName, getResourceRole } from '../graph/nodeDisplay';
 import type { EdgeRelation, Finding, Graph, GraphEdge, GraphNode } from '../graph/types';
 import { createJourneyContext, type JourneyContext } from './journeyContext';
 import { buildStop, isTourStop } from './stops';
@@ -8,7 +8,7 @@ import type { Journey } from './types';
 const FLOW_RELATIONS = new Set<EdgeRelation>(['references', 'depends_on', 'routes_to', 'invokes', 'reads', 'writes', 'publishes']);
 
 function flowEdgesFrom(context: JourneyContext, nodeId: string): GraphEdge[] {
-  return (context.outgoingByNodeId.get(nodeId) ?? []).filter((edge) => {
+  return (context.flowEdgesByNodeId.get(nodeId) ?? []).filter((edge) => {
     const target = context.nodeById.get(edge.target);
     return FLOW_RELATIONS.has(edge.relation) && target !== undefined && isTourStop(target);
   });
@@ -80,7 +80,7 @@ function pathStops(context: JourneyContext, path: GraphEdge[], entryId: string) 
 }
 
 function entryTitleName(entry: GraphNode): string {
-  return entry.name;
+  return getEntityName(entry);
 }
 
 /** The tours that can be told from the graph alone: one first-day walk and several request journeys per entry point. */
@@ -110,10 +110,13 @@ export function extractJourneys(graph: Graph, findings: Finding[]): Journey[] {
       const isFunction = getResourceRole(node) === 'function';
       const isLeaf = flowEdgesFrom(context, nodeId).length === 0;
 
-      if (isFunction && !passesThroughFunction) {
-        // Follow the request into the function, then to everything it uses.
+      if (isFunction) {
+        // Follow the request into the function, then to everything it uses that it hasn't already shown.
         const stops = pathStops(context, path, entry.id);
-        for (const edge of flowEdgesFrom(context, nodeId)) stops.push(buildStop(context, edge.target, edge));
+        const shown = new Set(stops.map((stop) => stop.nodeId));
+        for (const edge of flowEdgesFrom(context, nodeId)) {
+          if (!shown.has(edge.target)) stops.push(buildStop(context, edge.target, edge));
+        }
         requests.push({ id: `request:${entry.id}:${nodeId}`, title: `Follow a request through ${node.name}`, kind: 'request', stops });
       } else if (isLeaf && !passesThroughFunction && !isFunction) {
         requests.push({

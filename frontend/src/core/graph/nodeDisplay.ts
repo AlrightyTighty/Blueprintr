@@ -31,16 +31,22 @@ export const CATEGORY_LABELS: Record<NodeCategory, string> = {
   unresolved: 'unresolved reference',
 };
 
-/** The text shown on a node in the graph. */
-export function getNodeDisplayName(node: GraphNode): string {
-  const category = getNodeCategory(node);
-  if (category === 'code') return node.filePath ?? node.name;
-  if (category === 'resource' || category === 'iam_role') return node.address;
+/** The node's own name: a domain's real hostname when the Terraform sets one, otherwise its name. */
+export function getEntityName(node: GraphNode): string {
+  if (getNodeCategory(node) === 'domain' && typeof node.attributes?.name === 'string') return node.attributes.name;
   return node.name;
 }
 
+/** The text shown on a node in the graph. */
+export function getNodeDisplayName(node: GraphNode): string {
+  const category = getNodeCategory(node);
+  if (category === 'code') return node.kind === 'code_function' ? node.address : (node.filePath ?? node.name);
+  if (category === 'resource' || category === 'iam_role') return node.address;
+  return getEntityName(node);
+}
+
 /** The kind of AWS thing a resource is, for choosing how to describe it. */
-export type ResourceRole = 'domain' | 'cdn' | 'api' | 'function' | 'bucket' | 'table' | 'queue' | 'role' | 'other';
+export type ResourceRole = 'domain' | 'cdn' | 'api' | 'function' | 'bucket' | 'table' | 'queue' | 'role' | 'glue' | 'other';
 
 const ROLE_BY_TERRAFORM_TYPE: Record<string, ResourceRole> = {
   aws_route53_record: 'domain',
@@ -55,6 +61,11 @@ const ROLE_BY_TERRAFORM_TYPE: Record<string, ResourceRole> = {
   aws_iam_role: 'role',
   aws_iam_policy: 'role',
   aws_iam_role_policy: 'role',
+  // Wiring between two resources (an API route to a function, a queue to a function); told as part of them.
+  aws_apigatewayv2_integration: 'glue',
+  aws_api_gateway_integration: 'glue',
+  aws_lambda_event_source_mapping: 'glue',
+  aws_iam_role_policy_attachment: 'glue',
 };
 
 export function getResourceRole(node: GraphNode): ResourceRole {
@@ -70,6 +81,7 @@ const FRIENDLY_NAMES: Record<ResourceRole, string> = {
   table: 'DynamoDB table',
   queue: 'SQS queue',
   role: 'IAM role',
+  glue: 'connection',
   other: 'resource',
 };
 

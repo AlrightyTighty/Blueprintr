@@ -1,7 +1,8 @@
 import { computeCascade } from '../graph/cascade';
 import { getNodeCategory, getResourceRole, type ResourceRole } from '../graph/nodeDisplay';
 import type { Finding, Graph, GraphNode, PlanChange } from '../graph/types';
-import { createJourneyContext, type JourneyContext } from './journeyContext';
+import { createJourneyContext, isCodeNode, type JourneyContext } from './journeyContext';
+import { isTourStop } from './stops';
 import { capitalise, inferredNote, listOut, sentences, speakableName } from './narration';
 import type { Journey, Stop } from './types';
 
@@ -18,6 +19,7 @@ const FAILURE_SYMPTOMS: Record<ResourceRole, string> = {
   table: 'Reads and writes to it fail, and anything that needs that data goes with it.',
   queue: 'Messages stop flowing, so the work behind them quietly stops happening.',
   role: 'Whatever relied on its permissions loses them.',
+  glue: 'Whatever it connects stops talking to each other.',
   other: 'Whatever depends on it stops working.',
 };
 
@@ -36,7 +38,12 @@ function simpleStop(nodeId: string, script: string, inferred = false): Stop {
 export function buildDisasterJourney(graph: Graph, findings: Finding[], failedNodeId: string): Journey {
   const context = createJourneyContext(graph, findings);
   const failedNode = context.nodeById.get(failedNodeId)!;
-  const cascade = computeCascade(graph, failedNodeId);
+  const hasFunctions = graph.nodes.some((node) => node.kind === 'code_function');
+  // IAM and wiring aren't something a user would notice failing, and a file's functions are told individually.
+  const cascade = computeCascade(graph, failedNodeId).filter((step) => {
+    const node = context.nodeById.get(step.nodeId)!;
+    return step.distance === 0 || (isTourStop(node) || (isCodeNode(node) && !(hasFunctions && node.kind === 'code_file')));
+  });
   const shown = cascade.slice(0, MAX_IMPACT_STOPS);
   const hiddenCount = cascade.length - shown.length;
 

@@ -60,6 +60,21 @@ function relatedFindingNodeIds(context: JourneyContext, node: GraphNode, running
   return ids;
 }
 
+/** One reference per file, covering every range found in it. */
+function mergeRefsByFile(refs: CodeRef[]): CodeRef[] {
+  const merged = new Map<string, CodeRef>();
+  for (const ref of refs) {
+    const existing = merged.get(ref.file);
+    merged.set(
+      ref.file,
+      existing
+        ? { file: ref.file, startLine: Math.min(existing.startLine, ref.startLine), endLine: Math.max(existing.endLine, ref.endLine) }
+        : ref,
+    );
+  }
+  return [...merged.values()];
+}
+
 function uniqueRefs(refs: CodeRef[]): CodeRef[] {
   const seen = new Set<string>();
   return refs.filter((ref) => {
@@ -70,6 +85,11 @@ function uniqueRefs(refs: CodeRef[]): CodeRef[] {
   });
 }
 
+/** The files whose code runs in a function, one entry per file even when its functions are listed separately. */
+function runningFiles(links: CodeLink[]): string[] {
+  return [...new Set(links.map((link) => link.ref.file))];
+}
+
 /**
  * One stop on a tour: what the node is, how we got here, the code that touches it and any warnings.
  * `arrivalEdge` is the edge used to reach this node, or null for the first stop.
@@ -77,26 +97,47 @@ function uniqueRefs(refs: CodeRef[]): CodeRef[] {
 export function buildStop(context: JourneyContext, nodeId: string, arrivalEdge: GraphEdge | null): Stop {
   const node = context.nodeById.get(nodeId)!;
   const codeLinks = findCodeLinks(context, node);
-  const runningCode = codeLinks.filter((link) => link.edge.relation === 'runs_code').map((link) => link.codeNode);
-  const touchingCode = codeLinks.filter((link) => link.edge.relation !== 'runs_code');
+  const runningLinks = codeLinks.filter((link) => link.edge.relation === 'runs_code');
+  const runningCode = runningLinks.map((link) => link.codeNode);
 
   const previous = arrivalEdge ? context.nodeById.get(arrivalEdge.source === nodeId ? arrivalEdge.target : arrivalEdge.source) : undefined;
   const arrival = arrivalEdge && previous ? { previous, edge: arrivalEdge } : null;
 
+  // Arriving from a function, only that function's own code is relevant to what it does here.
+  const codeRunningInPrevious =
+    previous && getResourceRole(previous) === 'function'
+      ? new Set(
+          (context.incomingByNodeId.get(previous.id) ?? [])
+            .filter((edge) => edge.relation === 'runs_code')
+            .map((edge) => edge.source),
+        )
+      : null;
+  const touchingCode = codeLinks.filter(
+    (link) => link.edge.relation !== 'runs_code' && (!codeRunningInPrevious || codeRunningInPrevious.has(link.codeNode.id)),
+  );
+
   const roleEdge = (context.outgoingByNodeId.get(nodeId) ?? []).find((edge) => edge.relation === 'assumes_role');
   const roleNode = roleEdge ? context.nodeById.get(roleEdge.target) : undefined;
 
-  const warnings = context.findings
-    .filter((finding) => {
-      const ids = relatedFindingNodeIds(context, node, runningCode);
-      return (finding.nodeId && ids.has(finding.nodeId)) || (finding.relatedNodeId && ids.has(finding.relatedNodeId));
-    })
-    .map((finding) => finding.detail ?? finding.title);
-  const uniqueWarnings = [...new Set(warnings)];
+  const relatedIds = relatedFindingNodeIds(context, node, runningCode);
+  const warnings = [
+    ...new Set(
+      context.findings
+        .filter(
+          (finding) =>
+            (finding.nodeId && relatedIds.has(finding.nodeId)) || (finding.relatedNodeId && relatedIds.has(finding.relatedNodeId)),
+        )
+        // "Can't tell which resource this call targets" is for the findings list, not the narrator.
+        .filter((finding) => finding.kind !== 'unresolved_reference')
+        // The title is short enough to say out loud; the full detail is on the Details tab.
+        .map((finding) => finding.title),
+    ),
+  ];
 
+  const files = runningFiles(runningLinks);
   const codeSentence =
-    runningCode.length > 0
-      ? `The code that runs here is ${listOut(runningCode.map((codeNode) => speakableName(codeNode)))}.`
+    files.length > 0
+      ? `The code that runs here is ${listOut(files.map((file) => `the file ${file}`))}.`
       : touchingCode.length > 0
         ? touchingCode
             .map((link) => `${capitalise(speakableName(link.codeNode))} ${relationPhrase(link.edge.relation)} it.`)
@@ -113,21 +154,22 @@ export function buildStop(context: JourneyContext, nodeId: string, arrivalEdge: 
     codeSentence,
     roleSentence,
     isArrivalInferred && inferredNote('arrival'),
-    inferredCode.length > 0 && inferredNote('code', inferredCode.map((link) => link.codeNode.filePath ?? link.codeNode.name)),
-    ...uniqueWarnings.map(warningSentence),
+    inferredCode.length > 0 && inferredNote('code', inferredCode.map((link) => link.codeNode.address)),
+    ...warnings.map(warningSentence),
   );
 
   return {
     nodeId,
     script,
-    codeRefs: uniqueRefs(codeLinks.map((link) => link.ref)),
-    warnings: uniqueWarnings,
+    // Where the code runs: the whole file. Where it touches this node: the exact lines.
+    codeRefs: uniqueRefs([...mergeRefsByFile(runningLinks.map((link) => link.ref)), ...touchingCode.map((link) => link.ref)]),
+    warnings,
     inferred: isInferred,
   };
 }
 
-/** Roles that make sense as stops on a request path; IAM roles are told as part of the function's stop. */
+/** Whether a node is worth a stop of its own; IAM and wiring are told as part of the thing they serve. */
 export function isTourStop(node: GraphNode): boolean {
-  const category = getNodeCategory(node);
-  return category !== 'iam_role' && category !== 'code' && getResourceRole(node) !== 'role';
+  const role = getResourceRole(node);
+  return getNodeCategory(node) !== 'code' && role !== 'role' && role !== 'glue';
 }

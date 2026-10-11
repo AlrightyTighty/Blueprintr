@@ -1,15 +1,16 @@
 // Offline tour scripts, written from the graph alone. They only ever mention nodes that exist and
 // say plainly when a link is inferred. A Gemini-written script can replace these later; the Stop
 // shape stays the same.
-import { getFriendlyTypeName, getNodeCategory, getResourceRole } from '../graph/nodeDisplay';
+import { getEntityName, getFriendlyTypeName, getNodeCategory, getResourceRole } from '../graph/nodeDisplay';
 import type { EdgeRelation, GraphEdge, GraphNode } from '../graph/types';
 
 /** How a node is named out loud: "the DynamoDB table orders", or a file's own name for code. */
 export function speakableName(node: GraphNode): string {
+  if (node.kind === 'code_function') return `the function ${node.name} in ${node.filePath ?? 'this repo'}`;
   if (getNodeCategory(node) === 'code') return `the file ${node.filePath ?? node.name}`;
   if (getNodeCategory(node) === 'unmanaged') return `the bucket ${node.name}`;
   if (getNodeCategory(node) === 'unresolved') return `an unresolved reference called ${node.name}`;
-  return `the ${getFriendlyTypeName(node)} ${node.name}`;
+  return `the ${getFriendlyTypeName(node)} ${getEntityName(node)}`;
 }
 
 export function capitalise(text: string): string {
@@ -42,6 +43,7 @@ const ROLE_DESCRIPTIONS: Record<ReturnType<typeof getResourceRole>, string> = {
   table: "It keeps the application's data.",
   queue: "It passes messages between parts of the system, so one side doesn't have to wait for the other.",
   role: 'It decides what its owner is allowed to do.',
+  glue: '',
   other: '',
 };
 
