@@ -11,3 +11,28 @@ body,
   height: 100%;
   margin: 0;
 }
+
+/* The landing page's rippling rings. */
+@keyframes ripple {
+  from {
+    transform: scale(0.2);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.ripple-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ripple 4s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ripple-ring {
+    animation: none;
+    opacity: 0.25;
+  }
+}

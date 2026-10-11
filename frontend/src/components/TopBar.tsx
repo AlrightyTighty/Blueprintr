@@ -16,7 +16,7 @@ export default function TopBar({ title, children }: TopBarProps) {
   return (
     <header className="flex items-center justify-between border-b border-indigo-900 px-4 py-2">
       <div className="flex items-center gap-3">
-        <Link to={session ? '/projects' : '/login'} className="text-lg font-semibold text-indigo-200">
+        <Link to={session ? '/projects' : '/'} className="text-lg font-semibold text-indigo-200">
           Ripplemap
         </Link>
         {title && <span className="text-slate-400">/</span>}
