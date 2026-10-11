@@ -41,7 +41,8 @@ export async function fetchFindings(projectId: string, runId: string): Promise<F
   const findings: Finding[] = [];
   let cursor: string | null = null;
   do {
-    const query: string = `?limit=200${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
+    // 100 is the largest page the spec allows (the shared `Limit` parameter); more pages follow via nextCursor.
+    const query: string = `?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`;
     const page: Page<Finding> = await apiGet<Page<Finding>>(
       `/projects/${projectId}/runs/${runId}/findings${query}`,
     );
