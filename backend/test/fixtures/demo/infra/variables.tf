@@ -5,5 +5,5 @@ variable "env" {
 
 variable "domain" {
   type    = string
-  default = "whatbreaks.example.com"
+  default = "demo.ripplemap.wiki"
 }

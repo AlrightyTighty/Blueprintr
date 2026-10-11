@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import type { AskResult } from '../../core/graph/types';
 import { getNodeDisplayName } from '../../core/graph/nodeDisplay';
+import { isDemoProject } from '../../config';
+import { DEMO_EXAMPLE_QUESTIONS } from '../../demo/exampleQuestions';
 import { askQuestion, type AiResult } from '../../services/analysisService';
 import { useGraphStore } from '../graph-view/useGraphStore';
 import { useTourStore } from '../tour-player/useTourStore';
 import { speak } from '../voice/narrator';
-import { PERSONAS } from '../voice/personas';
 
 const EXAMPLE_QUESTION = 'What touches the orders table?';
 
@@ -16,24 +17,30 @@ export default function AskPanel() {
   const [isAsking, setIsAsking] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!question.trim()) return;
+  async function ask(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setQuestion(trimmed);
     setIsAsking(true);
     setErrorMessage(null);
     // Interrupting a tour: the guide stops talking and waits while the question is answered.
-    const { activeJourney, personaId, pause } = useTourStore.getState();
+    const { activeJourney, pause } = useTourStore.getState();
     if (activeJourney) pause();
     try {
-      const result = await askQuestion(question.trim(), { projectId, graph, planChanges, planId });
+      const result = await askQuestion(trimmed, { projectId, graph, planChanges, planId });
       setAnswer(result);
-      // Mid-tour, the guide answers out loud in their own voice; the tour stays paused until Play.
-      if (activeJourney) speak(result.data.answer, PERSONAS[personaId], () => undefined);
+      // The guide answers out loud; a mid-tour answer leaves the tour paused until Play.
+      speak(result.data.answer, () => undefined);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Could not get an answer.');
     } finally {
       setIsAsking(false);
     }
+  }
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    void ask(question);
   }
 
   const citedNodes = (answer?.data.citedNodeIds ?? []).flatMap((nodeId) => {
@@ -59,6 +66,23 @@ export default function AskPanel() {
           {isAsking ? '…' : 'Ask'}
         </button>
       </form>
+
+      {isDemoProject(projectId) && (
+        <ul className="flex flex-col gap-1">
+          {DEMO_EXAMPLE_QUESTIONS.map((example) => (
+            <li key={example}>
+              <button
+                type="button"
+                className="w-full rounded bg-indigo-950 px-2 py-1 text-left text-xs text-indigo-200 hover:bg-indigo-900"
+                disabled={isAsking}
+                onClick={() => void ask(example)}
+              >
+                {example}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {errorMessage && <p className="text-rose-300">{errorMessage}</p>}
 

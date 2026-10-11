@@ -1,7 +1,9 @@
 // Offline stand-ins for the Gemini and ElevenLabs endpoints. They run on the local graph only, so
 // they work with no backend or Wi-Fi. The UI labels their output as offline, never as AI-generated.
 import { blastRadius } from '../core/graph/blastRadius';
-import { getNodeDisplayName } from '../core/graph/nodeDisplay';
+import { getNodeCategory, getNodeDisplayName } from '../core/graph/nodeDisplay';
+import { capitalise, speakableName } from '../core/journeys/narration';
+import { isTourStop } from '../core/journeys/stops';
 import type {
   AskResult,
   Briefing,
@@ -74,9 +76,18 @@ export function createOfflineBriefing(planChanges: PlanChange[]): Briefing {
 /** A keyword-matching stand-in for Gemini function calling: finds a named node and walks the graph. */
 export function answerOffline(graph: Graph, question: string): AskResult {
   const lowerQuestion = question.toLowerCase();
+  // Only things a person would name: IAM and wiring nodes share names with the resources they serve
+  // ("worker", "jobs") and would otherwise win the match. The longest name found in the question wins.
+  const matchLength = (node: Graph['nodes'][number]) =>
+    Math.max(
+      0,
+      ...[getNodeDisplayName(node), node.name, node.address]
+        .filter((text) => lowerQuestion.includes(text.toLowerCase()))
+        .map((text) => text.length),
+    );
   const mentionedNode = graph.nodes
-    .filter((node) => [getNodeDisplayName(node), node.name, node.address].some((text) => lowerQuestion.includes(text.toLowerCase())))
-    .sort((first, second) => second.address.length - first.address.length)[0];
+    .filter((node) => (isTourStop(node) || getNodeCategory(node) === 'code') && matchLength(node) > 0)
+    .sort((first, second) => matchLength(second) - matchLength(first))[0];
 
   if (!mentionedNode) {
     return { answer: "I couldn't find a resource or file by that name in the graph.", citedNodeIds: [], toolCalls: [] };
@@ -84,13 +95,22 @@ export function answerOffline(graph: Graph, question: string): AskResult {
 
   const wantsDependencies = /\b(use|uses|depend on|depends on|rely|relies)\b/.test(lowerQuestion);
   const direction = wantsDependencies ? 'dependencies' : 'dependents';
-  const reachedIds = [...blastRadius(graph, mentionedNode.id, direction).keys()];
-  const names = reachedIds.map((id) => getNodeDisplayName(graph.nodes.find((node) => node.id === id)!));
-  const subject = getNodeDisplayName(mentionedNode);
+  // IAM and wiring aren't something a person would name, and a file's functions are listed on their own.
+  const hasFunctions = graph.nodes.some((node) => node.kind === 'code_function');
+  const reachedIds = [...blastRadius(graph, mentionedNode.id, direction).keys()].filter((id) => {
+    const node = graph.nodes.find((candidate) => candidate.id === id)!;
+    return isTourStop(node) || (getNodeCategory(node) === 'code' && !(hasFunctions && node.kind === 'code_file'));
+  });
+  // Spoken aloud, so use plain names ("the DynamoDB table orders"), name a handful and count the rest.
+  const names = reachedIds.map((id) => speakableName(graph.nodes.find((node) => node.id === id)!));
+  const subject = capitalise(speakableName(mentionedNode));
 
+  const MAX_NAMES_SPOKEN = 4;
+  const listed = names.slice(0, MAX_NAMES_SPOKEN).join(', ');
+  const rest = names.length > MAX_NAMES_SPOKEN ? `, and ${names.length - MAX_NAMES_SPOKEN} more` : '';
   const answer =
     names.length === 0
       ? `Nothing ${wantsDependencies ? 'is used by' : 'depends on'} ${subject}.`
-      : `${subject} ${wantsDependencies ? 'uses' : 'is used by'} ${names.length}: ${names.join(', ')}.`;
+      : `${subject} ${wantsDependencies ? 'uses' : 'is used by'} ${names.length}: ${listed}${rest}.`;
   return { answer, citedNodeIds: reachedIds, toolCalls: [{ op: direction, node: mentionedNode.address }] };
 }

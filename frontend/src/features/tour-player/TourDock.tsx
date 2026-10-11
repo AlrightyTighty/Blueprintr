@@ -1,12 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { getNodeDisplayName } from '../../core/graph/nodeDisplay';
 import type { CodeRef } from '../../core/journeys/types';
 import { secondaryButtonClass } from '../../components/ui';
 import { useGraphStore } from '../graph-view/useGraphStore';
-import { speak, stopSpeaking } from '../voice/narrator';
-import PersonaSelect from '../voice/PersonaSelect';
-import { PERSONAS } from '../voice/personas';
-import { getSourceLines, getSourceUrl } from './sourceSnippets';
+import { speak, stopSpeaking, type VoiceSource } from '../voice/narrator';
+import { spokenTextFor } from '../voice/spokenText';
+import { findBlockEndLine, getSourceLines, getSourceUrl } from './sourceSnippets';
 import { useTourStore } from './useTourStore';
 
 /** Pause between one stop finishing and the next beginning, so the camera can arrive first. */
@@ -62,8 +61,9 @@ interface TourDockProps {
 
 /** The tour player: caption, controls, and the real code beside the Terraform block for the current stop. */
 export default function TourDock({ projectId, sourceBaseUrl }: TourDockProps) {
-  const { activeJourney, stopIndex, status, personaId, next, previous, play, pause, endTour } = useTourStore();
+  const { activeJourney, stopIndex, status, next, previous, play, pause, endTour } = useTourStore();
   const graph = useGraphStore((state) => state.graph);
+  const [voiceSource, setVoiceSource] = useState<VoiceSource | null>(null);
 
   // Narrate the current stop while playing, then move on. Anything that changes the stop, persona
   // or play state restarts this, which also cancels the old speech.
@@ -72,29 +72,34 @@ export default function TourDock({ projectId, sourceBaseUrl }: TourDockProps) {
       stopSpeaking();
       return;
     }
-    const persona = PERSONAS[personaId];
-    const stop = activeJourney.stops[stopIndex];
-    const isFirst = stopIndex === 0;
-    const isLast = stopIndex === activeJourney.stops.length - 1;
-    const opener = isFirst ? persona.openers[activeJourney.kind === 'disaster' ? 'disaster' : activeJourney.kind === 'change' ? 'change' : 'tour'] : '';
-    const text = [opener, stop.script, isLast ? persona.closer : ''].filter(Boolean).join(' ');
+    const text = spokenTextFor(activeJourney, stopIndex);
 
     let advanceTimer: ReturnType<typeof setTimeout> | undefined;
-    speak(text, persona, () => {
-      advanceTimer = setTimeout(() => useTourStore.getState().next(), PAUSE_BETWEEN_STOPS_MS);
-    });
+    speak(
+      text,
+      () => {
+        advanceTimer = setTimeout(() => useTourStore.getState().next(), PAUSE_BETWEEN_STOPS_MS);
+      },
+      setVoiceSource,
+    );
     return () => {
       clearTimeout(advanceTimer);
       stopSpeaking();
     };
-  }, [activeJourney, stopIndex, status, personaId]);
+  }, [activeJourney, stopIndex, status]);
 
   if (!activeJourney) return null;
 
   const stop = activeJourney.stops[stopIndex];
   const node = graph.nodes.find((candidate) => candidate.id === stop.nodeId);
   const terraformRef: CodeRef | null =
-    node?.filePath && node.lineStart ? { file: node.filePath, startLine: node.lineStart, endLine: node.lineEnd ?? node.lineStart } : null;
+    node?.filePath && node.lineStart
+      ? {
+          file: node.filePath,
+          startLine: node.lineStart,
+          endLine: node.lineEnd ?? findBlockEndLine(projectId, node.filePath, node.lineStart) ?? node.lineStart,
+        }
+      : null;
   const isCodeNode = node?.kind === 'code_file' || node?.kind === 'code_function';
   const codeRefs = stop.codeRefs.filter((reference) => !terraformRef || reference.file !== terraformRef.file);
 
@@ -107,10 +112,10 @@ export default function TourDock({ projectId, sourceBaseUrl }: TourDockProps) {
             Stop {stopIndex + 1} of {activeJourney.stops.length}
             {node && ` · ${getNodeDisplayName(node)}`}
             {status === 'finished' && ' · Tour finished'}
+            {status === 'playing' && voiceSource && ` · Voice: ${voiceSource === 'elevenlabs' ? 'ElevenLabs' : 'captions only'}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <PersonaSelect />
           <button className={iconButtonClass} onClick={previous} disabled={stopIndex === 0} aria-label="Previous stop">
             Back
           </button>
