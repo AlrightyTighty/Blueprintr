@@ -1,39 +1,30 @@
-import FindingsPanel from './features/findings/FindingsPanel';
-import GraphView from './features/graph-view/GraphView';
-import { useGraphStore } from './features/graph-view/useGraphStore';
-import PlanPanel from './features/plan-overlay/PlanPanel';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import RequireAuth from './components/RequireAuth';
+import { DEMO_PROJECT_ID } from './config';
+import DashboardPage from './pages/DashboardPage';
+import GithubCallbackPage from './pages/GithubCallbackPage';
+import LoginPage from './pages/LoginPage';
+import NewProjectPage from './pages/NewProjectPage';
+import ProjectPage from './pages/ProjectPage';
+import RegisterPage from './pages/RegisterPage';
+import WorkspacePage from './pages/WorkspacePage';
 
 export default function App() {
-  const { direction, setDirection } = useGraphStore();
-
-  const toggleClass = (isActive: boolean) =>
-    `rounded px-3 py-1 transition-colors ${
-      isActive ? 'bg-violet-600 text-white' : 'bg-indigo-950 text-indigo-200 hover:bg-indigo-900'
-    }`;
-
   return (
-    <div className="flex h-full flex-col bg-slate-950 text-slate-100">
-      <header className="flex items-center justify-between border-b border-indigo-900 px-4 py-2">
-        <h1 className="text-lg font-semibold text-indigo-200">Ripplemap</h1>
-        <div className="flex gap-2 text-sm">
-          <button className={toggleClass(direction === 'dependents')} onClick={() => setDirection('dependents')}>
-            What breaks?
-          </button>
-          <button
-            className={toggleClass(direction === 'dependencies')}
-            onClick={() => setDirection('dependencies')}
-          >
-            What does it use?
-          </button>
-        </div>
-      </header>
-      <div className="flex min-h-0 flex-1">
-        <FindingsPanel />
-        <main className="flex-1">
-          <GraphView />
-        </main>
-        <PlanPanel />
-      </div>
-    </div>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/auth/github/callback" element={<GithubCallbackPage />} />
+      {/* The demo needs no account or backend, so it can always be shown. */}
+      <Route path="/demo" element={<WorkspacePage projectId={DEMO_PROJECT_ID} title="Demo project" />} />
+
+      <Route element={<RequireAuth />}>
+        <Route path="/projects" element={<DashboardPage />} />
+        <Route path="/projects/new" element={<NewProjectPage />} />
+        <Route path="/projects/:projectId" element={<ProjectPage />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/projects" replace />} />
+    </Routes>
   );
 }

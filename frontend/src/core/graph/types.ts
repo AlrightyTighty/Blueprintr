@@ -120,3 +120,45 @@ export interface PlanChange {
   /** Attribute names only, never values. */
   changedAttributes: string[];
 }
+
+export interface Page<Item> {
+  items: Item[];
+  nextCursor: string | null;
+}
+
+export interface PlanExplanation {
+  explanation: string;
+  risks: { address: string; severity: FindingSeverity; summary: string }[];
+  saferAlternatives: { address: string; suggestion: string }[];
+  model: string;
+  generatedAt: string;
+}
+
+export type BriefingRecommendation = 'proceed' | 'caution' | 'stop';
+
+export interface Briefing {
+  script: string;
+  /** Short-lived signed URL for the audio (MP3). */
+  audioUrl: string;
+  expiresAt: string;
+  recommendation: BriefingRecommendation;
+}
+
+export interface AskResult {
+  answer: string;
+  citedNodeIds: string[];
+  /** The graph queries Gemini made, for transparency. */
+  toolCalls: { op: string; node: string }[];
+}
+
+/** Response to uploading a plan: the plan's id plus per-resource changes. */
+export interface PlanAnalysisDetail {
+  id: string;
+  runId: string;
+  terraformVersion?: string | null;
+  summary: { create?: number; update?: number; replace?: number; destroy?: number; downstream?: number };
+  hasExplanation: boolean;
+  hasBriefing: boolean;
+  createdAt: string;
+  changes: PlanChange[];
+}

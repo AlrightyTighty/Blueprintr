@@ -43,3 +43,20 @@ Only variables prefixed with `VITE_` are exposed to client code.
 `iac/` uploads `dist/` to S3 and serves it through CloudFront, so **build before
 deploying** (`npm run deploy` from the repo root does this for you). Unknown paths
 fall back to `index.html`, so client-side routing works if you add a router.
+
+## Pages
+
+| Route                   | Page                                                                   |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `/login`, `/register`   | Email/username + password, or GitHub                                   |
+| `/auth/github/callback` | OAuth redirect target; finishes sign-in, sign-up or account linking    |
+| `/projects`             | Dashboard of your projects (needs sign-in)                             |
+| `/projects/new`         | Create a project: pick a GitHub repo, branch and subfolder             |
+| `/projects/:id`         | The graph workspace; shows analysis progress while a run is going      |
+| `/demo`                 | The workspace on bundled data. No account or backend needed            |
+
+The session (JWT) is kept in localStorage (`src/session.ts`); a 401 from the API signs you out.
+GitHub must be configured to redirect to `<site>/auth/github/callback`.
+
+All backend calls live in `src/services/`. The offline stand-ins for Gemini and ElevenLabs
+(used by `/demo`, or when a plan couldn't be sent to the backend) are in `src/services/mockAi.ts`.
