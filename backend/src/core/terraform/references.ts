@@ -6,7 +6,7 @@ export type TfRef =
 
 // Provider prefixes we recognise for resource types. A prefix list (rather than "any word with an
 // underscore") keeps things like `data_files.json` in a string from being read as a reference.
-const PROVIDERS = 'aws|random|null|tls|time|external|archive|http|cloudinit|local|template';
+const PROVIDERS = 'aws|random|null|tls|time|external|archive|http|cloudinit|local|template|custom';
 const TYPE = `(?:${PROVIDERS})_[a-z0-9_]+`;
 
 const REF_PATTERN = new RegExp(

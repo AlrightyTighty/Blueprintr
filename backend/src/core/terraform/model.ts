@@ -17,6 +17,10 @@ export interface TfResource {
   line: number | null;
   /** The block body with hcl2json's one-element-array wrapping removed. */
   body: Record<string, any>;
+  /** What to show as the node name when it differs from `name` (the address label), e.g. a CDK construct path. */
+  displayName?: string;
+  /** Extra non-secret facts to put on the node, e.g. where the resource came from. */
+  attributes?: Record<string, unknown>;
 }
 
 export interface TfDataBlock {

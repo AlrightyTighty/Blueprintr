@@ -209,8 +209,9 @@ function resolveHandler(
   const wanted = codeDir ? posix.join(codeDir, modulePath) : modulePath;
   const exact = files.find((f) => stripExtension(f) === wanted);
   if (exact) return { file: exact, fn };
-  const suffix = files.find((f) => stripExtension(f).endsWith(`/${modulePath}`) || stripExtension(f) === modulePath);
-  return { file: suffix ?? null, fn };
+  // Without a known source folder, a handler like "index.handler" is only trusted if exactly one file fits.
+  const matches = files.filter((f) => stripExtension(f).endsWith(`/${modulePath}`) || stripExtension(f) === modulePath);
+  return { file: matches.length === 1 ? matches[0]! : null, fn };
 }
 
 // ------------------------------------------------------------------------------------------------------------
@@ -250,11 +251,11 @@ export function linkGraph(model: TfModel, facts: CodeFacts): LinkResult {
     builder.addNode({
       kind: 'resource',
       address: resource.address,
-      name: resource.name,
+      name: resource.displayName ?? resource.name,
       terraformType: resource.type,
       filePath: resource.file,
       lineStart: resource.line,
-      attributes: safeAttributes(resource, model),
+      attributes: { ...safeAttributes(resource, model), ...resource.attributes },
     });
     result.identifiers.set(resource.address, identifierNames(resource, model));
   }
@@ -277,7 +278,7 @@ export function linkGraph(model: TfModel, facts: CodeFacts): LinkResult {
       if (address === resource.address) return;
       let target = builder.node(address);
       if (!target) {
-        target = unresolved(address, address, 'Referenced but not declared in the analyzed Terraform.');
+        target = unresolved(address, address, 'Referenced but not declared in the analyzed infrastructure code.');
         result.unresolvedRefs.push({ source, target, reason: `${resource.address} references ${address}, which was not found.` });
       }
       const targetType = target.terraformType ?? ref.type;
@@ -404,7 +405,7 @@ export function linkGraph(model: TfModel, facts: CodeFacts): LinkResult {
       address: `unmanaged:${call.op.service}:${name}`,
       name,
       terraformType: SERVICE_RESOURCE_TYPE[call.op.service] ?? null,
-      attributes: { service: call.op.service, reason: 'Named in code but not managed by Terraform.' },
+      attributes: { service: call.op.service, reason: 'Named in code but not defined in the analyzed infrastructure code.' },
     });
     builder.addEdge(source, unmanaged, call.op.relation, 'code_mapping', { ...via, hardcoded: true, value, operations: [call.action], locations: [`${call.file}:${call.line}`] });
     result.unmanaged.push({ call, source, target: unmanaged, name });
@@ -429,7 +430,7 @@ export function linkGraph(model: TfModel, facts: CodeFacts): LinkResult {
       for (const lambda of lambdas) {
         const binding = lambda.env.get(envName);
         if (binding?.kind === 'ref') {
-          const target = builder.node(binding.address) ?? unresolved(binding.address, binding.address, 'Referenced but not declared in the analyzed Terraform.');
+          const target = builder.node(binding.address) ?? unresolved(binding.address, binding.address, 'Referenced but not declared in the analyzed infrastructure code.');
           builder.addEdge(source, target, call.op.relation, 'env_var', { ...location, envVar: envName, operations: [call.action], locations: [`${call.file}:${call.line}`] });
           result.resolved.push({ call, source, target, lambda, inferred: false });
         } else if (binding?.kind === 'literal') {

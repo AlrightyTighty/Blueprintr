@@ -100,10 +100,10 @@ export function computeFindings(link: LinkResult): NewFinding[] {
     findings.push({
       kind: 'unmanaged_resource',
       severity: 'medium',
-      title: `"${first.name}" (${service}) is hardcoded in code but not managed by Terraform`,
+      title: `"${first.name}" (${service}) is hardcoded in code but not defined in your infrastructure code`,
       detail:
         `${uses.map((u) => `${where(u.call)} (${u.call.action})`).join('; ')}. ` +
-        `No Terraform resource of this type has that name, so changes to it can't be reviewed or reproduced and it may have drifted.`,
+        `No resource of this type in the analyzed infrastructure code has that name, so changes to it can't be reviewed or reproduced and it may have drifted.`,
       nodeId: first.target.id,
       relatedNodeId: first.source.id,
       evidence: { service, name: first.name, locations: uses.map((u) => where(u.call)), actions: unique(uses.map((u) => u.call.action)) },

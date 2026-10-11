@@ -77,13 +77,24 @@ runs it: in-process locally, or by the Lambda invoking itself asynchronously whe
 is frozen once it responds). The job downloads the commit's tarball from GitHub (never cloning or
 executing anything), and `core/analysis/pipeline.ts` does the rest:
 
-1. Parse `.tf` files with HashiCorp's HCL parser (`@cdktf/hcl2json`, WASM).
+1. Read the infrastructure code into one model:
+   - Terraform: `.tf` files, parsed with HashiCorp's HCL parser (`@cdktf/hcl2json`, WASM).
+   - CloudFormation: YAML or JSON templates, hand-written or the output of `cdk synth` (`cdk.out/*.template.json`).
+     Intrinsics (`Ref`, `GetAtt`, `Sub`, `Join`, `ImportValue`, ...) are rewritten into the same reference form
+     Terraform uses, so one linker, IAM analysis and set of findings serve both. Resource types are mapped to
+     Terraform-style names (`AWS::SQS::Queue` becomes `aws_sqs_queue`), and CDK nodes are named after the
+     construct (`Api/ServiceRole`) instead of the hashed logical id.
 2. Scan JavaScript/TypeScript and Python for env var reads and AWS SDK calls (regexes plus bracket matching).
 3. Link: declared references (certain) → Lambda handler/source folder to code (high) → env var bridge (high) → literal names (high).
 4. Gemini resolves calls static analysis could not (labelled `inferred`); skipped when not configured.
 5. Findings: permission gaps, over-broad IAM, unmanaged resources, unresolved references.
 
-Limits: modules, `count`/`for_each` expansion and Docker/compose mapping are out of scope; unresolved
+CDK: Blueprint never runs `cdk synth` or any CDK code, so a CDK app is analysable only when its synthesized
+templates are in the repository (commit `cdk.out/*.template.json`, or point at a folder of templates). Code to
+Lambda mapping works from `aws:asset:path` when assets are un-staged (`cdk synth --no-staging`) and otherwise
+from the handler, but only when exactly one file matches. Terraform plan overlays are Terraform-only for now.
+
+Limits: Terraform modules, `count`/`for_each` expansion, SAM (`AWS::Serverless::*`), nested stacks and Docker/compose mapping are out of scope; unresolved
 references show up as labelled nodes and findings instead of being guessed. Source file contents are
 never stored; only Gemini inference sees the few functions it is asked about.
 

@@ -1,6 +1,7 @@
 import type { GeminiClient } from '../../integrations/gemini.js';
 import type { NewEdge, NewNode } from '../../repositories/graph.js';
 import type { NewFinding } from '../../repositories/findings.js';
+import { addCloudFormationTemplates } from '../cloudformation/index.js';
 import { scanCode, languageOf } from '../code/scan.js';
 import { parseTerraform, type SourceFile } from '../terraform/model.js';
 import { computeFindings, unresolvedCallFindings } from './findings.js';
@@ -42,6 +43,8 @@ export async function analyze(input: PipelineInput): Promise<PipelineOutput> {
 
   await stage('parsing_terraform');
   const model = await parseTerraform(input.files);
+  // CloudFormation (hand-written, or synthesized by CDK) lands in the same model.
+  const cloudFormation = addCloudFormationTemplates(model, input.files);
 
   await stage('scanning_code');
   const facts = scanCode(input.files.filter((f) => languageOf(f.path)));
@@ -60,7 +63,8 @@ export async function analyze(input: PipelineInput): Promise<PipelineOutput> {
   const stats = {
     terraformFiles: input.files.filter((f) => f.path.endsWith('.tf')).length,
     codeFiles: facts.files.length,
-    terraformResources: model.resources.length,
+    cloudFormationTemplates: cloudFormation.templates,
+    infrastructureResources: model.resources.length,
     nodes: nodes.length,
     nodesByKind: countBy(nodes, (n) => n.kind),
     edges: edges.length,
