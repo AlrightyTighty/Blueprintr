@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
+import GlowCard, { GLOW } from '../components/GlowCard';
 import Logo from '../components/Logo';
+import ParticleField from '../components/ParticleField';
 import { primaryButtonClass, secondaryButtonClass } from '../components/ui';
 import { useAuthStore } from '../features/auth/useAuthStore';
 
@@ -42,21 +44,25 @@ const TOURS = [
     name: 'First day',
     body: 'The main journeys through the system, starting at the front door: the domain.',
     accent: 'text-blue-300',
+    glow: GLOW.blue,
   },
   {
     name: 'Follow a request',
     body: 'Pick one journey and ride it end to end, from the API to where the data ends up.',
     accent: 'text-indigo-300',
+    glow: GLOW.indigo,
   },
   {
     name: 'Disaster tour',
     body: 'Pull the plug on a resource and watch the failure spread, narrated by a guide who stays entirely calm.',
     accent: 'text-rose-300',
+    glow: GLOW.rose,
   },
   {
     name: 'Change tour',
     body: 'Paste a Terraform plan and see what the change touches before you apply it, including the code that depends on it.',
     accent: 'text-amber-300',
+    glow: GLOW.amber,
   },
 ];
 
@@ -177,27 +183,30 @@ export default function LandingPage() {
       </header>
 
       <main>
-        <section className="mx-auto grid max-w-5xl items-center gap-10 px-4 py-14 md:grid-cols-2 md:py-20">
-          <div>
-            <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
-              A guided tour of your cloud, including the outage before it happens.
-            </h1>
-            <p className="mt-5 text-lg text-slate-300">
-              Ripplemap links your code to your Terraform and walks you through how requests really flow. Then it lets you pull the plug on
-              a resource and watch what ripples out, or preview a change before you apply it.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/demo" className={primaryButtonClass}>
-                Take the demo tour
-              </Link>
-              <Link to={session ? '/projects' : '/register'} className={secondaryButtonClass}>
-                {session ? 'Your projects' : 'Link your repo'}
-              </Link>
+        <section className="relative overflow-hidden">
+          <ParticleField />
+          <div className="relative mx-auto grid max-w-5xl items-center gap-10 px-4 py-14 md:grid-cols-2 md:py-20">
+            <div>
+              <h1 className="text-4xl font-semibold leading-tight tracking-tight md:text-5xl">
+                A guided tour of your cloud, including the outage before it happens.
+              </h1>
+              <p className="mt-5 text-lg text-slate-300">
+                Ripplemap links your code to your Terraform and walks you through how requests really flow. Then it lets you pull the plug on
+                a resource and watch what ripples out, or preview a change before you apply it.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link to="/demo" className={primaryButtonClass}>
+                  Take the demo tour
+                </Link>
+                <Link to={session ? '/projects' : '/register'} className={secondaryButtonClass}>
+                  {session ? 'Your projects' : 'Link your repo'}
+                </Link>
+              </div>
+              <p className="mt-4 text-sm text-slate-500">No account needed for the demo.</p>
             </div>
-            <p className="mt-4 text-sm text-slate-500">No account needed for the demo.</p>
-          </div>
-          <div className="flex justify-center">
-            <RippleIllustration />
+            <div className="flex justify-center">
+              <RippleIllustration />
+            </div>
           </div>
         </section>
 
@@ -211,10 +220,10 @@ export default function LandingPage() {
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {BENEFITS.map((benefit) => (
-                <div key={benefit.audience} className="rounded-lg border border-indigo-900 bg-indigo-950/40 p-5">
+                <GlowCard key={benefit.audience}>
                   <h3 className="font-medium text-indigo-100">{benefit.audience}</h3>
                   <p className="mt-2 text-sm text-slate-400">{benefit.body}</p>
-                </div>
+                </GlowCard>
               ))}
             </div>
           </div>
@@ -225,13 +234,13 @@ export default function LandingPage() {
             <h2 className="text-2xl font-semibold">How it works</h2>
             <ol className="mt-8 grid gap-6 md:grid-cols-3">
               {STEPS.map((step, index) => (
-                <li key={step.title} className="rounded-lg border border-indigo-900 bg-slate-950 p-5">
+                <GlowCard as="li" key={step.title}>
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-600 text-sm font-medium text-white">
                     {index + 1}
                   </span>
                   <h3 className="mt-3 font-medium text-indigo-100">{step.title}</h3>
                   <p className="mt-2 text-sm text-slate-400">{step.body}</p>
-                </li>
+                </GlowCard>
               ))}
             </ol>
           </div>
@@ -242,10 +251,10 @@ export default function LandingPage() {
             <h2 className="text-2xl font-semibold">Four ways to take the tour</h2>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {TOURS.map((tour) => (
-                <div key={tour.name} className="rounded-lg border border-indigo-900 bg-indigo-950/40 p-5">
+                <GlowCard key={tour.name} glow={tour.glow}>
                   <h3 className={`font-medium ${tour.accent}`}>{tour.name}</h3>
                   <p className="mt-2 text-sm text-slate-400">{tour.body}</p>
-                </div>
+                </GlowCard>
               ))}
             </div>
             <p className="mt-6 text-slate-300">
@@ -260,10 +269,10 @@ export default function LandingPage() {
             <h2 className="text-2xl font-semibold">Built to be trusted</h2>
             <div className="mt-8 grid gap-6 md:grid-cols-3">
               {PROMISES.map((promise) => (
-                <div key={promise.title}>
+                <GlowCard key={promise.title} glow={GLOW.indigo}>
                   <h3 className="font-medium text-indigo-100">{promise.title}</h3>
                   <p className="mt-2 text-sm text-slate-400">{promise.body}</p>
-                </div>
+                </GlowCard>
               ))}
             </div>
             <p className="mt-6 text-sm text-slate-500">For now: Terraform and AWS only; Python and JavaScript or TypeScript code.</p>

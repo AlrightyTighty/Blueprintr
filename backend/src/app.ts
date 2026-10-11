@@ -24,11 +24,42 @@ import systemRoutes from './routes/system/index.js';
 import { executeRun } from './services/analysis.js';
 
 /**
- * Which websites may call the API from a browser. An explicit CORS_ORIGIN wins. Otherwise, in production,
- * only the frontend's own address; anywhere else (a laptop) any origin, for convenience.
+ * Turns CORS_ORIGIN into what the CORS plugin takes. It may list several origins separated by commas, for
+ * example the bare domain and its www form: "https://example.com,https://www.example.com". Each must be a full
+ * origin (scheme and host); a path or trailing slash is dropped, since browsers never send one. A lone "*"
+ * allows every origin. Throws on a mistake, so a typo stops the server from starting instead of silently
+ * blocking the site.
  */
-export function corsOriginFor(settings: { CORS_ORIGIN?: string; NODE_ENV: string; FRONTEND_URL: string }): string | boolean {
-  if (settings.CORS_ORIGIN) return settings.CORS_ORIGIN;
+export function parseCorsOrigins(value: string): string | string[] {
+  const entries = value.split(',').map((entry) => entry.trim()).filter(Boolean);
+  if (entries.length === 0) throw new Error('CORS_ORIGIN is set but lists no origins.');
+  if (entries.includes('*')) {
+    if (entries.length > 1) throw new Error('CORS_ORIGIN: "*" (any origin) cannot be combined with other origins.');
+    return '*';
+  }
+  const origins = entries.map((entry) => {
+    let url: URL;
+    try {
+      url = new URL(entry);
+    } catch {
+      throw new Error(`CORS_ORIGIN: "${entry}" is not a full origin such as https://example.com.`);
+    }
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new Error(`CORS_ORIGIN: "${entry}" must start with http:// or https://.`);
+    }
+    return url.origin;
+  });
+  const unique = [...new Set(origins)];
+  return unique.length === 1 ? unique[0]! : unique;
+}
+
+/**
+ * Which websites may call the API from a browser. An explicit CORS_ORIGIN (one origin, or several separated by
+ * commas) wins. Otherwise, in production, only the frontend's own address; anywhere else (a laptop) any origin,
+ * for convenience.
+ */
+export function corsOriginFor(settings: { CORS_ORIGIN?: string; NODE_ENV: string; FRONTEND_URL: string }): string | string[] | boolean {
+  if (settings.CORS_ORIGIN) return parseCorsOrigins(settings.CORS_ORIGIN);
   return settings.NODE_ENV === 'production' ? new URL(settings.FRONTEND_URL).origin : true;
 }
 

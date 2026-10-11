@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildApp, corsOriginFor } from '../src/app.js';
+import { buildApp, corsOriginFor, parseCorsOrigins } from '../src/app.js';
+import { resetConfig } from '../src/config.js';
 import { closePool } from '../src/db/pool.js';
 import { redactUrl } from '../src/lib/redact.js';
 import { createFakes } from './fakes.js';
@@ -40,6 +41,74 @@ describe('corsOriginFor: which websites may call the API', () => {
   it('on a laptop, allows any origin when nothing is set', () => {
     expect(corsOriginFor({ ...base, NODE_ENV: 'development' })).toBe(true);
     expect(corsOriginFor({ ...base, NODE_ENV: 'test' })).toBe(true);
+  });
+  it('accepts several comma-separated origins, such as a bare domain and its www form', () => {
+    expect(corsOriginFor({ ...base, CORS_ORIGIN: 'https://ripplemap.wiki,https://www.ripplemap.wiki' })).toEqual([
+      'https://ripplemap.wiki',
+      'https://www.ripplemap.wiki',
+    ]);
+  });
+});
+
+describe('parseCorsOrigins', () => {
+  it('ignores spaces, empty entries and repeats, and keeps the order', () => {
+    expect(parseCorsOrigins(' https://a.example , ,https://b.example,https://a.example,')).toEqual(['https://a.example', 'https://b.example']);
+  });
+  it('returns a single origin as a plain string', () => {
+    expect(parseCorsOrigins('https://a.example')).toBe('https://a.example');
+    expect(parseCorsOrigins('https://a.example, https://a.example')).toBe('https://a.example');
+  });
+  it('reduces each entry to its origin, as browsers send it', () => {
+    expect(parseCorsOrigins('https://A.example/')).toBe('https://a.example');
+    expect(parseCorsOrigins('https://a.example/app?x=1, http://localhost:5173/')).toEqual(['https://a.example', 'http://localhost:5173']);
+  });
+  it('allows a lone * but not mixed with others', () => {
+    expect(parseCorsOrigins('*')).toBe('*');
+    expect(() => parseCorsOrigins('*,https://a.example')).toThrow(/cannot be combined/);
+  });
+  it('refuses mistakes loudly instead of silently blocking the site', () => {
+    expect(() => parseCorsOrigins(' , ')).toThrow(/lists no origins/);
+    expect(() => parseCorsOrigins('ripplemap.wiki')).toThrow(/"ripplemap.wiki" is not a full origin/);
+    expect(() => parseCorsOrigins('https://a.example,www.a.example')).toThrow(/"www.a.example"/);
+    expect(() => parseCorsOrigins('ftp://a.example')).toThrow(/http:\/\/ or https:\/\//);
+  });
+});
+
+describe('CORS with several origins, as a browser sees it', () => {
+  const originalOrigin = process.env.CORS_ORIGIN;
+  const preflight = async (origin: string) => {
+    process.env.CORS_ORIGIN = 'https://ripplemap.wiki, https://www.ripplemap.wiki';
+    resetConfig();
+    const app = buildApp({ integrations: createFakes().integrations, logger: false });
+    const res = await app.inject({
+      method: 'OPTIONS',
+      url: '/projects',
+      headers: { origin, 'access-control-request-method': 'GET', 'access-control-request-headers': 'authorization' },
+    });
+    await app.close();
+    return res;
+  };
+
+  afterAll(() => {
+    if (originalOrigin === undefined) delete process.env.CORS_ORIGIN;
+    else process.env.CORS_ORIGIN = originalOrigin;
+    resetConfig();
+  });
+
+  it('answers each listed origin with that origin, so both the apex and www work', async () => {
+    for (const origin of ['https://ripplemap.wiki', 'https://www.ripplemap.wiki']) {
+      const res = await preflight(origin);
+      expect(res.statusCode).toBe(204);
+      expect(res.headers['access-control-allow-origin']).toBe(origin);
+      expect(res.headers['vary']).toContain('Origin');
+    }
+  });
+
+  it('gives any other website no permission', async () => {
+    const res = await preflight('https://evil.example');
+    expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    const lookalike = await preflight('https://ripplemap.wiki.evil.example');
+    expect(lookalike.headers['access-control-allow-origin']).toBeUndefined();
   });
 });
 

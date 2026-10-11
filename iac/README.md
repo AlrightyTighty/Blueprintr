@@ -69,7 +69,8 @@ When the domain is ready, the usual setup is:
 4. Site: set `domainNames` + `certificate` on the `Distribution`, then add an `ARecord`
    targeting `new CloudFrontTarget(distribution)`.
 5. Change the `apiUrl` passed to `FrontendStack` to `https://api.example.com`, and set
-   the backend's `CORS_ORIGIN` to the site's domain.
+   the backend's `CORS_ORIGIN` to the site's domain. List every address the site is served from, separated by
+   commas, e.g. `https://example.com,https://www.example.com`; each must be a full origin (with `https://`).
 
 ## Notes
 

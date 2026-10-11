@@ -36,3 +36,66 @@ body,
     opacity: 0.25;
   }
 }
+
+/*
+ * Cards that light up under the mouse (see components/GlowCard.tsx). The border, glow and lift only apply
+ * on devices that can hover, so a tap on a phone doesn't leave a card stuck lit.
+ */
+.glow-card {
+  --glow: 139 92 246;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+/* The pool of light that follows the pointer. */
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 0%), rgb(var(--glow) / 0.22), transparent 70%);
+  transition: opacity 0.3s ease;
+}
+
+.glow-card p {
+  transition: color 0.25s ease;
+}
+
+@media (hover: hover) {
+  .glow-card:hover {
+    border-color: rgb(var(--glow) / 0.75);
+    background-color: rgb(30 27 75 / 0.75);
+    box-shadow:
+      0 0 0 1px rgb(var(--glow) / 0.25),
+      0 10px 34px -10px rgb(var(--glow) / 0.55);
+    transform: translateY(-3px);
+  }
+
+  .glow-card:hover::before {
+    opacity: 1;
+  }
+
+  .glow-card:hover p {
+    color: rgb(226 232 240); /* slate-200: the text brightens with the card */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-card,
+  .glow-card::before,
+  .glow-card p {
+    transition: none;
+  }
+
+  .glow-card:hover {
+    transform: none;
+  }
+}

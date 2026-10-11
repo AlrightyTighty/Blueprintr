@@ -14,5 +14,5 @@ const backend = new BackendStack(app, `${prefix}-backend`, { env });
 
 new FrontendStack(app, `${prefix}-frontend`, {
   env,
-  apiUrl: backend.apiUrl,
+  apiUrl: "https://api.ripplemap.wiki",
 });
