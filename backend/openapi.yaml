@@ -1662,6 +1662,41 @@ paths:
         '429': { $ref: '#/components/responses/TooManyRequests' }
         '502': { $ref: '#/components/responses/BadGateway' }
 
+  /narrate:
+    post:
+      tags: [AI]
+      operationId: narrate
+      summary: Speak a line in the guide's voice (ElevenLabs)
+      description: |
+        Returns the text as MP3 in the one configured voice (`ELEVENLABS_VOICE_ID`). Public, so the demo
+        works without an account, but limited: lines are at most `NARRATION_MAX_CHARACTERS` long, each
+        IP is rate limited, and the server spends at most `NARRATION_DAILY_CHARACTER_BUDGET` characters a
+        day (`429` with code `narration_budget_exceeded` after that). Repeat lines are cached and free.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string, minLength: 1, maxLength: 700 }
+      responses:
+        '200':
+          description: The spoken line.
+          content:
+            audio/mpeg:
+              schema: { type: string, format: binary }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+        '503':
+          description: ElevenLabs is not configured on this server.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
   /projects/{projectId}/voice/session:
     parameters:
       - $ref: '#/components/parameters/ProjectId'

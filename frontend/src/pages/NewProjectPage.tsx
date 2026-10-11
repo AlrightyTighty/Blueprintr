@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import SoftBreak from '../components/SoftBreak';
 import TopBar from '../components/TopBar';
 import { inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from '../components/ui';
 import type { GithubConnection, GithubRepository } from '../core/accounts/types';
@@ -182,7 +183,9 @@ export default function NewProjectPage() {
                           selectedRepository?.githubId === repository.githubId ? 'bg-indigo-900' : ''
                         }`}
                       >
-                        <span className="break-all">{repository.fullName}</span>
+                        <span className="[overflow-wrap:anywhere]">
+                          <SoftBreak text={repository.fullName} />
+                        </span>
                         {repository.isPrivate && <span className="ml-2 text-xs text-slate-500">private</span>}
                       </button>
                     </li>

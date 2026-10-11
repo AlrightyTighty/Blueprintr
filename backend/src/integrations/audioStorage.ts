@@ -8,6 +8,11 @@ export interface AudioStorage {
   put(key: string, audio: Buffer): Promise<void>;
   /** Short-lived download URL. */
   signedUrl(key: string, ttlSeconds: number): Promise<string>;
+  /**
+   * Whether `key` is still stored. Only needed by stores that can lose files (local disk); a store
+   * without it is trusted to keep what it was given.
+   */
+  exists?(key: string): Promise<boolean>;
 }
 
 export class S3AudioStorage implements AudioStorage {

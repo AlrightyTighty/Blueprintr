@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { getNodeDisplayName } from '../../core/graph/nodeDisplay';
 import type { Journey } from '../../core/journeys/types';
+import SoftBreak from '../../components/SoftBreak';
 import { primaryButtonClass, secondaryButtonClass } from '../../components/ui';
 import FindingsPanel from '../findings/FindingsPanel';
 import { useGraphStore } from '../graph-view/useGraphStore';
@@ -85,7 +86,9 @@ export default function TourPanel() {
             <h3 className="font-medium text-rose-300">Disaster tour</h3>
             {selectedNode ? (
               <>
-                <p className="break-all text-slate-300">Lose {getNodeDisplayName(selectedNode)}?</p>
+                <p className="text-slate-300 [overflow-wrap:anywhere]">
+                  Lose <SoftBreak text={getNodeDisplayName(selectedNode)} />?
+                </p>
                 <button className={primaryButtonClass} onClick={() => startDisaster(graph, findings, selectedNode.id)}>
                   Pull the plug
                 </button>

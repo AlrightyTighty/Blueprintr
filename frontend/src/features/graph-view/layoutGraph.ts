@@ -1,13 +1,11 @@
 import dagre from '@dagrejs/dagre';
 import type { Graph } from '../../core/graph/types';
-
-export const NODE_WIDTH = 220;
-export const NODE_HEIGHT = 56;
+import { NODE_HEIGHT, NODE_WIDTH } from './ResourceNode';
 
 /** Returns a top-left position per node id, laid out left-to-right by dependency. */
 export function layoutGraph(graph: Graph): Map<string, { x: number; y: number }> {
   const layout = new dagre.graphlib.Graph();
-  layout.setGraph({ rankdir: 'LR', nodesep: 30, ranksep: 90 });
+  layout.setGraph({ rankdir: 'LR', nodesep: 36, ranksep: 110 });
   layout.setDefaultEdgeLabel(() => ({}));
 
   for (const node of graph.nodes) {

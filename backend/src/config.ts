@@ -27,7 +27,7 @@ const envSchema = z.object({
   GITHUB_REDIRECT_URI: optionalString,
 
   GEMINI_API_KEY: optionalString,
-  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-3.8-flash'),
 
   ELEVENLABS_API_KEY: optionalString,
   ELEVENLABS_VOICE_ID: optionalString,
@@ -37,6 +37,14 @@ const envSchema = z.object({
   /** S3 bucket for cached briefing audio. */
   AUDIO_BUCKET: optionalString,
   AWS_REGION: optionalString,
+
+  /** Longest line the /narrate endpoint will speak, in characters. */
+  NARRATION_MAX_CHARACTERS: z.coerce.number().int().min(1).default(700),
+  /**
+   * Most characters /narrate will send to ElevenLabs per day (UTC), so the public endpoint can't drain
+   * the account's credits. Counted per server process; repeat lines are served from a cache for free.
+   */
+  NARRATION_DAILY_CHARACTER_BUDGET: z.coerce.number().int().min(0).default(4000),
 
   /** Largest accepted Terraform plan upload, in bytes. */
   MAX_PLAN_BYTES: z.coerce.number().int().default(6 * 1024 * 1024),

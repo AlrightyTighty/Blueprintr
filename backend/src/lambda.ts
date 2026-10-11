@@ -4,7 +4,8 @@ import { isAnalysisJobEvent } from './integrations/runDispatcher.js';
 import { executeRun } from './services/analysis.js';
 
 const app = buildApp();
-const http = awsLambdaFastify(app);
+// /narrate returns MP3 bytes, which API Gateway must be told to pass through as base64.
+const http = awsLambdaFastify(app, { binaryMimeTypes: ['audio/mpeg'] });
 
 await app.ready();
 

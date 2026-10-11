@@ -1,5 +1,7 @@
 import { LogMailer, type Mailer } from '../lib/mailer.js';
 import { S3AudioStorage, type AudioStorage } from './audioStorage.js';
+import { getConfig } from '../config.js';
+import { LocalAudioStorage } from './localAudioStorage.js';
 import { HttpElevenLabsClient, type ElevenLabsClient } from './elevenlabs.js';
 import { HttpGeminiClient, type GeminiClient } from './gemini.js';
 import { HttpGithubClient, type GithubClient } from './github.js';
@@ -34,7 +36,8 @@ export function createDefaultIntegrations({ executeRun, log }: DefaultIntegratio
     github: new HttpGithubClient(),
     gemini: new HttpGeminiClient(),
     elevenlabs: new HttpElevenLabsClient(),
-    audio: new S3AudioStorage(),
+    // No bucket (a laptop): keep briefing audio on local disk instead of failing.
+    audio: getConfig().AUDIO_BUCKET ? new S3AudioStorage() : new LocalAudioStorage(),
     dispatcher: process.env.AWS_LAMBDA_FUNCTION_NAME ? new LambdaSelfDispatcher() : new InProcessDispatcher(executeRun),
   };
 }

@@ -7,6 +7,7 @@ import PlanInsightsPanel from '../features/ai/PlanInsightsPanel';
 import GraphView from '../features/graph-view/GraphView';
 import { useGraphStore } from '../features/graph-view/useGraphStore';
 import PlanPanel from '../features/plan-overlay/PlanPanel';
+import VoiceModeControl from '../features/voice/VoiceModeControl';
 import TourDock from '../features/tour-player/TourDock';
 import TourPanel from '../features/tour-player/TourPanel';
 
@@ -39,6 +40,7 @@ export default function WorkspacePage({ projectId, title, actions, sourceBaseUrl
           <span className="rounded bg-indigo-950 px-2 py-0.5 text-xs text-indigo-300">Demo data</span>
         )}
         {actions}
+        <VoiceModeControl />
         <div className="flex gap-2">
           <button className={toggleClass(direction === 'dependents')} onClick={() => setDirection('dependents')}>
             What breaks?

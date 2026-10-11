@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { formatDateTime, primaryButtonClass, secondaryButtonClass, inputClass } from '../components/ui';
+import SoftBreak from '../components/SoftBreak';
 import TopBar from '../components/TopBar';
 import type { Project, RunStatus } from '../core/accounts/types';
 import { listProjects } from '../services/projectService';
@@ -22,15 +23,15 @@ function ProjectCard({ project }: { project: Project }) {
       className="flex flex-col gap-2 rounded-lg border border-indigo-900 bg-indigo-950/40 p-4 transition-colors hover:border-violet-500"
     >
       <div className="flex items-start justify-between gap-2">
-        <h2 className="break-all font-semibold text-slate-100">{project.name}</h2>
+        <h2 className="font-semibold text-slate-100 [overflow-wrap:anywhere]">{project.name}</h2>
         {project.myRole && (
           <span className="rounded bg-indigo-900 px-1.5 py-0.5 text-xs text-indigo-200">{project.myRole}</span>
         )}
       </div>
       {project.description && <p className="text-sm text-slate-400">{project.description}</p>}
       {repository && (
-        <p className="break-all text-sm text-blue-300">
-          {repository.fullName}
+        <p className="text-sm text-blue-300 [overflow-wrap:anywhere]">
+          <SoftBreak text={repository.fullName} />
           {run?.branch && <span className="text-slate-500"> · {run.branch}</span>}
         </p>
       )}

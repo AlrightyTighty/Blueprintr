@@ -45,7 +45,7 @@ async function describeFailure(method: string, path: string, res: Response): Pro
 
 type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
-async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
+async function send(method: Method, path: string, body?: unknown): Promise<Response> {
   const token = getSession()?.token;
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -61,6 +61,11 @@ async function request<T>(method: Method, path: string, body?: unknown): Promise
     if (res.status === 401 && token) saveSession(null);
     throw await describeFailure(method, path, res);
   }
+  return res;
+}
+
+async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
+  const res = await send(method, path, body);
   return res.status === 204 ? (undefined as T) : (res.json() as Promise<T>);
 }
 
@@ -70,6 +75,11 @@ export function apiGet<T>(path: string): Promise<T> {
 
 export function apiPost<T>(path: string, body?: unknown): Promise<T> {
   return request<T>('POST', path, body);
+}
+
+/** For endpoints that answer with a file (audio) instead of JSON. */
+export async function apiPostForBlob(path: string, body: unknown): Promise<Blob> {
+  return (await send('POST', path, body)).blob();
 }
 
 export function apiPatch<T>(path: string, body: unknown): Promise<T> {

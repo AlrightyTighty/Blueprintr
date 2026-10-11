@@ -170,7 +170,9 @@ export async function createBriefing(actor: Actor, projectId: string, planId: st
 
   let script = plan.briefingScript;
   let key = plan.briefingAudioKey;
-  if (!script || !key || refresh) {
+  // A store that can lose files (local disk) is asked whether the cached audio is still there.
+  const hasAudio = key && audio.exists ? await audio.exists(key) : Boolean(key);
+  if (!script || !key || !hasAudio || refresh) {
     script = await writeScript(facts);
     key = `briefings/${projectId}/${planId}.mp3`;
     await audio.put(key, await elevenlabs.synthesize(script));

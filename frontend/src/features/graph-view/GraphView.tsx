@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow, type Edge, type Node } from '@xyflow/react';
+import { Background, Controls, ReactFlow, ReactFlowProvider, useReactFlow, type Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { blastRadius } from '../../core/graph/blastRadius';
-import { getNodeCategory, getNodeDisplayName, type NodeCategory } from '../../core/graph/nodeDisplay';
+import { getNodeCategory, type NodeCategory } from '../../core/graph/nodeDisplay';
 import type { PlanChange } from '../../core/graph/types';
 import { useTourStore } from '../tour-player/useTourStore';
-import { layoutGraph, NODE_WIDTH } from './layoutGraph';
+import { layoutGraph } from './layoutGraph';
+import ResourceNode, { type NodeLook, type ResourceFlowNode } from './ResourceNode';
 import { useGraphStore } from './useGraphStore';
 
 // Dark surface with blue/purple accents; text is always light so it stays readable.
@@ -32,16 +33,11 @@ const EDGE_COLOR = '#475a85';
 const EDGE_COLOR_ON_PATH = '#a78bfa';
 const EDGE_COLOR_FAILING = '#f43f5e';
 
-interface NodeLook {
-  borderColor: string;
-  background: string;
-  opacity: number;
-  glow: boolean;
-  suffix: string;
-}
+// Defined once, outside the component, so React Flow doesn't rebuild the node type on every render.
+const nodeTypes = { resource: ResourceNode };
 
 function GraphCanvas() {
-  const { graph, selectedNodeId, direction, selectNode, planChanges } = useGraphStore();
+  const { graph, findings, selectedNodeId, direction, selectNode, planChanges } = useGraphStore();
   const { activeJourney, stopIndex } = useTourStore();
   const { fitView } = useReactFlow();
 
@@ -82,33 +78,33 @@ function GraphCanvas() {
     const currentBorder = '#ddd6fe';
 
     if (tourKind === 'disaster') {
-      if (!isRevealed) return { borderColor: defaultBorder, background: NODE_BACKGROUND, opacity: isStop ? 0.8 : 0.35, glow: false, suffix: '' };
+      if (!isRevealed) return { borderColor: defaultBorder, background: NODE_BACKGROUND, opacity: isStop ? 0.8 : 0.35, glow: false, badge: null };
       return {
         borderColor: isCurrent ? currentBorder : PLAN_COLORS.dangerBorder,
         background: PLAN_COLORS.dangerBackground,
         opacity: 1,
         glow: true,
-        suffix: ' (down)',
+        badge: 'down',
       };
     }
 
     if (tourKind === 'change') {
       const change = planChangeByNodeId.get(nodeId);
-      if (!isRevealed || !change) return { borderColor: defaultBorder, background: NODE_BACKGROUND, opacity: isStop ? 0.8 : 0.35, glow: false, suffix: '' };
+      if (!isRevealed || !change) return { borderColor: defaultBorder, background: NODE_BACKGROUND, opacity: isStop ? 0.8 : 0.35, glow: false, badge: null };
       const isDestructive = change.impact === 'direct' && (change.action === 'replace' || change.action === 'destroy');
       return {
         borderColor: isCurrent ? currentBorder : isDestructive ? PLAN_COLORS.dangerBorder : PLAN_COLORS.warningBorder,
         background: isDestructive ? PLAN_COLORS.dangerBackground : change.impact === 'downstream' ? PLAN_COLORS.warningBackground : NODE_BACKGROUND,
         opacity: 1,
         glow: true,
-        suffix: change.impact === 'direct' ? ` (${change.action})` : '',
+        badge: change.impact === 'direct' ? change.action : null,
       };
     }
 
     // A walk through the system: the current stop shines, where we've been stays lit, the rest recedes.
-    if (isCurrent) return { borderColor: currentBorder, background: NODE_BACKGROUND_SELECTED, opacity: 1, glow: true, suffix: '' };
-    if (isRevealed) return { borderColor: defaultBorder, background: NODE_BACKGROUND_HIGHLIGHTED, opacity: 1, glow: true, suffix: '' };
-    return { borderColor: defaultBorder, background: NODE_BACKGROUND, opacity: isStop ? 0.7 : 0.3, glow: false, suffix: '' };
+    if (isCurrent) return { borderColor: currentBorder, background: NODE_BACKGROUND_SELECTED, opacity: 1, glow: true, badge: null };
+    if (isRevealed) return { borderColor: defaultBorder, background: NODE_BACKGROUND_HIGHLIGHTED, opacity: 1, glow: true, badge: null };
+    return { borderColor: defaultBorder, background: NODE_BACKGROUND, opacity: isStop ? 0.7 : 0.3, glow: false, badge: null };
   }
 
   function lookOutsideTour(nodeId: string, defaultBorder: string): NodeLook {
@@ -120,7 +116,7 @@ function GraphCanvas() {
     // With a plan loaded, plan colors take over; otherwise show the click-to-highlight view.
     let borderColor = isSelected ? '#ddd6fe' : defaultBorder;
     let background = isSelected ? NODE_BACKGROUND_SELECTED : isHighlighted ? NODE_BACKGROUND_HIGHLIGHTED : NODE_BACKGROUND;
-    let suffix = '';
+    let badge: string | null = null;
     if (planChange?.impact === 'direct' && (planChange.action === 'replace' || planChange.action === 'destroy')) {
       borderColor = PLAN_COLORS.dangerBorder;
       background = PLAN_COLORS.dangerBackground;
@@ -131,29 +127,28 @@ function GraphCanvas() {
       borderColor = PLAN_COLORS.warningBorder;
       background = PLAN_COLORS.warningBackground;
     }
-    if (planChange?.impact === 'direct') suffix = ` (${planChange.action})`;
+    if (planChange?.impact === 'direct') badge = planChange.action;
 
     const isDimmed = isPlanActive ? !planChange : selectedNodeId !== null && !isSelected && !isHighlighted;
-    return { borderColor, background, opacity: isDimmed ? 0.3 : 1, glow: isSelected || isHighlighted || Boolean(planChange), suffix };
+    return { borderColor, background, opacity: isDimmed ? 0.3 : 1, glow: isSelected || isHighlighted || Boolean(planChange), badge };
   }
 
-  const flowNodes: Node[] = graph.nodes.map((node) => {
+  const findingCountByNodeId = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const finding of findings) {
+      if (finding.nodeId && !finding.dismissedAt) counts.set(finding.nodeId, (counts.get(finding.nodeId) ?? 0) + 1);
+    }
+    return counts;
+  }, [findings]);
+
+  const flowNodes: ResourceFlowNode[] = graph.nodes.map((node) => {
     const defaultBorder = CATEGORY_COLORS[getNodeCategory(node)];
     const look = activeJourney ? lookDuringTour(node.id, defaultBorder) : lookOutsideTour(node.id, defaultBorder);
     return {
       id: node.id,
+      type: 'resource',
       position: positions.get(node.id)!,
-      data: { label: `${getNodeDisplayName(node)}${look.suffix}` },
-      style: {
-        width: NODE_WIDTH,
-        fontSize: 12,
-        color: '#f1f5f9',
-        border: `2px solid ${look.borderColor}`,
-        background: look.background,
-        boxShadow: look.glow ? `0 0 12px ${look.borderColor}88` : undefined,
-        opacity: look.opacity,
-        transition: 'opacity 300ms, background 300ms, border-color 300ms',
-      },
+      data: { node, look, findingCount: findingCountByNodeId.get(node.id) ?? 0 },
     };
   });
 
@@ -190,6 +185,7 @@ function GraphCanvas() {
     <ReactFlow
       nodes={flowNodes}
       edges={flowEdges}
+      nodeTypes={nodeTypes}
       onNodeClick={(_event, node) => selectNode(node.id)}
       onPaneClick={() => selectNode(null)}
       nodesDraggable={false}

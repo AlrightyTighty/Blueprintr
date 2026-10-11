@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import type { Briefing, FindingSeverity, PlanExplanation } from '../../core/graph/types';
+import SoftBreak from '../../components/SoftBreak';
+import { isDemoProject } from '../../config';
 import { createBriefing, explainPlan, type AiResult } from '../../services/analysisService';
 import { useGraphStore } from '../graph-view/useGraphStore';
+import { speak, stopSpeaking } from '../voice/narrator';
+import { useVoiceStore } from '../voice/useVoiceStore';
 
 const SEVERITY_CLASSES: Record<FindingSeverity, string> = {
   info: 'bg-slate-800 text-slate-300',
@@ -19,32 +23,29 @@ const RECOMMENDATION_CLASSES: Record<Briefing['recommendation'], string> = {
 
 const buttonClass = 'rounded px-3 py-1 text-sm transition-colors disabled:opacity-50';
 
-/** Reads the script aloud with the browser's built-in voice when the server sent no audio. */
-function speakScript(script: string) {
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(script);
-  utterance.rate = 0.95;
-  window.speechSynthesis.speak(utterance);
-}
-
 export default function PlanInsightsPanel() {
   const { projectId, graph, planChanges, planId } = useGraphStore();
   const [explanation, setExplanation] = useState<AiResult<PlanExplanation> | null>(null);
   const [briefing, setBriefing] = useState<AiResult<Briefing> | null>(null);
   const [busyAction, setBusyAction] = useState<'explain' | 'briefing' | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const voiceMode = useVoiceStore((state) => state.mode);
 
   // A new or cleared plan makes any earlier answer stale.
   useEffect(() => {
     setExplanation(null);
     setBriefing(null);
     setErrorMessage(null);
-    window.speechSynthesis?.cancel();
+    stopSpeaking();
   }, [planChanges]);
 
   if (planChanges.length === 0) return null;
 
   const context = { projectId, graph, planChanges, planId };
+  // On a real project the briefing is voiced by the server with ElevenLabs, which uses credits. The
+  // offline briefing (the demo, or a plan the server never saw) costs nothing.
+  const briefingCostsCredits = !isDemoProject(projectId) && planId !== null;
+  const isBriefingBlocked = briefingCostsCredits && voiceMode !== 'live';
 
   async function run<Data>(action: 'explain' | 'briefing', work: () => Promise<Data>): Promise<Data | null> {
     setBusyAction(action);
@@ -68,7 +69,8 @@ export default function PlanInsightsPanel() {
     const result = await run('briefing', () => createBriefing(context));
     if (!result) return;
     setBriefing(result);
-    if (!result.data.audioUrl) speakScript(result.data.script);
+    // The server's audio plays by itself; an offline briefing goes through the guide's voice like any other line.
+    if (!result.data.audioUrl) speak(result.data.script, () => undefined);
   }
 
   return (
@@ -84,13 +86,19 @@ export default function PlanInsightsPanel() {
         </button>
         <button
           className={`${buttonClass} bg-indigo-950 text-indigo-200 hover:bg-indigo-900`}
-          disabled={busyAction !== null}
+          disabled={busyAction !== null || isBriefingBlocked}
+          title={isBriefingBlocked ? 'Set Voice to Live to hear a briefing (it uses ElevenLabs credits).' : undefined}
           onClick={handleBriefing}
         >
           {busyAction === 'briefing' ? 'Preparing…' : 'Brief me'}
         </button>
       </div>
 
+      {isBriefingBlocked && (
+        <p className="text-xs text-slate-500">
+          Brief me is spoken by ElevenLabs, which uses voice credits. Set Voice to Live (top bar) to use it.
+        </p>
+      )}
       {errorMessage && <p className="text-rose-300">{errorMessage}</p>}
 
       {explanation && (
@@ -99,7 +107,9 @@ export default function PlanInsightsPanel() {
           {explanation.data.risks.map((risk) => (
             <div key={risk.address} className="rounded border border-indigo-900 bg-indigo-950 p-2">
               <span className={`rounded px-1.5 py-0.5 text-xs ${SEVERITY_CLASSES[risk.severity]}`}>{risk.severity}</span>
-              <p className="mt-1 break-all text-xs text-slate-400">{risk.address}</p>
+              <p className="mt-1 text-xs text-slate-400 wrap:anywhere">
+                <SoftBreak text={risk.address} />
+              </p>
               <p className="text-slate-200">{risk.summary}</p>
             </div>
           ))}
@@ -109,7 +119,9 @@ export default function PlanInsightsPanel() {
               <ul className="space-y-1 text-slate-300">
                 {explanation.data.saferAlternatives.map((alternative) => (
                   <li key={alternative.address}>
-                    <span className="break-all text-xs text-slate-500">{alternative.address}</span>
+                    <span className="text-xs text-slate-500 wrap:anywhere">
+                      <SoftBreak text={alternative.address} />
+                    </span>
                     <br />
                     {alternative.suggestion}
                   </li>
@@ -136,13 +148,13 @@ export default function PlanInsightsPanel() {
           ) : (
             <button
               className={`${buttonClass} self-start bg-indigo-900 text-indigo-200 hover:bg-indigo-800`}
-              onClick={() => speakScript(briefing.data.script)}
+              onClick={() => speak(briefing.data.script, () => undefined)}
             >
               Play again
             </button>
           )}
           {briefing.isOffline && (
-            <p className="text-xs text-slate-500">Offline briefing read by your browser's voice, not ElevenLabs.</p>
+            <p className="text-xs text-slate-500">Offline briefing from the local graph. It is spoken only if the Voice setting allows.</p>
           )}
         </div>
       )}

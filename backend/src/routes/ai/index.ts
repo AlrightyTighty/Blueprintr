@@ -1,10 +1,12 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
+import { getConfig } from '../../config.js';
 import { userActor } from '../../http/context.js';
 import { unauthorized } from '../../http/errors.js';
 import { parse, projectParams, queryBoolean, runRef, uuid } from '../../http/validation.js';
 import { verifyToken } from '../../lib/jwt.js';
 import * as ai from '../../services/ai.js';
+import * as narration from '../../services/narration.js';
 
 const planParams = projectParams.extend({ planId: uuid });
 const refresh = z.object({ refresh: queryBoolean.default(false) });
@@ -33,6 +35,14 @@ const routes: FastifyPluginAsync = async (app) => {
     const { projectId } = parse(projectParams, req.params);
     const body = parse(z.object({ question: z.string().trim().min(1).max(1000), runId: runRef.default('current'), planId: uuid.optional() }), req.body);
     return ai.ask(userActor(req), projectId, body);
+  });
+
+  // Public on purpose: the demo works without an account. The daily character budget and a per-IP
+  // rate limit keep it from being used to spend the ElevenLabs credits.
+  app.post('/narrate', { config: { rateLimit: { max: 30, timeWindow: '1 minute' } } }, async (req, reply) => {
+    const { text } = parse(z.object({ text: z.string().trim().min(1).max(getConfig().NARRATION_MAX_CHARACTERS) }), req.body);
+    const audio = await narration.narrate(text);
+    return reply.type('audio/mpeg').header('Cache-Control', 'private, max-age=86400').send(audio);
   });
 
   app.post('/projects/:projectId/voice/session', async (req, reply) => {

@@ -4,7 +4,7 @@
     "commitSha": null,
     "nodes": [
       {
-        "id": "d2b40e2b-ebb0-474d-a72d-9980253468f5",
+        "id": "d0c67dc0-faca-4b9f-bda5-77c14537cc49",
         "kind": "resource",
         "address": "aws_apigatewayv2_api.http",
         "name": "http",
@@ -16,10 +16,19 @@
         "attributes": {
           "name": "ripplemap-http",
           "protocol_type": "HTTP"
+        },
+        "resourceType": {
+          "terraformType": "aws_apigatewayv2_api",
+          "provider": "aws",
+          "service": "API Gateway",
+          "displayName": "HTTP/WebSocket API",
+          "category": "network",
+          "iconKey": "aws/api-gateway",
+          "color": "#8C4FFF"
         }
       },
       {
-        "id": "7e60b8f1-2392-4b7e-a376-b2a92ba2bce8",
+        "id": "60959840-3413-488c-afb1-31df2805fd76",
         "kind": "resource",
         "address": "aws_apigatewayv2_integration.api",
         "name": "api",
@@ -28,10 +37,19 @@
         "filePath": "infra/main.tf",
         "lineStart": 149,
         "lineEnd": null,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": {
+          "terraformType": "aws_apigatewayv2_integration",
+          "provider": "aws",
+          "service": "API Gateway",
+          "displayName": "API Integration",
+          "category": "network",
+          "iconKey": "aws/api-gateway",
+          "color": "#8C4FFF"
+        }
       },
       {
-        "id": "e71b9cbf-77fa-4829-9bb7-9004bba92d2e",
+        "id": "ad588ca3-a29f-4460-b907-dd40fe86b66f",
         "kind": "resource",
         "address": "aws_cloudfront_distribution.site",
         "name": "site",
@@ -44,10 +62,19 @@
           "aliases": [
             "${var.domain}"
           ]
+        },
+        "resourceType": {
+          "terraformType": "aws_cloudfront_distribution",
+          "provider": "aws",
+          "service": "CloudFront",
+          "displayName": "CloudFront Distribution",
+          "category": "edge",
+          "iconKey": "aws/cloudfront",
+          "color": "#8C4FFF"
         }
       },
       {
-        "id": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "kind": "resource",
         "address": "aws_dynamodb_table.orders",
         "name": "orders",
@@ -60,10 +87,19 @@
           "billing_mode": "PAY_PER_REQUEST",
           "hash_key": "id",
           "name": "orders-prod"
+        },
+        "resourceType": {
+          "terraformType": "aws_dynamodb_table",
+          "provider": "aws",
+          "service": "DynamoDB",
+          "displayName": "DynamoDB Table",
+          "category": "database",
+          "iconKey": "aws/dynamodb",
+          "color": "#C925D1"
         }
       },
       {
-        "id": "41817913-c354-4f79-b221-a0ece02c8caf",
+        "id": "1c823f5e-0a97-4b96-be0e-9a99e889223a",
         "kind": "resource",
         "address": "aws_iam_policy.worker",
         "name": "worker",
@@ -74,10 +110,19 @@
         "lineEnd": null,
         "attributes": {
           "name": "worker"
+        },
+        "resourceType": {
+          "terraformType": "aws_iam_policy",
+          "provider": "aws",
+          "service": "IAM",
+          "displayName": "IAM Policy",
+          "category": "security",
+          "iconKey": "aws/iam-policy",
+          "color": "#DD344C"
         }
       },
       {
-        "id": "80513c24-00ab-4308-a756-b10fc02d7d88",
+        "id": "e978f221-1a76-468f-81b6-29dfac55124a",
         "kind": "resource",
         "address": "aws_iam_role.api_role",
         "name": "api_role",
@@ -88,10 +133,19 @@
         "lineEnd": null,
         "attributes": {
           "name": "api-role"
+        },
+        "resourceType": {
+          "terraformType": "aws_iam_role",
+          "provider": "aws",
+          "service": "IAM",
+          "displayName": "IAM Role",
+          "category": "security",
+          "iconKey": "aws/iam-role",
+          "color": "#DD344C"
         }
       },
       {
-        "id": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
+        "id": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
         "kind": "resource",
         "address": "aws_iam_role.worker_role",
         "name": "worker_role",
@@ -102,10 +156,19 @@
         "lineEnd": null,
         "attributes": {
           "name": "worker-role"
+        },
+        "resourceType": {
+          "terraformType": "aws_iam_role",
+          "provider": "aws",
+          "service": "IAM",
+          "displayName": "IAM Role",
+          "category": "security",
+          "iconKey": "aws/iam-role",
+          "color": "#DD344C"
         }
       },
       {
-        "id": "641985a8-37a5-448b-8e39-08597e39c1c7",
+        "id": "5d2aa9a7-25a7-42c2-aad3-2110b37f9078",
         "kind": "resource",
         "address": "aws_iam_role_policy.api_access",
         "name": "api_access",
@@ -116,10 +179,19 @@
         "lineEnd": null,
         "attributes": {
           "name": "api-access"
+        },
+        "resourceType": {
+          "terraformType": "aws_iam_role_policy",
+          "provider": "aws",
+          "service": "IAM",
+          "displayName": "IAM Inline Role Policy",
+          "category": "security",
+          "iconKey": "aws/iam-policy",
+          "color": "#DD344C"
         }
       },
       {
-        "id": "f92bb483-2d43-4969-99ac-fe2bbf213926",
+        "id": "902e466d-0b82-41c2-949f-ace05bdf8f7b",
         "kind": "resource",
         "address": "aws_iam_role_policy_attachment.worker",
         "name": "worker",
@@ -128,10 +200,19 @@
         "filePath": "infra/main.tf",
         "lineStart": 91,
         "lineEnd": null,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": {
+          "terraformType": "aws_iam_role_policy_attachment",
+          "provider": "aws",
+          "service": "IAM",
+          "displayName": "IAM Policy Attachment",
+          "category": "security",
+          "iconKey": "aws/iam-policy",
+          "color": "#DD344C"
+        }
       },
       {
-        "id": "2daf9ce3-e678-4a39-b6a3-e3904c8efbb1",
+        "id": "988444b6-1c3f-46b7-998d-e9f0f5886328",
         "kind": "resource",
         "address": "aws_lambda_event_source_mapping.jobs",
         "name": "jobs",
@@ -140,10 +221,19 @@
         "filePath": "infra/main.tf",
         "lineStart": 139,
         "lineEnd": null,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": {
+          "terraformType": "aws_lambda_event_source_mapping",
+          "provider": "aws",
+          "service": "Lambda",
+          "displayName": "Lambda Event Source",
+          "category": "compute",
+          "iconKey": "aws/lambda",
+          "color": "#ED7100"
+        }
       },
       {
-        "id": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "id": "4a851773-a913-4ca4-803d-42e45e71f2e4",
         "kind": "resource",
         "address": "aws_lambda_function.api",
         "name": "api",
@@ -161,10 +251,19 @@
             "QUEUE_URL",
             "TABLE_NAME"
           ]
+        },
+        "resourceType": {
+          "terraformType": "aws_lambda_function",
+          "provider": "aws",
+          "service": "Lambda",
+          "displayName": "Lambda Function",
+          "category": "compute",
+          "iconKey": "aws/lambda",
+          "color": "#ED7100"
         }
       },
       {
-        "id": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "id": "fe709eee-cc5a-45c5-be76-dd007e20518b",
         "kind": "resource",
         "address": "aws_lambda_function.worker",
         "name": "worker",
@@ -181,10 +280,19 @@
             "QUEUE_URL",
             "TABLE_NAME"
           ]
+        },
+        "resourceType": {
+          "terraformType": "aws_lambda_function",
+          "provider": "aws",
+          "service": "Lambda",
+          "displayName": "Lambda Function",
+          "category": "compute",
+          "iconKey": "aws/lambda",
+          "color": "#ED7100"
         }
       },
       {
-        "id": "4b3e9eb5-8d60-4c99-a7f9-fce4d44b91de",
+        "id": "b838f423-a3d7-4b40-aeee-aa47cb6e5cf7",
         "kind": "resource",
         "address": "aws_route53_record.site",
         "name": "site",
@@ -197,10 +305,19 @@
           "name": "demo.ripplemap.wiki",
           "type": "A",
           "zone_id": "Z123"
+        },
+        "resourceType": {
+          "terraformType": "aws_route53_record",
+          "provider": "aws",
+          "service": "Route 53",
+          "displayName": "DNS Record",
+          "category": "dns",
+          "iconKey": "aws/route53",
+          "color": "#8C4FFF"
         }
       },
       {
-        "id": "5d72b00e-a3c9-43f4-bd98-a28e5216bb07",
+        "id": "4ff6e537-bbca-449c-a3f6-3a7f6657dc38",
         "kind": "resource",
         "address": "aws_s3_bucket.site",
         "name": "site",
@@ -211,10 +328,19 @@
         "lineEnd": null,
         "attributes": {
           "bucket": "ripplemap-site-prod"
+        },
+        "resourceType": {
+          "terraformType": "aws_s3_bucket",
+          "provider": "aws",
+          "service": "S3",
+          "displayName": "S3 Bucket",
+          "category": "storage",
+          "iconKey": "aws/s3",
+          "color": "#7AA116"
         }
       },
       {
-        "id": "c73a6887-47b7-4df9-848d-8d5001ce9650",
+        "id": "5d528e00-d1b6-4eb6-aede-76192b48c7cc",
         "kind": "resource",
         "address": "aws_s3_bucket.uploads",
         "name": "uploads",
@@ -225,10 +351,19 @@
         "lineEnd": null,
         "attributes": {
           "bucket": "ripplemap-uploads-prod"
+        },
+        "resourceType": {
+          "terraformType": "aws_s3_bucket",
+          "provider": "aws",
+          "service": "S3",
+          "displayName": "S3 Bucket",
+          "category": "storage",
+          "iconKey": "aws/s3",
+          "color": "#7AA116"
         }
       },
       {
-        "id": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "id": "3ca9c399-2f68-40a2-b820-29a77d36e867",
         "kind": "resource",
         "address": "aws_sqs_queue.jobs",
         "name": "jobs",
@@ -239,10 +374,19 @@
         "lineEnd": null,
         "attributes": {
           "name": "jobs-prod"
+        },
+        "resourceType": {
+          "terraformType": "aws_sqs_queue",
+          "provider": "aws",
+          "service": "SQS",
+          "displayName": "SQS Queue",
+          "category": "messaging",
+          "iconKey": "aws/sqs",
+          "color": "#E7157B"
         }
       },
       {
-        "id": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "id": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
         "kind": "code_file",
         "address": "src/api/app.js",
         "name": "app.js",
@@ -251,22 +395,24 @@
         "filePath": "src/api/app.js",
         "lineStart": null,
         "lineEnd": null,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       },
       {
-        "id": "68b27e51-b3aa-4c60-8b8a-55d538dff169",
+        "id": "795b0535-be60-4761-86f2-44183e214a55",
         "kind": "code_function",
         "address": "src/api/app.js::handler",
         "name": "handler",
         "terraformType": null,
-        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
         "filePath": "src/api/app.js",
         "lineStart": 35,
         "lineEnd": 38,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       },
       {
-        "id": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
+        "id": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
         "kind": "code_file",
         "address": "src/worker/main.py",
         "name": "main.py",
@@ -275,70 +421,76 @@
         "filePath": "src/worker/main.py",
         "lineStart": null,
         "lineEnd": null,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       },
       {
-        "id": "6db6fe9c-2e0c-479f-bd13-9bb3f65d2f18",
+        "id": "f2fc138d-e56a-4161-91d2-3532a2a49fcd",
         "kind": "code_function",
         "address": "src/worker/main.py::handler",
         "name": "handler",
         "terraformType": null,
-        "parentId": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
+        "parentId": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
         "filePath": "src/worker/main.py",
         "lineStart": 16,
         "lineEnd": 19,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       },
       {
-        "id": "995f7ea9-2c33-4637-be36-c3d8098dc100",
+        "id": "ea18d596-2e18-49aa-9cbb-cda82d94a28e",
         "kind": "code_function",
         "address": "src/api/app.js::getOrder",
         "name": "getOrder",
         "terraformType": null,
-        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
         "filePath": "src/api/app.js",
         "lineStart": 11,
         "lineEnd": 14,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       },
       {
-        "id": "a7393ebf-9278-403f-92d8-7804a97ef73d",
+        "id": "f4a77830-3223-4115-86cb-e3ab8c33342e",
         "kind": "code_function",
         "address": "src/api/app.js::saveOrder",
         "name": "saveOrder",
         "terraformType": null,
-        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
         "filePath": "src/api/app.js",
         "lineStart": 16,
         "lineEnd": 19,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       },
       {
-        "id": "7ead2231-4494-4205-9f09-0398430f5cc8",
+        "id": "19df2589-cfbc-47c8-aa0f-3cbe15cc379e",
         "kind": "code_function",
         "address": "src/api/app.js::cancelOrder",
         "name": "cancelOrder",
         "terraformType": null,
-        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
         "filePath": "src/api/app.js",
         "lineStart": 22,
         "lineEnd": 24,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       },
       {
-        "id": "e6cb2242-72b1-4ca7-bc98-beb40e022aca",
+        "id": "643da6d8-398b-4d79-ae15-1b606e24614f",
         "kind": "code_function",
         "address": "src/api/app.js::archiveReport",
         "name": "archiveReport",
         "terraformType": null,
-        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
         "filePath": "src/api/app.js",
         "lineStart": 26,
         "lineEnd": 29,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       },
       {
-        "id": "3d322bda-8d78-4355-8a71-484b7a771f6a",
+        "id": "de9469ea-1c85-4f13-abe5-4cac3b24d283",
         "kind": "unmanaged_resource",
         "address": "unmanaged:s3:legacy-reports",
         "name": "legacy-reports",
@@ -350,38 +502,49 @@
         "attributes": {
           "service": "s3",
           "reason": "Named in code but not managed by Terraform."
+        },
+        "resourceType": {
+          "terraformType": "aws_s3_bucket",
+          "provider": "aws",
+          "service": "S3",
+          "displayName": "S3 Bucket",
+          "category": "storage",
+          "iconKey": "aws/s3",
+          "color": "#7AA116"
         }
       },
       {
-        "id": "bd44c0fb-a232-41fc-acfd-9c49bf96b86a",
+        "id": "f5b35466-34b7-4678-9e0b-8982c4a0e637",
         "kind": "code_function",
         "address": "src/api/app.js::storeUpload",
         "name": "storeUpload",
         "terraformType": null,
-        "parentId": "50691677-58f3-4669-81a4-e262371aa1c8",
+        "parentId": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
         "filePath": "src/api/app.js",
         "lineStart": 31,
         "lineEnd": 33,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       },
       {
-        "id": "d5ca15b5-35de-4a21-889b-1ec05115b21f",
+        "id": "191915ce-87f2-4b6e-9b6b-a606ae8a1338",
         "kind": "code_function",
         "address": "src/worker/main.py::process",
         "name": "process",
         "terraformType": null,
-        "parentId": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
+        "parentId": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
         "filePath": "src/worker/main.py",
         "lineStart": 11,
         "lineEnd": 13,
-        "attributes": {}
+        "attributes": {},
+        "resourceType": null
       }
     ],
     "edges": [
       {
-        "id": "19e34c83-4759-4b2e-b458-ac161c0be07b",
-        "source": "7e60b8f1-2392-4b7e-a376-b2a92ba2bce8",
-        "target": "d2b40e2b-ebb0-474d-a72d-9980253468f5",
+        "id": "4bb36c41-1fcb-4316-9566-27f52ce4caa6",
+        "source": "60959840-3413-488c-afb1-31df2805fd76",
+        "target": "d0c67dc0-faca-4b9f-bda5-77c14537cc49",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -392,9 +555,9 @@
         "explanation": null
       },
       {
-        "id": "0ef558ea-9fcb-449e-86f0-7e47a3873479",
-        "source": "7e60b8f1-2392-4b7e-a376-b2a92ba2bce8",
-        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "id": "44441249-0c15-447f-bdec-d8837f2f7791",
+        "source": "60959840-3413-488c-afb1-31df2805fd76",
+        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
         "relation": "invokes",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -405,9 +568,9 @@
         "explanation": null
       },
       {
-        "id": "3d3b087d-dc6f-4995-a9d6-56b8affa803e",
-        "source": "e71b9cbf-77fa-4829-9bb7-9004bba92d2e",
-        "target": "5d72b00e-a3c9-43f4-bd98-a28e5216bb07",
+        "id": "bc0b0feb-b832-4340-bfd2-67b687fe6514",
+        "source": "ad588ca3-a29f-4460-b907-dd40fe86b66f",
+        "target": "4ff6e537-bbca-449c-a3f6-3a7f6657dc38",
         "relation": "routes_to",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -418,9 +581,9 @@
         "explanation": null
       },
       {
-        "id": "b609718a-bb3c-4a40-b390-afccd7534da8",
-        "source": "641985a8-37a5-448b-8e39-08597e39c1c7",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "a7d5edd7-b0e4-4381-95e7-95d4fd525101",
+        "source": "5d2aa9a7-25a7-42c2-aad3-2110b37f9078",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -431,9 +594,9 @@
         "explanation": null
       },
       {
-        "id": "11b54ea6-bd43-47f7-8dba-892a6e23ce09",
-        "source": "641985a8-37a5-448b-8e39-08597e39c1c7",
-        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "id": "8ae4d565-c9bb-45f2-8905-fa77b560e279",
+        "source": "5d2aa9a7-25a7-42c2-aad3-2110b37f9078",
+        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -444,9 +607,9 @@
         "explanation": null
       },
       {
-        "id": "fe0a55ec-f860-47fd-ab25-860899941413",
-        "source": "641985a8-37a5-448b-8e39-08597e39c1c7",
-        "target": "80513c24-00ab-4308-a756-b10fc02d7d88",
+        "id": "6a73ca9f-a399-405c-b5fd-ec04d4dc238e",
+        "source": "5d2aa9a7-25a7-42c2-aad3-2110b37f9078",
+        "target": "e978f221-1a76-468f-81b6-29dfac55124a",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -457,9 +620,9 @@
         "explanation": null
       },
       {
-        "id": "3cc52c61-dd3b-4e9a-aa9f-2bfd6216c20f",
-        "source": "f92bb483-2d43-4969-99ac-fe2bbf213926",
-        "target": "41817913-c354-4f79-b221-a0ece02c8caf",
+        "id": "64fb8021-868b-447e-8557-29d175f27005",
+        "source": "902e466d-0b82-41c2-949f-ace05bdf8f7b",
+        "target": "1c823f5e-0a97-4b96-be0e-9a99e889223a",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -470,9 +633,9 @@
         "explanation": null
       },
       {
-        "id": "73ee78fb-36ee-42f4-b1a2-08342a8ce350",
-        "source": "f92bb483-2d43-4969-99ac-fe2bbf213926",
-        "target": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
+        "id": "5ccadf20-fb29-4d36-a810-986523b16389",
+        "source": "902e466d-0b82-41c2-949f-ace05bdf8f7b",
+        "target": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -483,9 +646,9 @@
         "explanation": null
       },
       {
-        "id": "ee82c064-b202-4a1b-bcf5-668f0824f0af",
-        "source": "2daf9ce3-e678-4a39-b6a3-e3904c8efbb1",
-        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "id": "056fb474-d196-432f-b426-151dc5503140",
+        "source": "988444b6-1c3f-46b7-998d-e9f0f5886328",
+        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -496,9 +659,9 @@
         "explanation": null
       },
       {
-        "id": "f2918854-1439-48fd-a0e2-61464c4a412f",
-        "source": "2daf9ce3-e678-4a39-b6a3-e3904c8efbb1",
-        "target": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "id": "e795c620-771b-4eef-a831-6ba8ac545c14",
+        "source": "988444b6-1c3f-46b7-998d-e9f0f5886328",
+        "target": "fe709eee-cc5a-45c5-be76-dd007e20518b",
         "relation": "invokes",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -509,9 +672,9 @@
         "explanation": null
       },
       {
-        "id": "43123bf0-61c1-447b-8930-3f531daedef0",
-        "source": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
-        "target": "c73a6887-47b7-4df9-848d-8d5001ce9650",
+        "id": "c2e6dace-49b8-46f3-a811-a9e901598ac8",
+        "source": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "target": "5d528e00-d1b6-4eb6-aede-76192b48c7cc",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -522,9 +685,9 @@
         "explanation": null
       },
       {
-        "id": "b43d08b1-1332-4897-96d8-658f7ddb1017",
-        "source": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
-        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "id": "4ec1b823-1bdf-4d96-a408-bb9897f9b003",
+        "source": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -535,9 +698,9 @@
         "explanation": null
       },
       {
-        "id": "4521477a-3ab0-4c2f-8d19-441f1e22bd07",
-        "source": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "f487f225-d034-414b-9d41-c8c77928118c",
+        "source": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -548,9 +711,9 @@
         "explanation": null
       },
       {
-        "id": "1a21cf0f-e378-4eef-8a4b-e6c2cbb85eac",
-        "source": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
-        "target": "80513c24-00ab-4308-a756-b10fc02d7d88",
+        "id": "3b449240-414a-4fa9-af0e-05d8c9a723d4",
+        "source": "4a851773-a913-4ca4-803d-42e45e71f2e4",
+        "target": "e978f221-1a76-468f-81b6-29dfac55124a",
         "relation": "assumes_role",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -561,9 +724,9 @@
         "explanation": null
       },
       {
-        "id": "ac31e0f0-c398-4537-9657-7f5807293b03",
-        "source": "25b957b7-102d-4492-a1b1-9357fce815c2",
-        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "id": "7cd266ba-242c-43dc-88a1-c7dbf754ed93",
+        "source": "fe709eee-cc5a-45c5-be76-dd007e20518b",
+        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -574,9 +737,9 @@
         "explanation": null
       },
       {
-        "id": "5af0d0fd-cabf-476d-b0da-b5795a765f45",
-        "source": "25b957b7-102d-4492-a1b1-9357fce815c2",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "42196754-0237-4e90-ad17-089a30f84f7f",
+        "source": "fe709eee-cc5a-45c5-be76-dd007e20518b",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "references",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -587,9 +750,9 @@
         "explanation": null
       },
       {
-        "id": "84953f37-a3ca-4cd4-8e80-470318450c85",
-        "source": "25b957b7-102d-4492-a1b1-9357fce815c2",
-        "target": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
+        "id": "e2a19174-04f3-409b-8a07-ff61cd79875f",
+        "source": "fe709eee-cc5a-45c5-be76-dd007e20518b",
+        "target": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
         "relation": "assumes_role",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -600,9 +763,9 @@
         "explanation": null
       },
       {
-        "id": "33e10640-cdd6-4c08-ab26-ef4489c4e239",
-        "source": "4b3e9eb5-8d60-4c99-a7f9-fce4d44b91de",
-        "target": "e71b9cbf-77fa-4829-9bb7-9004bba92d2e",
+        "id": "125392fe-c4df-48dc-b445-e89fff696efb",
+        "source": "b838f423-a3d7-4b40-aeee-aa47cb6e5cf7",
+        "target": "ad588ca3-a29f-4460-b907-dd40fe86b66f",
         "relation": "routes_to",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -613,9 +776,9 @@
         "explanation": null
       },
       {
-        "id": "48a79764-2a5d-438d-abab-c55d4a95dca7",
-        "source": "80513c24-00ab-4308-a756-b10fc02d7d88",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "d13b94cc-e090-49cc-b060-a2f4e3839230",
+        "source": "e978f221-1a76-468f-81b6-29dfac55124a",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "grants_access",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -630,9 +793,9 @@
         "explanation": null
       },
       {
-        "id": "452c6d39-a6e4-4b7a-9656-30fc17181970",
-        "source": "80513c24-00ab-4308-a756-b10fc02d7d88",
-        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "id": "24a40720-6715-436d-a98e-ce1b7ad463f7",
+        "source": "e978f221-1a76-468f-81b6-29dfac55124a",
+        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
         "relation": "grants_access",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -645,9 +808,9 @@
         "explanation": null
       },
       {
-        "id": "9d92c8cb-38c2-4bc5-8671-17355b852c52",
-        "source": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
-        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "id": "2996b9a3-dec2-4f94-9d8e-c4d8f4e0e121",
+        "source": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
+        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
         "relation": "grants_access",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -661,9 +824,9 @@
         "explanation": null
       },
       {
-        "id": "69ad77b3-6cbc-43a4-a0f6-6b0ca09e3c5b",
-        "source": "a69785bf-e1a0-41f9-9bf7-ab78e27a688a",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "8c71a924-047e-4fe6-830d-52b886ee5010",
+        "source": "86c0cceb-c4e8-48b9-87ad-216dd2419b48",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "grants_access",
         "linkMethod": "declared_reference",
         "confidence": "certain",
@@ -677,9 +840,9 @@
         "explanation": null
       },
       {
-        "id": "9a8cf325-f1d5-4af4-90e2-c6492e2d62c4",
-        "source": "50691677-58f3-4669-81a4-e262371aa1c8",
-        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "id": "35b712ba-cf77-43d5-8e89-8358829e5f14",
+        "source": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
+        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -690,9 +853,9 @@
         "explanation": null
       },
       {
-        "id": "0142d7c2-da63-437a-b27a-caaa006f9513",
-        "source": "68b27e51-b3aa-4c60-8b8a-55d538dff169",
-        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "id": "c6b97f47-3162-4210-be17-2c5e4acb2dec",
+        "source": "795b0535-be60-4761-86f2-44183e214a55",
+        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -703,9 +866,9 @@
         "explanation": null
       },
       {
-        "id": "96aa9164-e946-4ed7-9007-51d81987ef02",
-        "source": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
-        "target": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "id": "75750fc2-69f4-459f-85d1-bbe775fd49a2",
+        "source": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
+        "target": "fe709eee-cc5a-45c5-be76-dd007e20518b",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -716,9 +879,9 @@
         "explanation": null
       },
       {
-        "id": "197332a2-91ee-4fd2-a596-366710c4c6bc",
-        "source": "6db6fe9c-2e0c-479f-bd13-9bb3f65d2f18",
-        "target": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "id": "f8308288-7363-47ef-94ca-f973115b4f4c",
+        "source": "f2fc138d-e56a-4161-91d2-3532a2a49fcd",
+        "target": "fe709eee-cc5a-45c5-be76-dd007e20518b",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -729,9 +892,9 @@
         "explanation": null
       },
       {
-        "id": "c60f6d49-2370-407f-91d6-fa73f16790ac",
-        "source": "995f7ea9-2c33-4637-be36-c3d8098dc100",
-        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "id": "3271d058-879a-45de-bb1b-e3fb735bb51b",
+        "source": "ea18d596-2e18-49aa-9cbb-cda82d94a28e",
+        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -742,9 +905,9 @@
         "explanation": null
       },
       {
-        "id": "d26be7ef-711b-436e-9749-d4741ac7bfb5",
-        "source": "995f7ea9-2c33-4637-be36-c3d8098dc100",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "8acbe604-de2e-475e-8c69-4d695825aaa6",
+        "source": "ea18d596-2e18-49aa-9cbb-cda82d94a28e",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "reads",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -762,9 +925,9 @@
         "explanation": null
       },
       {
-        "id": "0279dd79-7427-4eb5-b79e-7c8684785dcd",
-        "source": "a7393ebf-9278-403f-92d8-7804a97ef73d",
-        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "id": "689596f8-695a-4ce2-952a-21524e6a2b5c",
+        "source": "f4a77830-3223-4115-86cb-e3ab8c33342e",
+        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -775,9 +938,9 @@
         "explanation": null
       },
       {
-        "id": "5baa144b-3d41-426a-b5c4-0d1e0b90e6bb",
-        "source": "a7393ebf-9278-403f-92d8-7804a97ef73d",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "f1c7ed2c-16d5-450b-b697-6a3308675a7a",
+        "source": "f4a77830-3223-4115-86cb-e3ab8c33342e",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "writes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -795,9 +958,9 @@
         "explanation": null
       },
       {
-        "id": "8f0b3889-0e57-405b-9066-8c75838314c5",
-        "source": "a7393ebf-9278-403f-92d8-7804a97ef73d",
-        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "id": "633601a4-cc1b-403f-9606-44cdf16d0b28",
+        "source": "f4a77830-3223-4115-86cb-e3ab8c33342e",
+        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
         "relation": "publishes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -815,9 +978,9 @@
         "explanation": null
       },
       {
-        "id": "9ff5fa79-e0fa-418e-9222-61a9c8d0071c",
-        "source": "7ead2231-4494-4205-9f09-0398430f5cc8",
-        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "id": "2d90aa22-4934-4e43-9ba1-0cc8b5d8d1d2",
+        "source": "19df2589-cfbc-47c8-aa0f-3cbe15cc379e",
+        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -828,9 +991,9 @@
         "explanation": null
       },
       {
-        "id": "7a9c1128-8970-457a-83bd-c936493ff77c",
-        "source": "7ead2231-4494-4205-9f09-0398430f5cc8",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "d5a52070-ea1b-4966-b17a-9de9ad13a66b",
+        "source": "19df2589-cfbc-47c8-aa0f-3cbe15cc379e",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "writes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -848,9 +1011,9 @@
         "explanation": null
       },
       {
-        "id": "a7d8fafb-2cd0-4a8a-b8ae-b2c7f0477e21",
-        "source": "e6cb2242-72b1-4ca7-bc98-beb40e022aca",
-        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "id": "f5d00b5d-02e6-4cc8-ac38-2f7f02eb7643",
+        "source": "643da6d8-398b-4d79-ae15-1b606e24614f",
+        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -861,9 +1024,9 @@
         "explanation": null
       },
       {
-        "id": "ceb9ad5e-82e3-4449-8450-6b94f8d3db09",
-        "source": "e6cb2242-72b1-4ca7-bc98-beb40e022aca",
-        "target": "3d322bda-8d78-4355-8a71-484b7a771f6a",
+        "id": "ac6f6d50-7fd7-4ece-8b6f-f5e3c3d7ba2c",
+        "source": "643da6d8-398b-4d79-ae15-1b606e24614f",
+        "target": "de9469ea-1c85-4f13-abe5-4cac3b24d283",
         "relation": "writes",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -882,9 +1045,9 @@
         "explanation": null
       },
       {
-        "id": "68ef4290-a9ed-43a1-920a-82311b4037ae",
-        "source": "bd44c0fb-a232-41fc-acfd-9c49bf96b86a",
-        "target": "8b411576-bf5c-483c-9d60-cfac40d6d28f",
+        "id": "d12dce12-93d1-4c9d-87f0-d9425ce2192f",
+        "source": "f5b35466-34b7-4678-9e0b-8982c4a0e637",
+        "target": "4a851773-a913-4ca4-803d-42e45e71f2e4",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -895,9 +1058,9 @@
         "explanation": null
       },
       {
-        "id": "fbcd949e-e674-4c28-9b0a-2351a6b7cd15",
-        "source": "bd44c0fb-a232-41fc-acfd-9c49bf96b86a",
-        "target": "c73a6887-47b7-4df9-848d-8d5001ce9650",
+        "id": "b562f7db-12e4-4006-9fd5-4af81b556c47",
+        "source": "f5b35466-34b7-4678-9e0b-8982c4a0e637",
+        "target": "5d528e00-d1b6-4eb6-aede-76192b48c7cc",
         "relation": "writes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -915,9 +1078,9 @@
         "explanation": null
       },
       {
-        "id": "86f4da83-6763-41a7-8429-acb2b10eb7d2",
-        "source": "d5ca15b5-35de-4a21-889b-1ec05115b21f",
-        "target": "25b957b7-102d-4492-a1b1-9357fce815c2",
+        "id": "48ebe0de-1ae3-4cab-8f57-27adef516154",
+        "source": "191915ce-87f2-4b6e-9b6b-a606ae8a1338",
+        "target": "fe709eee-cc5a-45c5-be76-dd007e20518b",
         "relation": "runs_code",
         "linkMethod": "code_mapping",
         "confidence": "high",
@@ -928,9 +1091,9 @@
         "explanation": null
       },
       {
-        "id": "513b65d1-831c-44b8-b5b3-f27517dcb954",
-        "source": "d5ca15b5-35de-4a21-889b-1ec05115b21f",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "af66c51f-6520-4931-bf62-33fd2e475a9f",
+        "source": "191915ce-87f2-4b6e-9b6b-a606ae8a1338",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "writes",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -948,9 +1111,9 @@
         "explanation": null
       },
       {
-        "id": "45afba4f-1df4-43fb-8d30-657fd7c83870",
-        "source": "6db6fe9c-2e0c-479f-bd13-9bb3f65d2f18",
-        "target": "627e448b-520e-4bec-83cc-6b379c57e6c2",
+        "id": "90e34cf4-137b-4d4f-8120-9e1f172ed8ae",
+        "source": "f2fc138d-e56a-4161-91d2-3532a2a49fcd",
+        "target": "3ca9c399-2f68-40a2-b820-29a77d36e867",
         "relation": "reads",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -968,9 +1131,9 @@
         "explanation": null
       },
       {
-        "id": "4f33e307-90cc-483b-a648-4e5cd8f4c4ab",
-        "source": "50691677-58f3-4669-81a4-e262371aa1c8",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "d7acae76-4a6f-4637-a4d3-28e8b2839f1d",
+        "source": "0d0b0484-c8c6-413c-a76a-eea4cdb286ca",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "references",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -983,9 +1146,9 @@
         "explanation": null
       },
       {
-        "id": "c19e1bf9-ddce-4b71-ba80-a1c421da687e",
-        "source": "05ca1b8c-6b65-4cf8-9b09-a0902e2b6a4e",
-        "target": "1a197038-b0ac-4b7f-a371-aa115116cdff",
+        "id": "b90c53bc-22f5-4dc9-a82a-0af52e13b55a",
+        "source": "c89aec29-5f55-4dc4-bbcc-697e24a2c0bf",
+        "target": "9b194c63-8ef2-4a3e-8ec2-313e3c5c845d",
         "relation": "references",
         "linkMethod": "env_var",
         "confidence": "high",
@@ -1005,8 +1168,8 @@
       "severity": "high",
       "title": "cancelOrder calls dynamodb:DeleteItem on orders, but aws_iam_role.api_role doesn't allow it",
       "detail": "src/api/app.js:23 calls dynamodb:DeleteItem on aws_dynamodb_table.orders. The Lambda aws_lambda_function.api runs as aws_iam_role.api_role, whose policies don't grant that action on this resource, so the call fails with AccessDenied at runtime.",
-      "nodeId": "7ead2231-4494-4205-9f09-0398430f5cc8",
-      "relatedNodeId": "80513c24-00ab-4308-a756-b10fc02d7d88",
+      "nodeId": "19df2589-cfbc-47c8-aa0f-3cbe15cc379e",
+      "relatedNodeId": "e978f221-1a76-468f-81b6-29dfac55124a",
       "evidence": {
         "action": "dynamodb:DeleteItem",
         "resource": "aws_dynamodb_table.orders",
@@ -1023,7 +1186,7 @@
       "severity": "high",
       "title": "aws_iam_role.api_role allows s3:* on everything, but the code uses only s3:PutObject on aws_s3_bucket.uploads, legacy-reports",
       "detail": "aws_iam_role_policy.api_access (statement 2) grants s3:* on all resources (*). The code that runs as this role uses s3:PutObject on aws_s3_bucket.uploads, legacy-reports. Narrowing the policy to what is used limits the damage if the function is compromised.",
-      "nodeId": "80513c24-00ab-4308-a756-b10fc02d7d88",
+      "nodeId": "e978f221-1a76-468f-81b6-29dfac55124a",
       "relatedNodeId": null,
       "evidence": {
         "policy": "aws_iam_role_policy.api_access",
@@ -1048,8 +1211,8 @@
       "severity": "medium",
       "title": "\"legacy-reports\" (s3) is hardcoded in code but not managed by Terraform",
       "detail": "src/api/app.js:28 (s3:PutObject). No Terraform resource of this type has that name, so changes to it can't be reviewed or reproduced and it may have drifted.",
-      "nodeId": "3d322bda-8d78-4355-8a71-484b7a771f6a",
-      "relatedNodeId": "e6cb2242-72b1-4ca7-bc98-beb40e022aca",
+      "nodeId": "de9469ea-1c85-4f13-abe5-4cac3b24d283",
+      "relatedNodeId": "643da6d8-398b-4d79-ae15-1b606e24614f",
       "evidence": {
         "service": "s3",
         "name": "legacy-reports",

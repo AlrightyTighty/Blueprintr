@@ -91,3 +91,23 @@ export function getFriendlyTypeName(node: GraphNode): string {
   if (role === 'other') return node.resourceType?.displayName ?? FRIENDLY_NAMES.other;
   return FRIENDLY_NAMES[role];
 }
+
+/** The short name under an icon in the graph: "orders", "getOrder", "app.js". The full path is in the tooltip. */
+export function getShortName(node: GraphNode): string {
+  if (node.kind === 'code_file') return (node.filePath ?? node.name).split('/').pop() ?? node.name;
+  return getEntityName(node);
+}
+
+/** A small line under the short name saying what the thing is. */
+export function getTypeCaption(node: GraphNode): string {
+  switch (getNodeCategory(node)) {
+    case 'code':
+      return node.kind === 'code_function' ? (node.filePath ?? 'function') : 'file';
+    case 'unmanaged':
+      return 'not in Terraform';
+    case 'unresolved':
+      return 'unresolved reference';
+    default:
+      return node.resourceType?.displayName ?? getFriendlyTypeName(node);
+  }
+}
