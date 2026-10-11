@@ -9,7 +9,8 @@ import { login } from '../services/authService';
 export default function LoginPage() {
   const { session, signIn } = useAuthStore();
   const navigate = useNavigate();
-  const returnPath = (useLocation().state as { from?: string } | null)?.from ?? '/projects';
+  const location = useLocation();
+  const returnPath = (location.state as { from?: string } | null)?.from ?? '/projects';
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -73,7 +74,7 @@ export default function LoginPage() {
         <GithubButton intent="login" label="Continue with GitHub" returnPath={returnPath} onError={setErrorMessage} />
       </form>
       <div className="mt-5 flex justify-between text-sm">
-        <Link to="/register" className="text-indigo-300 hover:text-indigo-200">
+        <Link to="/register" state={location.state} className="text-indigo-300 hover:text-indigo-200">
           Create an account
         </Link>
         <Link to="/demo" className="text-indigo-300 hover:text-indigo-200">

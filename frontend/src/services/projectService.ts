@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '../api';
+import { apiDelete, apiGet, apiPost } from '../api';
 import type {
   AnalysisRun,
   CreateProjectRequest,
@@ -18,10 +18,33 @@ function buildQuery(parameters: Record<string, string | number | undefined>): st
   return text ? `?${text}` : '';
 }
 
-export function listProjects(options: { search?: string; cursor?: string } = {}): Promise<Page<Project>> {
+/** Which of a user's projects to list: the live ones, archived ones, or the trash. */
+export type ProjectScope = 'active' | 'archived' | 'trash';
+
+export function listProjects(options: { search?: string; cursor?: string; scope?: ProjectScope } = {}): Promise<Page<Project>> {
   return apiGet<Page<Project>>(
-    `/projects${buildQuery({ q: options.search, cursor: options.cursor, limit: 24 })}`,
+    `/projects${buildQuery({ q: options.search, cursor: options.cursor, scope: options.scope, limit: 24 })}`,
   );
+}
+
+/** Moves a project to the trash (owner). It can be restored until it is deleted for good. */
+export function deleteProject(projectId: string): Promise<void> {
+  return apiDelete(`/projects/${projectId}`);
+}
+
+/** Hides a project from the main list without deleting it (owner). */
+export function archiveProject(projectId: string): Promise<Project> {
+  return apiPost<Project>(`/projects/${projectId}/archive`);
+}
+
+/** Brings an archived or trashed project back (owner). */
+export function restoreProject(projectId: string): Promise<Project> {
+  return apiPost<Project>(`/projects/${projectId}/restore`);
+}
+
+/** Permanently deletes a project that is already in the trash (owner). This cannot be undone. */
+export function purgeProject(projectId: string): Promise<void> {
+  return apiDelete(`/projects/${projectId}/permanent`);
 }
 
 export function getProject(projectId: string): Promise<ProjectDetail> {

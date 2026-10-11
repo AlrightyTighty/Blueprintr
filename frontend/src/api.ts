@@ -48,13 +48,22 @@ async function describeFailure(method: string, path: string, res: Response): Pro
   return new ApiError(detail || `${method} ${path} failed: ${res.status}`, res.status, fieldErrors);
 }
 
-type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+// Set while someone is looking at a project through a read-only share link; sent on every request so
+// the backend lets them read the project's graph and findings without an account.
+let activeShareToken: string | null = null;
+
+export function setShareToken(token: string | null): void {
+  activeShareToken = token;
+}
 
 async function send(method: Method, path: string, body?: unknown): Promise<Response> {
   const token = getSession()?.token;
   const headers: Record<string, string> = {};
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
+  if (activeShareToken) headers['X-Share-Token'] = activeShareToken;
 
   const res = await fetch(`${await getApiUrl()}${path}`, {
     method,
@@ -85,6 +94,10 @@ export function apiPost<T>(path: string, body?: unknown): Promise<T> {
 /** For endpoints that answer with a file (audio) instead of JSON. */
 export async function apiPostForBlob(path: string, body: unknown): Promise<Blob> {
   return (await send('POST', path, body)).blob();
+}
+
+export function apiPut<T>(path: string, body: unknown): Promise<T> {
+  return request<T>('PUT', path, body);
 }
 
 export function apiPatch<T>(path: string, body: unknown): Promise<T> {

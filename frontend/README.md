@@ -53,6 +53,8 @@ fall back to `index.html`, so client-side routing works if you add a router.
 | `/projects`             | Dashboard of your projects (needs sign-in)                             |
 | `/projects/new`         | Create a project: pick a GitHub repo, branch and subfolder             |
 | `/projects/:id`         | The graph workspace; shows analysis progress while a run is going      |
+| `/invites/:token`       | What an invitation is for; sign in (or sign up) and join the project   |
+| `/shared/:shareToken`   | A project opened through its read-only share link. No account needed   |
 | `/demo`                 | The workspace on bundled data. No account or backend needed            |
 
 The session (JWT) is kept in localStorage (`src/session.ts`); a 401 from the API signs you out.
@@ -77,4 +79,22 @@ the graph; nothing here needs a journey endpoint on the backend.
 Swap points for the backend: scripts come from `narration.ts` (replace with Gemini-written `Stop`s) and
 narration audio comes from `narrator.ts` (replace with ElevenLabs audio per persona). The `Stop` and
 `Journey` shapes in `src/core/journeys/types.ts` follow the contract in `claude.md`.
+
+## Sharing and deleting projects
+
+The **Share** button in a project's header opens a dialog with three parts:
+
+- **People with access**: everyone on the project and their role. The owner can change a role, remove someone, or
+  make someone else the owner. Anyone who isn't the owner can leave.
+- **Invite someone** (owner): makes an invitation for an email address as an editor or viewer. Ripplemap doesn't send
+  email: copy the link and send it. The link is shown once, when the invitation is made.
+- **Anyone with the link can view** (owner): a read-only link that needs no account. Viewers and link visitors can
+  explore the graph, findings and tours; uploading a plan and the AI features need an editor. "Reset link" replaces
+  the link so the old one stops working.
+
+**Delete** (owner) moves a project to the trash. The dashboard has Active, Archived and Trash tabs: archive and
+restore happen straight away; delete and delete-forever ask first. Members can leave a project from its card.
+
+Service calls live in `src/services/sharingService.ts` and `projectService.ts`; the link visitor's token is sent as
+`X-Share-Token` (see `setShareToken` in `src/api.ts`).
 

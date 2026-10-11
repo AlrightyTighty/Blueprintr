@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import ConfirmDialog from '../components/ConfirmDialog';
 import TopBar from '../components/TopBar';
 import { primaryButtonClass, secondaryButtonClass } from '../components/ui';
 import type { AnalysisRun, ProjectDetail, RunStage } from '../core/accounts/types';
-import { getLatestRun, getProject, getRun, startRun } from '../services/projectService';
+import ShareDialog from '../features/sharing/ShareDialog';
+import { deleteProject, getLatestRun, getProject, getRun, startRun } from '../services/projectService';
 import WorkspacePage from './WorkspacePage';
 
 const POLL_INTERVAL_MS = 2000;
@@ -24,6 +26,55 @@ const STAGE_LABELS: Record<RunStage, string> = {
   inferring: 'Resolving ambiguous links with Gemini',
   findings: 'Checking for permission gaps and drift',
 };
+
+const dangerTextButtonClass =
+  'rounded bg-indigo-950 px-3 py-1 text-sm text-rose-300 transition-colors hover:bg-rose-950';
+
+/** Share and delete, shown in the header whatever state the project is in, so a stuck project can still be removed. */
+function ProjectActions({ project, onChanged }: { project: ProjectDetail; onChanged: () => void }) {
+  const navigate = useNavigate();
+  const [dialog, setDialog] = useState<'share' | 'delete' | null>(null);
+  const isOwner = project.myRole === 'owner';
+
+  return (
+    <>
+      <button className={`${secondaryButtonClass} px-3! py-1!`} onClick={() => setDialog('share')}>
+        Share
+      </button>
+      {isOwner && (
+        <button className={dangerTextButtonClass} onClick={() => setDialog('delete')}>
+          Delete
+        </button>
+      )}
+
+      {dialog === 'share' && (
+        <ShareDialog
+          project={project}
+          onClose={() => setDialog(null)}
+          onProjectChanged={onChanged}
+          onLeft={() => navigate('/projects')}
+        />
+      )}
+      {dialog === 'delete' && (
+        <ConfirmDialog
+          title="Move this project to the trash?"
+          confirmLabel="Move to trash"
+          danger
+          onCancel={() => setDialog(null)}
+          onConfirm={async () => {
+            await deleteProject(project.id);
+            navigate('/projects');
+          }}
+        >
+          <p>
+            “{project.name}” disappears for you and everyone it's shared with. You can bring it back from the Trash tab on
+            your projects page, or delete it forever from there.
+          </p>
+        </ConfirmDialog>
+      )}
+    </>
+  );
+}
 
 /** What the page shows: derived from the project's current run and its newest run. */
 type Phase =
@@ -100,12 +151,16 @@ export default function ProjectPage() {
         projectId={projectId}
         title={phase.project.name}
         sourceBaseUrl={sourceBaseUrlFor(phase.project)}
+        role={phase.project.myRole}
         actions={
-          canAnalyse && hasRepository ? (
-            <button className={`${secondaryButtonClass} !px-3 !py-1`} disabled={isStarting} onClick={handleStartAnalysis}>
-              {isStarting ? 'Starting…' : 'Re-run analysis'}
-            </button>
-          ) : undefined
+          <>
+            {canAnalyse && hasRepository && (
+              <button className={`${secondaryButtonClass} px-3! py-1!`} disabled={isStarting} onClick={handleStartAnalysis}>
+                {isStarting ? 'Starting…' : 'Re-run analysis'}
+              </button>
+            )}
+            <ProjectActions project={phase.project} onChanged={() => void loadProject()} />
+          </>
         }
       />
     );
@@ -113,7 +168,11 @@ export default function ProjectPage() {
 
   return (
     <div className="flex h-full flex-col bg-slate-950 text-slate-100">
-      <TopBar title={phase.kind === 'loading' || phase.kind === 'error' ? undefined : phase.project.name} />
+      <TopBar title={phase.kind === 'loading' || phase.kind === 'error' ? undefined : phase.project.name}>
+        {phase.kind !== 'loading' && phase.kind !== 'error' && (
+          <ProjectActions project={phase.project} onChanged={() => void loadProject()} />
+        )}
+      </TopBar>
       <main className="flex flex-1 items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           {phase.kind === 'loading' && <p className="text-indigo-300">Loading project…</p>}

@@ -42,7 +42,7 @@ function JourneyList({ title, journeys }: { title: string; journeys: Journey[] }
 }
 
 /** Left sidebar: pick a tour, or look at a node and its findings. */
-export default function TourPanel() {
+export default function TourPanel({ canUsePlans = true }: { canUsePlans?: boolean }) {
   const [tab, setTab] = useState<Tab>('tours');
   const { graph, findings, selectedNodeId, planChanges } = useGraphStore();
   const { journeys, startDisaster, startChange } = useTourStore();
@@ -98,6 +98,7 @@ export default function TourPanel() {
             )}
           </section>
 
+          {canUsePlans && (
           <section className="flex flex-col gap-2 rounded border border-indigo-900 p-3">
             <h3 className="font-medium text-amber-300">Change tour</h3>
             {planChanges.length > 0 ? (
@@ -112,6 +113,7 @@ export default function TourPanel() {
               <p className="text-slate-500">Paste a Terraform plan on the right to tour what it would change.</p>
             )}
           </section>
+          )}
         </div>
       )}
     </aside>

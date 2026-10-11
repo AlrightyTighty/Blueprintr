@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import TopBar from '../components/TopBar';
 import { secondaryButtonClass } from '../components/ui';
+import type { ProjectRole } from '../core/accounts/types';
 import { isDemoProject } from '../config';
 import AskPanel from '../features/ai/AskPanel';
 import PlanInsightsPanel from '../features/ai/PlanInsightsPanel';
@@ -18,10 +19,16 @@ interface WorkspacePageProps {
   actions?: ReactNode;
   /** e.g. https://github.com/acme/app/blob/main, so tour stops can link to the real code. */
   sourceBaseUrl?: string;
+  /**
+   * What the person looking may do. Viewers, and people using a read-only share link (null), can explore the
+   * graph, findings and tours but not upload plans or use the AI features, which need an editor.
+   */
+  role?: ProjectRole | null;
 }
 
 /** The graph, findings and plan panels for one project (or the bundled demo). */
-export default function WorkspacePage({ projectId, title, actions, sourceBaseUrl }: WorkspacePageProps) {
+export default function WorkspacePage({ projectId, title, actions, sourceBaseUrl, role = 'owner' }: WorkspacePageProps) {
+  const isViewOnly = role === null || role === 'viewer';
   const { direction, setDirection, status, errorMessage, loadGraph, graph } = useGraphStore();
 
   useEffect(() => {
@@ -54,7 +61,7 @@ export default function WorkspacePage({ projectId, title, actions, sourceBaseUrl
         </div>
       </TopBar>
       <div className="flex min-h-0 flex-1">
-        <TourPanel />
+        <TourPanel canUsePlans={!isViewOnly} />
         <div className="flex min-w-0 flex-1 flex-col">
           <main className="min-h-0 flex-1">
             {status === 'ready' && graph.nodes.length > 0 && <GraphView />}
@@ -85,9 +92,21 @@ export default function WorkspacePage({ projectId, title, actions, sourceBaseUrl
           {status === 'ready' && <TourDock projectId={projectId} sourceBaseUrl={sourceBaseUrl} />}
         </div>
         <aside className="flex w-80 flex-col overflow-y-auto border-l border-indigo-900 bg-slate-950">
-          <PlanPanel />
-          <PlanInsightsPanel />
-          <AskPanel />
+          {isViewOnly ? (
+            <div className="p-4 text-sm">
+              <h2 className="font-semibold text-indigo-200">View only</h2>
+              <p className="mt-2 text-slate-400">
+                You can explore the graph, take the tours and read the findings. Uploading a plan and asking the guide
+                questions need an editor.
+              </p>
+            </div>
+          ) : (
+            <>
+              <PlanPanel />
+              <PlanInsightsPanel />
+              <AskPanel />
+            </>
+          )}
         </aside>
       </div>
     </div>

@@ -102,11 +102,60 @@ export interface AnalysisRun {
   finishedAt?: string | null;
 }
 
+export type ProjectVisibility = 'private' | 'link_view';
+
+/** The roles that can be given to an invitee or a member; the owner is set by transferring ownership. */
+export type InvitableRole = 'editor' | 'viewer';
+
+export interface UserSummary {
+  id: string;
+  username: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface ProjectMember {
+  user: UserSummary;
+  role: ProjectRole;
+  addedBy?: UserSummary | null;
+  lastOpenedAt?: string | null;
+  createdAt: string;
+}
+
+/** The read-only link settings. The token is set once a link has been generated. */
+export interface Sharing {
+  visibility: ProjectVisibility;
+  shareToken?: string | null;
+  shareUrl?: string | null;
+}
+
+export interface ProjectInvite {
+  id: string;
+  email: string;
+  role: InvitableRole;
+  invitedBy?: UserSummary | null;
+  expiresAt: string;
+  createdAt: string;
+}
+
+/** Returned once, when an invite is made: the link to send. The token is never shown again. */
+export interface InviteCreated extends ProjectInvite {
+  inviteUrl: string;
+}
+
+export interface InvitePreview {
+  projectName: string;
+  role: InvitableRole;
+  email: string;
+  invitedBy?: UserSummary | null;
+  expiresAt: string;
+}
+
 export interface Project {
   id: string;
   name: string;
   description?: string | null;
-  visibility: 'private' | 'link_view';
+  visibility: ProjectVisibility;
   /** Null when viewing through a share link. */
   myRole: ProjectRole | null;
   currentRunId?: string | null;
@@ -114,6 +163,9 @@ export interface Project {
   lastOpenedAt?: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Set while the project is archived or in the trash. */
+  archivedAt?: string | null;
+  deletedAt?: string | null;
 }
 
 export interface ProjectDetail extends Project {

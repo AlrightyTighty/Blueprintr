@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ApiError, type FieldError } from '../api';
 import AuthCard from '../components/AuthCard';
 import { inputClass, labelClass, primaryButtonClass } from '../components/ui';
@@ -12,6 +12,9 @@ const MINIMUM_PASSWORD_LENGTH = 10;
 export default function RegisterPage() {
   const { session, signIn } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Where to go once the account exists, e.g. back to an invitation that sent them here.
+  const returnPath = (location.state as { from?: string } | null)?.from ?? '/projects';
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -20,7 +23,7 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldError[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (session) return <Navigate to="/projects" replace />;
+  if (session) return <Navigate to={returnPath} replace />;
 
   const errorFor = (field: string) => fieldErrors.find((fieldError) => fieldError.field === field)?.message;
 
@@ -43,7 +46,7 @@ export default function RegisterPage() {
           ...(displayName.trim() ? { displayName: displayName.trim() } : {}),
         }),
       );
-      navigate('/projects', { replace: true });
+      navigate(returnPath, { replace: true });
     } catch (error) {
       if (error instanceof ApiError && error.fieldErrors.length > 0) setFieldErrors(error.fieldErrors);
       else setErrorMessage(error instanceof Error ? error.message : 'Could not create the account.');
@@ -101,11 +104,11 @@ export default function RegisterPage() {
           or
           <span className="h-px flex-1 bg-indigo-900" />
         </div>
-        <GithubButton intent="signup" label="Sign up with GitHub" returnPath="/projects" onError={setErrorMessage} />
+        <GithubButton intent="signup" label="Sign up with GitHub" returnPath={returnPath} onError={setErrorMessage} />
       </form>
       <p className="mt-5 text-sm text-slate-400">
         Already have an account?{' '}
-        <Link to="/login" className="text-indigo-300 hover:text-indigo-200">
+        <Link to="/login" state={location.state} className="text-indigo-300 hover:text-indigo-200">
           Sign in
         </Link>
       </p>

@@ -7,7 +7,9 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import NewProjectPage from './pages/NewProjectPage';
 import ProjectPage from './pages/ProjectPage';
+import InvitePage from './pages/InvitePage';
 import RegisterPage from './pages/RegisterPage';
+import SharedProjectPage from './pages/SharedProjectPage';
 import WorkspacePage from './pages/WorkspacePage';
 
 export default function App() {
@@ -17,6 +19,9 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/auth/github/callback" element={<GithubCallbackPage />} />
+      {/* Reachable without an account: what an invitation is for, and a project shared by read-only link. */}
+      <Route path="/invites/:token" element={<InvitePage />} />
+      <Route path="/shared/:shareToken" element={<SharedProjectPage />} />
       {/* The demo needs no account or backend, so it can always be shown. */}
       <Route path="/demo" element={<WorkspacePage projectId={DEMO_PROJECT_ID} title="Demo project" />} />
 

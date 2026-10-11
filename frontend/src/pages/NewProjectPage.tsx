@@ -156,7 +156,7 @@ export default function NewProjectPage() {
                 understood too. Ripplemap only reads the files and never runs anything.
               </p>
               {previewedRepo && (
-                <p className="mt-1 text-sm text-blue-300 [overflow-wrap:anywhere]">
+                <p className="mt-1 text-sm text-blue-300 wrap-anywhere">
                   Looks like <SoftBreak text={previewedRepo} />
                 </p>
               )}
@@ -244,7 +244,7 @@ export default function NewProjectPage() {
                             selectedRepository?.githubId === repository.githubId ? 'bg-indigo-900' : ''
                           }`}
                         >
-                          <span className="[overflow-wrap:anywhere]">
+                          <span className="wrap-anywhere">
                             <SoftBreak text={repository.fullName} />
                           </span>
                           {repository.isPrivate && <span className="ml-2 text-xs text-slate-500">private</span>}
