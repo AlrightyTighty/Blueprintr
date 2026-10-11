@@ -1,0 +1,2622 @@
+openapi: 3.1.0
+info:
+  title: Blueprint API
+  version: 0.1.0
+  license:
+    name: Proprietary
+  summary: Blast-radius analysis across app code and Terraform infrastructure.
+  description: |
+    Blueprint reads a repository's Terraform alongside its app code, links them into one graph,
+    and answers "what breaks if I change this?".
+
+    ## Conventions
+
+    - **JSON, camelCase.** Ids are UUIDs, timestamps are RFC 3339. (The database is snake_case;
+      the backend maps.)
+    - **Authentication:** `Authorization: Bearer <jwt>`. Register, log in, or finish GitHub sign-up
+      to get a token. It is a single stateless token with no refresh endpoint, so sign-out is
+      client-side. Read-only project endpoints also accept `X-Share-Token` for projects whose
+      visibility is `link_view`.
+    - **Errors** are `application/problem+json` (RFC 9457) with a stable `code`. A user who is not a
+      member of a project gets `404` (existence is not leaked); a member whose role is too low gets
+      `403`.
+    - **Lists** use cursor pagination: `?limit=&cursor=` returns `{ items, nextCursor }`
+      (`nextCursor` is `null` on the last page).
+    - **Soft deletes:** `DELETE` on a project moves it to the trash; restore and permanent purge are
+      explicit endpoints. `DELETE /me` soft-deletes the account.
+    - **Activity log:** each mutating operation notes the `activity_log` action it records, which
+      matches the catalog in `database/README.md`.
+    - **Analysis is server-side.** Starting a run returns `202`; poll the run until `status` is
+      `succeeded` or `failed`. Every run is pinned to a commit SHA, and a project keeps many runs.
+    - **Confidence on every edge.** `GraphEdge.confidence` is determined by `linkMethod`:
+      `declared_reference` is `certain`; `env_var` and `code_mapping` are `high`;
+      `gemini_inference` is `inferred`.
+    - **Never stored:** source code, GitHub tokens in the clear, and raw Terraform plan JSON.
+      Uploaded plans are parsed in memory and discarded; only addresses, actions and attribute names
+      are kept. Blueprint never runs `terraform apply` or any repository code.
+
+    ## Roles
+
+    | Action | owner | editor | viewer |
+    |---|:-:|:-:|:-:|
+    | View graph, findings, plans | yes | yes | yes |
+    | Run analysis, link repos, upload plans, dismiss findings, use AI/voice | yes | yes | |
+    | View activity log | yes | yes | |
+    | Rename, change visibility / share link | yes | | |
+    | Invite, change roles, remove members | yes | | |
+    | Transfer ownership, archive, delete, restore | yes | | |
+    | Leave project | | yes | yes |
+servers:
+  - url: http://localhost:3000
+    description: Local dev server (`npm run dev`)
+  - url: https://{domain}
+    description: Deployed API
+    variables:
+      domain:
+        default: api.example.com
+tags:
+  - name: System
+    description: Health and static catalogs.
+  - name: Auth
+    description: Sign up, sign in, password and email flows, GitHub OAuth. Public and rate-limited.
+  - name: Account
+    description: The signed-in user's profile and linked GitHub accounts.
+  - name: Projects
+    description: Projects hold analysis results only, never code.
+  - name: Sharing
+    description: Share links, members and invitations.
+  - name: Repositories
+    description: GitHub repositories (and subfolders) that feed a project.
+  - name: Analysis
+    description: Analysis runs, each pinned to a commit.
+  - name: Graph
+    description: The linked code and infrastructure graph, and blast-radius queries.
+  - name: Findings
+    description: Permission gaps, over-broad IAM, unmanaged resources.
+  - name: Plans
+    description: Terraform plan overlays.
+  - name: AI
+    description: Gemini explanations and Q&A, ElevenLabs voice briefing and agent.
+  - name: Activity
+    description: Append-only audit trail.
+security:
+  - bearerAuth: []
+
+paths:
+  # ------------------------------------------------------------------ System
+  /health:
+    get:
+      tags: [System]
+      operationId: getHealth
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: Service is up.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, const: ok }
+
+  /resource-types:
+    get:
+      tags: [System]
+      operationId: listResourceTypes
+      summary: Supported Terraform resource types
+      description: Catalog of display metadata (name, icon, colour). Static; safe to cache.
+      security: []
+      responses:
+        '200':
+          description: All resource types.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ResourceType' }
+
+  # -------------------------------------------------------------------- Auth
+  /auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      summary: Sign up with username, email and password
+      description: Logs `user.signed_in`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, email, password]
+              properties:
+                username: { $ref: '#/components/schemas/Username' }
+                email: { type: string, format: email }
+                password: { $ref: '#/components/schemas/Password' }
+                displayName: { type: string, maxLength: 100 }
+      responses:
+        '201':
+          description: Account created. The email is unverified until confirmed.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: Sign in with username or email and password
+      description: Logs `user.signed_in`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier, password]
+              properties:
+                identifier:
+                  type: string
+                  description: Username or email address.
+                password: { type: string }
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/github/authorize:
+    get:
+      tags: [Auth]
+      operationId: githubAuthorize
+      summary: Start a GitHub OAuth flow
+      description: |
+        Returns the GitHub URL to send the browser to. `intent=link` requires a bearer token (the
+        GitHub account is attached to the current user); `login` and `signup` are public.
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - name: intent
+          in: query
+          required: true
+          schema: { type: string, enum: [login, signup, link] }
+      responses:
+        '200':
+          description: Where to send the browser.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [authorizeUrl, state]
+                properties:
+                  authorizeUrl: { type: string, format: uri }
+                  state:
+                    type: string
+                    description: Opaque value to echo back to the callback endpoint.
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /auth/github/callback:
+    post:
+      tags: [Auth]
+      operationId: githubCallback
+      summary: Finish a GitHub OAuth flow
+      description: |
+        The frontend's OAuth redirect route posts the `code` and `state` here. The result depends on
+        the intent and on whether the GitHub account is already known:
+
+        - `authenticated`: a Blueprint user is linked to this GitHub account; they are signed in.
+        - `registration_required`: new GitHub account. Username and email are pre-filled from the
+          GitHub profile; the user must confirm them and set a password via `/auth/github/complete`.
+        - `linked`: (intent `link`) the GitHub account was attached to the current user. Logs
+          `github.connected`.
+      security:
+        - {}
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code, state]
+              properties:
+                code: { type: string }
+                state: { type: string }
+      responses:
+        '200':
+          description: Outcome of the flow.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GithubCallbackAuthenticated'
+                  - $ref: '#/components/schemas/GithubCallbackRegistrationRequired'
+                  - $ref: '#/components/schemas/GithubCallbackLinked'
+                discriminator:
+                  propertyName: status
+                  mapping:
+                    authenticated: '#/components/schemas/GithubCallbackAuthenticated'
+                    registration_required: '#/components/schemas/GithubCallbackRegistrationRequired'
+                    linked: '#/components/schemas/GithubCallbackLinked'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /auth/github/complete:
+    post:
+      tags: [Auth]
+      operationId: githubComplete
+      summary: Finish GitHub sign-up
+      description: |
+        Creates the account (username, email and password are all required) and links the GitHub
+        account. Logs `user.signed_in` and `github.connected`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [registrationToken, username, email, password]
+              properties:
+                registrationToken: { type: string }
+                username: { $ref: '#/components/schemas/Username' }
+                email: { type: string, format: email }
+                password: { $ref: '#/components/schemas/Password' }
+                displayName: { type: string, maxLength: 100 }
+      responses:
+        '201':
+          description: Account created and GitHub linked.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /auth/email/verify:
+    post:
+      tags: [Auth]
+      operationId: verifyEmail
+      summary: Confirm an email address
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '204': { description: Email verified. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /auth/email/resend:
+    post:
+      tags: [Auth]
+      operationId: resendVerification
+      summary: Resend the verification email
+      responses:
+        '202': { description: Email queued. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/password/forgot:
+    post:
+      tags: [Auth]
+      operationId: forgotPassword
+      summary: Request a password reset
+      description: Always returns 202, whether or not the email exists.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '202': { description: 'If the account exists, a reset email was sent.' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /auth/password/reset:
+    post:
+      tags: [Auth]
+      operationId: resetPassword
+      summary: Set a new password using a reset token
+      description: Logs `user.password_changed`.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string }
+                password: { $ref: '#/components/schemas/Password' }
+      responses:
+        '204': { description: Password updated. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ----------------------------------------------------------------- Account
+  /me:
+    get:
+      tags: [Account]
+      operationId: getMe
+      summary: Current user
+      responses:
+        '200':
+          description: The signed-in user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Account]
+      operationId: updateMe
+      summary: Update profile
+      description: Changing the email resets verification and sends a new verification email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                username: { $ref: '#/components/schemas/Username' }
+                email: { type: string, format: email }
+                displayName: { type: [string, 'null'], maxLength: 100 }
+                avatarUrl: { type: [string, 'null'], format: uri }
+      responses:
+        '200':
+          description: Updated user.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Account]
+      operationId: deleteMe
+      summary: Delete the account
+      description: |
+        Soft-deletes the user and removes their GitHub connections. Fails with `409` while the user
+        still owns projects (transfer or delete them first).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string }
+      responses:
+        '204': { description: Account deleted. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /me/password:
+    post:
+      tags: [Account]
+      operationId: changePassword
+      summary: Change password
+      description: Logs `user.password_changed`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { $ref: '#/components/schemas/Password' }
+      responses:
+        '204': { description: Password changed. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /me/activity:
+    get:
+      tags: [Account]
+      operationId: listMyActivity
+      summary: Account-level activity
+      description: Entries where the current user is the actor and there is no project (sign-ins, GitHub links, password changes).
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of activity.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ActivityPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /me/github-connections:
+    get:
+      tags: [Account]
+      operationId: listGithubConnections
+      summary: Linked GitHub accounts
+      responses:
+        '200':
+          description: The user's GitHub connections. Tokens are never returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/GithubConnection' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /me/github-connections/{connectionId}:
+    parameters:
+      - $ref: '#/components/parameters/ConnectionId'
+    delete:
+      tags: [Account]
+      operationId: deleteGithubConnection
+      summary: Unlink a GitHub account
+      description: |
+        Logs `github.disconnected`. Projects that were linked through this connection keep their
+        analysis; re-analysis needs another connection with access to the repository.
+      responses:
+        '204': { description: Unlinked. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /me/github-connections/{connectionId}/repositories:
+    parameters:
+      - $ref: '#/components/parameters/ConnectionId'
+    get:
+      tags: [Account]
+      operationId: listGithubRepositories
+      summary: Repositories visible to a GitHub connection
+      description: Live lookup against GitHub for the repository picker. Returns metadata only, never code.
+      parameters:
+        - name: q
+          in: query
+          description: Filter by repository name.
+          schema: { type: string }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of repositories.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/GithubRepository' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+
+  # ---------------------------------------------------------------- Projects
+  /projects:
+    get:
+      tags: [Projects]
+      operationId: listProjects
+      summary: Projects the user is a member of
+      parameters:
+        - name: scope
+          in: query
+          schema: { type: string, enum: [active, archived, trash], default: active }
+        - name: role
+          in: query
+          description: Only projects where the user has this role.
+          schema: { $ref: '#/components/schemas/ProjectRole' }
+        - name: q
+          in: query
+          description: Filter by project name.
+          schema: { type: string }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of projects, most recently opened first.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Project' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [Projects]
+      operationId: createProject
+      summary: Create a project
+      description: |
+        The creator becomes the owner. Repositories can be linked at creation, and `analyze: true`
+        starts the first run. Logs `project.created` (plus `repository.linked`,
+        `analysis.started`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 100 }
+                description: { type: string, maxLength: 1000 }
+                repositories:
+                  type: array
+                  items: { $ref: '#/components/schemas/LinkRepositoryRequest' }
+                analyze:
+                  type: boolean
+                  default: false
+                  description: Start an analysis of the linked repositories immediately.
+      responses:
+        '201':
+          description: Project created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectDetail' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /projects/{projectId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Projects]
+      operationId: getProject
+      summary: Project details
+      description: Updates the caller's `lastOpenedAt` when authenticated as a member.
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      responses:
+        '200':
+          description: The project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectDetail' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Projects]
+      operationId: updateProject
+      summary: Rename or edit a project (owner)
+      description: Logs `project.renamed` when the name changes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name: { type: string, minLength: 1, maxLength: 100 }
+                description: { type: [string, 'null'], maxLength: 1000 }
+      responses:
+        '200':
+          description: Updated project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectDetail' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Projects]
+      operationId: deleteProject
+      summary: Move a project to the trash (owner)
+      description: Soft delete. Logs `project.deleted`.
+      responses:
+        '204': { description: Moved to the trash. }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/archive:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Projects]
+      operationId: archiveProject
+      summary: Archive a project (owner)
+      description: Hides it from the default list; still viewable. Logs `project.archived`.
+      responses:
+        '200':
+          description: Archived project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/restore:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Projects]
+      operationId: restoreProject
+      summary: Restore an archived or trashed project (owner)
+      description: Logs `project.restored`.
+      responses:
+        '200':
+          description: Restored project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/permanent:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    delete:
+      tags: [Projects]
+      operationId: purgeProject
+      summary: Permanently delete a trashed project (owner)
+      description: |
+        Hard delete; cascades to runs, graph, findings, plans, members and invites. Only allowed
+        while the project is in the trash (`409` otherwise). The activity log keeps its rows.
+      responses:
+        '204': { description: Purged. }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /projects/{projectId}/leave:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Projects]
+      operationId: leaveProject
+      summary: Leave a project (editor or viewer)
+      description: Owners must transfer ownership first (`409`). Logs `member.left`.
+      responses:
+        '204': { description: Left the project. }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /projects/{projectId}/transfer-ownership:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Projects]
+      operationId: transferOwnership
+      summary: Transfer ownership to another member (owner)
+      description: The previous owner becomes an editor. Logs `project.ownership_transferred`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated member list.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemberList' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ----------------------------------------------------------------- Sharing
+  /projects/{projectId}/sharing:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Sharing]
+      operationId: getSharing
+      summary: Share-link settings (owner)
+      responses:
+        '200':
+          description: Current settings.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sharing' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Sharing]
+      operationId: setSharing
+      summary: Turn the read-only share link on or off (owner)
+      description: |
+        `link_view` generates a share token if none exists. Going back to `private` keeps the token
+        but disables it. Logs `project.visibility_changed`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [visibility]
+              properties:
+                visibility: { $ref: '#/components/schemas/ProjectVisibility' }
+      responses:
+        '200':
+          description: Updated settings.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sharing' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/sharing/rotate:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Sharing]
+      operationId: rotateShareToken
+      summary: Replace the share token (owner)
+      description: Invalidates the old link. Logs `project.share_link_rotated`.
+      responses:
+        '200':
+          description: New settings.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sharing' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /shared/{shareToken}:
+    get:
+      tags: [Sharing]
+      operationId: getSharedProject
+      summary: Resolve a share link
+      description: |
+        Public. Returns the project so the frontend can open its graph; use the same token as
+        `X-Share-Token` on the read endpoints.
+      security: []
+      parameters:
+        - name: shareToken
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The shared project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/members:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Sharing]
+      operationId: listMembers
+      summary: Project members
+      responses:
+        '200':
+          description: Members and their roles.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemberList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/UserId'
+    patch:
+      tags: [Sharing]
+      operationId: updateMemberRole
+      summary: Change a member's role (owner)
+      description: The owner's role cannot be changed here; use transfer-ownership. Logs `member.role_changed`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role: { $ref: '#/components/schemas/InvitableRole' }
+      responses:
+        '200':
+          description: Updated member.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectMember' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [Sharing]
+      operationId: removeMember
+      summary: Remove a member (owner)
+      description: Logs `member.removed`.
+      responses:
+        '204': { description: Removed. }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /projects/{projectId}/invites:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Sharing]
+      operationId: listInvites
+      summary: Pending invitations (owner)
+      responses:
+        '200':
+          description: Pending invites.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProjectInvite' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Sharing]
+      operationId: createInvite
+      summary: Invite someone by email (owner)
+      description: |
+        The response includes a copyable `inviteUrl`, so no email service is required. The token is
+        shown only here. Logs `invite.created`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email: { type: string, format: email }
+                role: { $ref: '#/components/schemas/InvitableRole' }
+      responses:
+        '201':
+          description: Invite created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InviteCreated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /projects/{projectId}/invites/{inviteId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: inviteId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    delete:
+      tags: [Sharing]
+      operationId: revokeInvite
+      summary: Revoke an invitation (owner)
+      description: Logs `invite.revoked`.
+      responses:
+        '204': { description: Revoked. }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /invites/{token}:
+    parameters:
+      - name: token
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Sharing]
+      operationId: previewInvite
+      summary: Preview an invitation
+      description: Public, so the frontend can show "Join Project X as editor" before sign-in.
+      security: []
+      responses:
+        '200':
+          description: Invite details.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvitePreview' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '410':
+          description: The invite expired, was revoked, or was already accepted.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /invites/{token}/accept:
+    parameters:
+      - name: token
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [Sharing]
+      operationId: acceptInvite
+      summary: Accept an invitation
+      description: Logs `invite.accepted` and `member.added`.
+      responses:
+        '200':
+          description: Joined. Returns the project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectDetail' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '410':
+          description: The invite expired, was revoked, or was already accepted.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  # ------------------------------------------------------------ Repositories
+  /projects/{projectId}/repositories:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Repositories]
+      operationId: listProjectRepositories
+      summary: Linked repositories
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      responses:
+        '200':
+          description: Linked repositories.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProjectRepository' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Repositories]
+      operationId: linkRepository
+      summary: Link a GitHub repository (editor)
+      description: Logs `repository.linked`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LinkRepositoryRequest' }
+      responses:
+        '201':
+          description: Linked.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectRepository' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+
+  /projects/{projectId}/repositories/{linkId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: linkId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [Repositories]
+      operationId: updateProjectRepository
+      summary: Change branch, subfolder or connection (editor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                branch: { type: string }
+                rootPath: { type: string }
+                connectionId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated link.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProjectRepository' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [Repositories]
+      operationId: unlinkRepository
+      summary: Unlink a repository (editor)
+      description: Existing runs are kept. Logs `repository.unlinked`.
+      responses:
+        '204': { description: Unlinked. }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Analysis
+  /projects/{projectId}/runs:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Analysis]
+      operationId: listRuns
+      summary: Analysis runs, newest first
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      parameters:
+        - name: commitSha
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/RunStatus' }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of runs.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/AnalysisRun' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Analysis]
+      operationId: startRun
+      summary: Analyze a commit (editor)
+      description: |
+        Fetches the linked repository at the given commit (default: head of the linked branch),
+        parses Terraform and app code, links them, runs Gemini inference for ambiguous links, and
+        computes findings. Static analysis only. Returns immediately; poll the run. Re-running a
+        commit that already has a run is allowed. Logs `analysis.started`, and later
+        `analysis.succeeded` or `analysis.failed`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                repositoryLinkId:
+                  type: string
+                  format: uuid
+                  description: Required when the project links more than one repository.
+                commitSha:
+                  type: string
+                  pattern: '^[0-9a-f]{40}([0-9a-f]{24})?$'
+                setAsCurrent:
+                  type: boolean
+                  default: true
+                  description: Make this the project's current run once it succeeds.
+      responses:
+        '202':
+          description: Run accepted.
+          headers:
+            Location:
+              description: URL of the run.
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnalysisRun' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+
+  /projects/{projectId}/runs/{runId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [Analysis]
+      operationId: getRun
+      summary: Run status and details
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      responses:
+        '200':
+          description: The run.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnalysisRun' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Analysis]
+      operationId: deleteRun
+      summary: Delete a run and its graph, findings and plans (editor)
+      description: The current run cannot be deleted (`409`). Logs `analysis.deleted`.
+      responses:
+        '204': { description: Deleted. }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /projects/{projectId}/current-run:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    put:
+      tags: [Analysis]
+      operationId: setCurrentRun
+      summary: Choose which run is shown by default (editor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [runId]
+              properties:
+                runId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Updated project.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /projects/{projectId}/runs/{runId}/diff:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [Analysis]
+      operationId: diffRuns
+      summary: Compare two runs (two commits)
+      description: Nodes and edges added, removed or changed in `runId` relative to `against`, matched by address.
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      parameters:
+        - name: against
+          in: query
+          required: true
+          description: The base run to compare with.
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: The differences.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GraphDiff' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  # ------------------------------------------------------------------- Graph
+  /projects/{projectId}/runs/{runId}/graph:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [Graph]
+      operationId: getGraph
+      summary: The full graph for a run
+      description: |
+        Everything the UI needs to draw the graph: nodes (with resource-type name/icon/colour
+        inlined) and edges (each with confidence). Intended to be cached per run; a run's graph never
+        changes.
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      responses:
+        '200':
+          description: The graph.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Graph' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /projects/{projectId}/runs/{runId}/nodes:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [Graph]
+      operationId: searchNodes
+      summary: Search nodes
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      parameters:
+        - name: kind
+          in: query
+          schema: { $ref: '#/components/schemas/NodeKind' }
+        - name: terraformType
+          in: query
+          schema: { type: string }
+        - name: q
+          in: query
+          description: Matches name or address.
+          schema: { type: string }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of nodes.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/GraphNode' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/runs/{runId}/nodes/{nodeId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+      - $ref: '#/components/parameters/NodeId'
+    get:
+      tags: [Graph]
+      operationId: getNode
+      summary: Node detail
+      description: |
+        For a code node: the resources it reads, writes or publishes to. For a resource node: every
+        function that touches it and the IAM roles granting access (`grants`). Edges carry their
+        confidence and evidence.
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      responses:
+        '200':
+          description: The node and its neighbours.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NodeDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/runs/{runId}/nodes/{nodeId}/blast-radius:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+      - $ref: '#/components/parameters/NodeId'
+    get:
+      tags: [Graph]
+      operationId: getBlastRadius
+      summary: Everything affected by, or affecting, a node
+      description: |
+        `dependents` walks edges toward things that depend on the node (change a table, see the
+        functions that break). `dependencies` walks toward what the node itself relies on.
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      parameters:
+        - name: direction
+          in: query
+          schema: { type: string, enum: [dependents, dependencies, both], default: dependents }
+        - name: maxDepth
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 20, default: 10 }
+        - name: minConfidence
+          in: query
+          description: Ignore edges less certain than this.
+          schema: { $ref: '#/components/schemas/Confidence' }
+      responses:
+        '200':
+          description: Reachable nodes with their distance.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BlastRadius' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/graph/query:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [Graph]
+      operationId: queryGraph
+      summary: Structured graph query
+      description: |
+        The one tool used by Gemini function calling and by the ElevenLabs agent, so answers come
+        from real graph traversal instead of guesses. Also handy for the UI. Read-only.
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GraphQueryRequest' }
+      responses:
+        '200':
+          description: Query result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GraphQueryResult' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ---------------------------------------------------------------- Findings
+  /projects/{projectId}/runs/{runId}/findings:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    get:
+      tags: [Findings]
+      operationId: listFindings
+      summary: Findings for a run
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      parameters:
+        - name: kind
+          in: query
+          schema: { $ref: '#/components/schemas/FindingKind' }
+        - name: severity
+          in: query
+          schema: { $ref: '#/components/schemas/FindingSeverity' }
+        - name: dismissed
+          in: query
+          description: Include only dismissed (true) or only open (false) findings. Omit for both.
+          schema: { type: boolean }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of findings, most severe first.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/Finding' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/findings/{findingId}/dismiss:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/FindingId'
+    post:
+      tags: [Findings]
+      operationId: dismissFinding
+      summary: Dismiss a finding (editor)
+      description: |
+        Dismissals carry over to later runs through the finding's fingerprint. Logs
+        `finding.dismissed`.
+      responses:
+        '200':
+          description: Updated finding.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Finding' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/findings/{findingId}/restore:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/FindingId'
+    post:
+      tags: [Findings]
+      operationId: restoreFinding
+      summary: Un-dismiss a finding (editor)
+      description: Logs `finding.restored`.
+      responses:
+        '200':
+          description: Updated finding.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Finding' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ------------------------------------------------------------------- Plans
+  /projects/{projectId}/runs/{runId}/plans:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/RunId'
+    post:
+      tags: [Plans]
+      operationId: uploadPlan
+      summary: Overlay a Terraform plan on a run (editor)
+      description: |
+        Body is the output of `terraform show -json plan.out`. Resources marked replace or destroy
+        are `direct` impacts (red); everything downstream in the graph, including the code that
+        depends on them, is a `downstream` impact (amber). The plan is parsed in memory and
+        discarded: only addresses, actions and changed attribute *names* are stored, never
+        values. Request size is limited by the Lambda payload cap (about 6 MB). Logs `plan.uploaded`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TerraformPlanJson' }
+      responses:
+        '201':
+          description: The plan overlay.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanAnalysisDetail' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413':
+          description: The plan is too large.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  /projects/{projectId}/plans:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Plans]
+      operationId: listPlans
+      summary: Uploaded plans, newest first
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of plans.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageMeta'
+                  - type: object
+                    required: [items]
+                    properties:
+                      items:
+                        type: array
+                        items: { $ref: '#/components/schemas/PlanAnalysis' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /projects/{projectId}/plans/{planId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/PlanId'
+    get:
+      tags: [Plans]
+      operationId: getPlan
+      summary: Plan with per-resource changes
+      security:
+        - bearerAuth: []
+        - shareToken: []
+      responses:
+        '200':
+          description: The plan overlay.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanAnalysisDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Plans]
+      operationId: deletePlan
+      summary: Delete a plan (editor)
+      description: Logs `plan.deleted`.
+      responses:
+        '204': { description: Deleted. }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------------- AI
+  /projects/{projectId}/plans/{planId}/explain:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/PlanId'
+    post:
+      tags: [AI]
+      operationId: explainPlan
+      summary: Plain-English risk explanation (Gemini) (editor)
+      description: |
+        Explains what the plan's replacements and destroys mean for the code that depends on them
+        and suggests safer alternatives (`create_before_destroy`, staged migration). The result is
+        cached on the plan; pass `refresh=true` to regenerate. Humans should review every
+        conclusion.
+      parameters:
+        - name: refresh
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: The explanation.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanExplanation' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+
+  /projects/{projectId}/plans/{planId}/briefing:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/PlanId'
+    post:
+      tags: [AI]
+      operationId: createBriefing
+      summary: Spoken pre-flight briefing (ElevenLabs) (editor)
+      description: |
+        Writes the briefing script from the plan and graph, synthesizes it in the on-call-engineer
+        voice, caches the audio in S3, and returns a short-lived signed URL. Repeat calls reuse the
+        cached audio unless `refresh=true`.
+      parameters:
+        - name: refresh
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: The briefing.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Briefing' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+
+  /projects/{projectId}/ask:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [AI]
+      operationId: askQuestion
+      summary: Ask a question about the graph (Gemini function calling) (editor)
+      description: |
+        Gemini answers by calling `graph/query` rather than guessing, so every claim is backed by a
+        graph traversal. Returns the nodes it cited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string, minLength: 1, maxLength: 1000 }
+                runId:
+                  type: string
+                  default: current
+                  description: Run UUID or `current`.
+                planId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: The answer.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AskResult' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+
+  /projects/{projectId}/voice/session:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [AI]
+      operationId: createVoiceSession
+      summary: Start an ElevenLabs voice Q&A session (editor)
+      description: |
+        Returns what the browser needs to open the conversational agent, plus a short-lived
+        `toolToken` scoped to this project. The agent presents the token as a bearer token when it
+        calls `POST /voice/tools/graph-query`. The ElevenLabs API key never reaches the browser.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                runId:
+                  type: string
+                  default: current
+                  description: Run UUID or `current`.
+                planId: { type: string, format: uuid }
+      responses:
+        '201':
+          description: Session details.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VoiceSession' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '502': { $ref: '#/components/responses/BadGateway' }
+
+  /voice/tools/graph-query:
+    post:
+      tags: [AI]
+      operationId: voiceGraphQuery
+      summary: Graph query tool for the ElevenLabs agent
+      description: |
+        Server tool called by the ElevenLabs agent during a voice session. Authenticated with the
+        `toolToken` from `createVoiceSession`, which pins the project and expires quickly. Same
+        semantics as `POST /projects/{projectId}/graph/query`, with a speech-friendly `summary`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GraphQueryRequest' }
+      responses:
+        '200':
+          description: Query result.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GraphQueryResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+
+  # ---------------------------------------------------------------- Activity
+  /projects/{projectId}/activity:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Activity]
+      operationId: listProjectActivity
+      summary: Project activity log (owner, editor)
+      description: Newest first. Viewers get `403`.
+      parameters:
+        - name: action
+          in: query
+          description: Exact action (`member.added`) or a prefix ending in `.*` (`member.*`).
+          schema: { type: string }
+        - name: actorId
+          in: query
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of activity.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ActivityPage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token from register, login or GitHub sign-up. Voice tool tokens use the same scheme.
+    shareToken:
+      type: apiKey
+      in: header
+      name: X-Share-Token
+      description: Read-only access to a project whose visibility is `link_view`.
+
+  parameters:
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    RunId:
+      name: runId
+      in: path
+      required: true
+      description: A run UUID, or `current` for the project's current run.
+      schema:
+        type: string
+        pattern: '^(current|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$'
+    NodeId:
+      name: nodeId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    FindingId:
+      name: findingId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    PlanId:
+      name: planId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ConnectionId:
+      name: connectionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Cursor:
+      name: cursor
+      in: query
+      description: Opaque value from a previous page's `nextCursor`.
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: Malformed request, or an invalid or expired token/code.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthorized:
+      description: Missing, invalid or expired credentials.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: The caller's role does not allow this action.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Not found, or not visible to the caller.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: The request conflicts with current state (duplicate, wrong status, last owner, ...).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ValidationError:
+      description: The body or parameters failed validation.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    TooManyRequests:
+      description: Rate limit exceeded.
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    BadGateway:
+      description: An upstream service (GitHub, Gemini, ElevenLabs) failed.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+    # ------------------------------------------------------------- Shared
+    Problem:
+      type: object
+      description: RFC 9457 problem details.
+      required: [title, status, code]
+      properties:
+        type: { type: string, format: uri-reference, default: 'about:blank' }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        code:
+          type: string
+          description: Stable machine-readable code, e.g. `username_taken`, `last_owner`, `run_not_ready`.
+        errors:
+          type: array
+          description: Field-level validation errors.
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field: { type: string }
+              message: { type: string }
+    PageMeta:
+      type: object
+      required: [nextCursor]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+          description: Pass as `cursor` for the next page; null on the last page.
+    Username:
+      type: string
+      pattern: '^[A-Za-z0-9_-]{3,39}$'
+      description: Case-insensitive, unique among active users.
+    Password:
+      type: string
+      minLength: 10
+      maxLength: 128
+      format: password
+    ProjectRole:
+      type: string
+      enum: [owner, editor, viewer]
+    InvitableRole:
+      type: string
+      enum: [editor, viewer]
+    ProjectVisibility:
+      type: string
+      enum: [private, link_view]
+    RunStatus:
+      type: string
+      enum: [pending, running, succeeded, failed]
+    NodeKind:
+      type: string
+      enum: [resource, code_file, code_function, unmanaged_resource, unresolved_ref]
+      description: |
+        `resource` is a Terraform resource (Route 53 and CloudFront domain nodes included).
+        `unmanaged_resource` is something hardcoded in code that is not in Terraform (drift).
+        `unresolved_ref` is a reference that could not be resolved (shown as a labelled node).
+    EdgeRelation:
+      type: string
+      enum: [references, depends_on, assumes_role, grants_access, runs_code, reads, writes, publishes, invokes, routes_to]
+    LinkMethod:
+      type: string
+      enum: [declared_reference, env_var, code_mapping, gemini_inference]
+    Confidence:
+      type: string
+      enum: [certain, high, inferred]
+      description: Ordered most to least certain.
+    FindingKind:
+      type: string
+      enum: [permission_gap, over_broad_iam, unmanaged_resource, unresolved_reference]
+    FindingSeverity:
+      type: string
+      enum: [info, low, medium, high, critical]
+    PlanAction:
+      type: string
+      enum: [create, update, replace, destroy, noop]
+    PlanImpact:
+      type: string
+      enum: [direct, downstream]
+      description: '`direct` nodes are changed by the plan (red); `downstream` nodes are affected through the graph (amber).'
+    ResourceCategory:
+      type: string
+      enum: [compute, storage, database, messaging, security, network, edge, dns]
+
+    # ------------------------------------------------------- Users & auth
+    User:
+      type: object
+      required: [id, username, email, emailVerified, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        email: { type: string, format: email }
+        emailVerified: { type: boolean }
+        displayName: { type: [string, 'null'] }
+        avatarUrl: { type: [string, 'null'], format: uri }
+        createdAt: { type: string, format: date-time }
+    UserSummary:
+      type: object
+      required: [id, username]
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        displayName: { type: [string, 'null'] }
+        avatarUrl: { type: [string, 'null'], format: uri }
+    AuthSession:
+      type: object
+      required: [token, expiresAt, user]
+      properties:
+        token: { type: string, description: JWT for the `Authorization` header. }
+        expiresAt: { type: string, format: date-time }
+        user: { $ref: '#/components/schemas/User' }
+    GithubCallbackAuthenticated:
+      type: object
+      required: [status, session]
+      properties:
+        status: { type: string, const: authenticated }
+        session: { $ref: '#/components/schemas/AuthSession' }
+    GithubCallbackRegistrationRequired:
+      type: object
+      required: [status, registrationToken, prefill]
+      properties:
+        status: { type: string, const: registration_required }
+        registrationToken:
+          type: string
+          description: Short-lived token to send to `/auth/github/complete`.
+        prefill:
+          type: object
+          description: Values from the GitHub profile; any may be missing or taken, so the user confirms them.
+          properties:
+            username: { type: string }
+            email: { type: string, format: email }
+            displayName: { type: string }
+            avatarUrl: { type: string, format: uri }
+    GithubCallbackLinked:
+      type: object
+      required: [status, connection]
+      properties:
+        status: { type: string, const: linked }
+        connection: { $ref: '#/components/schemas/GithubConnection' }
+    GithubConnection:
+      type: object
+      required: [id, githubUserId, githubLogin, scopes, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        githubUserId: { type: integer, format: int64 }
+        githubLogin: { type: string }
+        scopes:
+          type: array
+          items: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    # --------------------------------------------------------- Repositories
+    GithubRepository:
+      type: object
+      description: A repository as seen on GitHub (picker result). Metadata only.
+      required: [githubId, fullName, defaultBranch, htmlUrl, isPrivate]
+      properties:
+        githubId: { type: integer, format: int64 }
+        fullName: { type: string, examples: [acme/orders-service] }
+        defaultBranch: { type: string }
+        htmlUrl: { type: string, format: uri }
+        isPrivate: { type: boolean }
+    Repository:
+      allOf:
+        - $ref: '#/components/schemas/GithubRepository'
+        - type: object
+          required: [id]
+          properties:
+            id: { type: string, format: uuid }
+    LinkRepositoryRequest:
+      type: object
+      required: [connectionId, githubRepoId]
+      properties:
+        connectionId:
+          type: string
+          format: uuid
+          description: The GitHub connection used to fetch this repository.
+        githubRepoId: { type: integer, format: int64 }
+        branch:
+          type: string
+          description: Defaults to the repository's default branch.
+        rootPath:
+          type: string
+          default: ''
+          description: Subfolder to analyze (monorepos). Empty means the repository root.
+    ProjectRepository:
+      type: object
+      required: [id, repository, branch, rootPath, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        repository: { $ref: '#/components/schemas/Repository' }
+        branch: { type: string }
+        rootPath: { type: string }
+        linkedByConnectionId: { type: [string, 'null'], format: uuid }
+        createdAt: { type: string, format: date-time }
+
+    # ------------------------------------------------------------- Projects
+    Project:
+      type: object
+      required: [id, name, visibility, myRole, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: [string, 'null'] }
+        visibility: { $ref: '#/components/schemas/ProjectVisibility' }
+        myRole:
+          description: The caller's role; null when viewing through a share link.
+          oneOf:
+            - $ref: '#/components/schemas/ProjectRole'
+            - type: 'null'
+        currentRunId: { type: [string, 'null'], format: uuid }
+        currentRun:
+          description: Summary of the current run, if any.
+          oneOf:
+            - $ref: '#/components/schemas/AnalysisRun'
+            - type: 'null'
+        createdBy:
+          oneOf:
+            - $ref: '#/components/schemas/UserSummary'
+            - type: 'null'
+        lastOpenedAt: { type: [string, 'null'], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        archivedAt: { type: [string, 'null'], format: date-time }
+        deletedAt: { type: [string, 'null'], format: date-time }
+    ProjectDetail:
+      allOf:
+        - $ref: '#/components/schemas/Project'
+        - type: object
+          required: [repositories, memberCount, openFindingCounts]
+          properties:
+            repositories:
+              type: array
+              items: { $ref: '#/components/schemas/ProjectRepository' }
+            memberCount: { type: integer }
+            openFindingCounts:
+              type: object
+              description: Open (not dismissed) findings in the current run, by severity.
+              additionalProperties: { type: integer }
+    Sharing:
+      type: object
+      required: [visibility]
+      properties:
+        visibility: { $ref: '#/components/schemas/ProjectVisibility' }
+        shareToken:
+          type: [string, 'null']
+          description: Present once a link has been generated; only active when visibility is `link_view`.
+        shareUrl:
+          type: [string, 'null']
+          format: uri
+          description: Frontend URL that opens the shared project.
+    ProjectMember:
+      type: object
+      required: [user, role, createdAt]
+      properties:
+        user: { $ref: '#/components/schemas/UserSummary' }
+        role: { $ref: '#/components/schemas/ProjectRole' }
+        addedBy:
+          oneOf:
+            - $ref: '#/components/schemas/UserSummary'
+            - type: 'null'
+        lastOpenedAt: { type: [string, 'null'], format: date-time }
+        createdAt: { type: string, format: date-time }
+    MemberList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ProjectMember' }
+    ProjectInvite:
+      type: object
+      required: [id, email, role, expiresAt, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/InvitableRole' }
+        invitedBy:
+          oneOf:
+            - $ref: '#/components/schemas/UserSummary'
+            - type: 'null'
+        expiresAt: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+    InviteCreated:
+      allOf:
+        - $ref: '#/components/schemas/ProjectInvite'
+        - type: object
+          required: [inviteUrl]
+          properties:
+            inviteUrl:
+              type: string
+              format: uri
+              description: Link to send to the invitee. Contains the token, shown only once.
+    InvitePreview:
+      type: object
+      required: [projectName, role, email, expiresAt]
+      properties:
+        projectName: { type: string }
+        role: { $ref: '#/components/schemas/InvitableRole' }
+        email: { type: string, format: email }
+        invitedBy:
+          oneOf:
+            - $ref: '#/components/schemas/UserSummary'
+            - type: 'null'
+        expiresAt: { type: string, format: date-time }
+
+    # ------------------------------------------------------------- Analysis
+    AnalysisRun:
+      type: object
+      required: [id, projectId, status, parserVersion, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        projectId: { type: string, format: uuid }
+        repository:
+          description: The repository analyzed; null for non-git input or if the repository was since unlinked.
+          oneOf:
+            - $ref: '#/components/schemas/Repository'
+            - type: 'null'
+        rootPath: { type: string }
+        commitSha: { type: [string, 'null'], pattern: '^[0-9a-f]{40}([0-9a-f]{24})?$' }
+        branch: { type: [string, 'null'] }
+        status: { $ref: '#/components/schemas/RunStatus' }
+        stage:
+          type: [string, 'null']
+          enum: [fetching, parsing_terraform, scanning_code, linking, inferring, findings, null]
+          description: Progress while `status` is `running`.
+        error: { type: [string, 'null'] }
+        parserVersion: { type: string }
+        isCurrent: { type: boolean }
+        stats:
+          type: object
+          description: e.g. node, edge and finding counts, and how many edges were inferred.
+          additionalProperties: true
+        startedBy:
+          oneOf:
+            - $ref: '#/components/schemas/UserSummary'
+            - type: 'null'
+        createdAt: { type: string, format: date-time }
+        startedAt: { type: [string, 'null'], format: date-time }
+        finishedAt: { type: [string, 'null'], format: date-time }
+
+    # ---------------------------------------------------------------- Graph
+    ResourceType:
+      type: object
+      required: [terraformType, provider, service, displayName, category, iconKey, color]
+      properties:
+        terraformType: { type: string, examples: [aws_lambda_function] }
+        provider: { type: string, examples: [aws] }
+        service: { type: string, examples: [Lambda] }
+        displayName: { type: string, examples: [Lambda Function] }
+        category: { $ref: '#/components/schemas/ResourceCategory' }
+        iconKey:
+          type: string
+          description: Names an SVG bundled with the frontend.
+          examples: [aws/lambda]
+        color: { type: string, pattern: '^#[0-9A-Fa-f]{6}$' }
+    GraphNode:
+      type: object
+      required: [id, kind, address, name]
+      properties:
+        id: { type: string, format: uuid }
+        kind: { $ref: '#/components/schemas/NodeKind' }
+        address:
+          type: string
+          description: Terraform address (`aws_dynamodb_table.orders`) or code location (`src/api.py::get_order`).
+        name: { type: string }
+        terraformType: { type: [string, 'null'] }
+        resourceType:
+          description: Display metadata, inlined. Null for code nodes and types outside the catalog (use a generic icon).
+          oneOf:
+            - $ref: '#/components/schemas/ResourceType'
+            - type: 'null'
+        parentId:
+          type: [string, 'null']
+          format: uuid
+          description: A function's file.
+        filePath: { type: [string, 'null'] }
+        lineStart: { type: [integer, 'null'] }
+        lineEnd: { type: [integer, 'null'] }
+        attributes:
+          type: object
+          description: Non-secret configuration only.
+          additionalProperties: true
+    GraphEdge:
+      type: object
+      required: [id, source, target, relation, linkMethod, confidence]
+      properties:
+        id: { type: string, format: uuid }
+        source: { type: string, format: uuid, description: Node id. }
+        target: { type: string, format: uuid, description: Node id. }
+        relation: { $ref: '#/components/schemas/EdgeRelation' }
+        linkMethod: { $ref: '#/components/schemas/LinkMethod' }
+        confidence:
+          description: Determined by `linkMethod`; shown on every edge in the UI.
+          allOf:
+            - $ref: '#/components/schemas/Confidence'
+        evidence:
+          type: object
+          description: Proof for the link, e.g. `{"envVar":"TABLE_NAME","file":"src/api.py","line":12}`.
+          additionalProperties: true
+        explanation:
+          type: [string, 'null']
+          description: Gemini's reasoning; present on `gemini_inference` edges.
+    Graph:
+      type: object
+      required: [runId, nodes, edges]
+      properties:
+        runId: { type: string, format: uuid }
+        commitSha: { type: [string, 'null'] }
+        nodes:
+          type: array
+          items: { $ref: '#/components/schemas/GraphNode' }
+        edges:
+          type: array
+          items: { $ref: '#/components/schemas/GraphEdge' }
+    IamGrant:
+      type: object
+      description: An IAM role that gives a code node access to a resource, and what it allows.
+      required: [role, edge]
+      properties:
+        role: { $ref: '#/components/schemas/GraphNode' }
+        policy:
+          oneOf:
+            - $ref: '#/components/schemas/GraphNode'
+            - type: 'null'
+        allowedActions:
+          type: array
+          items: { type: string, examples: ['dynamodb:GetItem'] }
+        edge: { $ref: '#/components/schemas/GraphEdge' }
+    NodeDetail:
+      type: object
+      required: [node, incoming, outgoing]
+      properties:
+        node: { $ref: '#/components/schemas/GraphNode' }
+        incoming:
+          type: array
+          items: { $ref: '#/components/schemas/NeighbourEdge' }
+        outgoing:
+          type: array
+          items: { $ref: '#/components/schemas/NeighbourEdge' }
+        grants:
+          type: array
+          description: For resource nodes, the IAM roles granting access and the actions they allow.
+          items: { $ref: '#/components/schemas/IamGrant' }
+        findings:
+          type: array
+          items: { $ref: '#/components/schemas/Finding' }
+    NeighbourEdge:
+      type: object
+      required: [edge, node]
+      properties:
+        edge: { $ref: '#/components/schemas/GraphEdge' }
+        node:
+          description: The node at the other end.
+          allOf:
+            - $ref: '#/components/schemas/GraphNode'
+    ReachedNode:
+      type: object
+      required: [node, distance, via]
+      properties:
+        node: { $ref: '#/components/schemas/GraphNode' }
+        distance: { type: integer, minimum: 1, description: Hops from the root. }
+        via:
+          type: array
+          description: Edge ids along the shortest path from the root.
+          items: { type: string, format: uuid }
+        weakestConfidence:
+          description: Least certain edge on that path.
+          allOf:
+            - $ref: '#/components/schemas/Confidence'
+    BlastRadius:
+      type: object
+      required: [root, direction, maxDepth, reached, edges]
+      properties:
+        root: { $ref: '#/components/schemas/GraphNode' }
+        direction: { type: string, enum: [dependents, dependencies, both] }
+        maxDepth: { type: integer }
+        reached:
+          type: array
+          items: { $ref: '#/components/schemas/ReachedNode' }
+        edges:
+          type: array
+          description: Every edge on the paths, for highlighting.
+          items: { $ref: '#/components/schemas/GraphEdge' }
+    GraphQueryRequest:
+      type: object
+      required: [op]
+      properties:
+        op:
+          type: string
+          enum: [touches, dependents, dependencies, path, findings]
+          description: |
+            `touches`: code that reads, writes or publishes to a resource (and the roles granting it).
+            `dependents` / `dependencies`: blast radius in either direction.
+            `path`: shortest path between `node` and `to`.
+            `findings`: findings about a node.
+        runId:
+          type: string
+          default: current
+          description: Run UUID or `current`.
+        node:
+          type: string
+          description: A node id, address, or a name to match (the result lists what it resolved to).
+        to:
+          type: string
+          description: Second node, for `path`.
+        maxDepth: { type: integer, minimum: 1, maximum: 20, default: 10 }
+        planId:
+          type: string
+          format: uuid
+          description: Annotate results with this plan's actions.
+    GraphQueryResult:
+      type: object
+      required: [op, resolved, results, summary]
+      properties:
+        op: { type: string }
+        resolved:
+          type: array
+          description: Nodes the `node` argument matched. More than one means it was ambiguous.
+          items: { $ref: '#/components/schemas/GraphNode' }
+        results:
+          type: array
+          items: { $ref: '#/components/schemas/ReachedNode' }
+        edges:
+          type: array
+          items: { $ref: '#/components/schemas/GraphEdge' }
+        findings:
+          type: array
+          items: { $ref: '#/components/schemas/Finding' }
+        summary:
+          type: string
+          description: Short plain-English description, suitable for a model or a voice to read out.
+    GraphDiff:
+      type: object
+      required: [runId, againstRunId, addedNodes, removedNodes, changedNodes, addedEdges, removedEdges]
+      properties:
+        runId: { type: string, format: uuid }
+        againstRunId: { type: string, format: uuid }
+        addedNodes:
+          type: array
+          items: { $ref: '#/components/schemas/GraphNode' }
+        removedNodes:
+          type: array
+          items: { $ref: '#/components/schemas/GraphNode' }
+        changedNodes:
+          type: array
+          items:
+            type: object
+            required: [before, after]
+            properties:
+              before: { $ref: '#/components/schemas/GraphNode' }
+              after: { $ref: '#/components/schemas/GraphNode' }
+        addedEdges:
+          type: array
+          items: { $ref: '#/components/schemas/GraphEdge' }
+        removedEdges:
+          type: array
+          items: { $ref: '#/components/schemas/GraphEdge' }
+
+    # ------------------------------------------------------------- Findings
+    Finding:
+      type: object
+      required: [id, runId, kind, severity, title, fingerprint]
+      properties:
+        id: { type: string, format: uuid }
+        runId: { type: string, format: uuid }
+        kind: { $ref: '#/components/schemas/FindingKind' }
+        severity: { $ref: '#/components/schemas/FindingSeverity' }
+        title: { type: string }
+        detail: { type: [string, 'null'] }
+        nodeId: { type: [string, 'null'], format: uuid }
+        relatedNodeId: { type: [string, 'null'], format: uuid }
+        evidence:
+          type: object
+          additionalProperties: true
+        fingerprint: { type: string }
+        dismissedAt: { type: [string, 'null'], format: date-time }
+        dismissedBy:
+          oneOf:
+            - $ref: '#/components/schemas/UserSummary'
+            - type: 'null'
+
+    # ---------------------------------------------------------------- Plans
+    TerraformPlanJson:
+      type: object
+      description: |
+        Output of `terraform show -json plan.out`. Only the fields listed here are read; the rest
+        is ignored and discarded.
+      required: [format_version]
+      properties:
+        format_version: { type: string }
+        terraform_version: { type: string }
+        resource_changes:
+          type: array
+          items:
+            type: object
+            required: [address, change]
+            properties:
+              address: { type: string, examples: [aws_dynamodb_table.orders] }
+              type: { type: string }
+              change:
+                type: object
+                required: [actions]
+                properties:
+                  actions:
+                    type: array
+                    items: { type: string, enum: [no-op, create, read, update, delete] }
+                additionalProperties: true
+            additionalProperties: true
+      additionalProperties: true
+    PlanSummary:
+      type: object
+      description: Counts by outcome.
+      properties:
+        create: { type: integer }
+        update: { type: integer }
+        replace: { type: integer }
+        destroy: { type: integer }
+        downstream: { type: integer }
+    PlanAnalysis:
+      type: object
+      required: [id, projectId, runId, summary, hasExplanation, hasBriefing, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        projectId: { type: string, format: uuid }
+        runId: { type: string, format: uuid }
+        terraformVersion: { type: [string, 'null'] }
+        summary: { $ref: '#/components/schemas/PlanSummary' }
+        hasExplanation: { type: boolean }
+        hasBriefing: { type: boolean }
+        createdBy:
+          oneOf:
+            - $ref: '#/components/schemas/UserSummary'
+            - type: 'null'
+        createdAt: { type: string, format: date-time }
+    PlanChange:
+      type: object
+      required: [id, address, actions, action, impact, distance, changedAttributes]
+      properties:
+        id: { type: string, format: uuid }
+        nodeId:
+          type: [string, 'null']
+          format: uuid
+          description: Null if the resource is not in the graph.
+        address: { type: string }
+        terraformType: { type: [string, 'null'] }
+        actions:
+          type: array
+          description: Raw Terraform actions, e.g. `["delete","create"]`.
+          items: { type: string }
+        action: { $ref: '#/components/schemas/PlanAction' }
+        impact: { $ref: '#/components/schemas/PlanImpact' }
+        distance:
+          type: integer
+          minimum: 0
+          description: Hops from the nearest changed node (0 for direct).
+        changedAttributes:
+          type: array
+          description: Attribute names only, never values.
+          items: { type: string }
+    PlanAnalysisDetail:
+      allOf:
+        - $ref: '#/components/schemas/PlanAnalysis'
+        - type: object
+          required: [changes]
+          properties:
+            changes:
+              type: array
+              items: { $ref: '#/components/schemas/PlanChange' }
+    PlanExplanation:
+      type: object
+      required: [explanation, risks, saferAlternatives, model, generatedAt]
+      properties:
+        explanation:
+          type: string
+          description: e.g. "Replacing this table drops its data unless you migrate first."
+        risks:
+          type: array
+          items:
+            type: object
+            required: [address, severity, summary]
+            properties:
+              address: { type: string }
+              severity: { $ref: '#/components/schemas/FindingSeverity' }
+              summary: { type: string }
+        saferAlternatives:
+          type: array
+          items:
+            type: object
+            required: [address, suggestion]
+            properties:
+              address: { type: string }
+              suggestion: { type: string, examples: [Add create_before_destroy and migrate data first] }
+        model: { type: string }
+        generatedAt: { type: string, format: date-time }
+    Briefing:
+      type: object
+      required: [script, audioUrl, expiresAt, recommendation]
+      properties:
+        script: { type: string }
+        audioUrl:
+          type: string
+          format: uri
+          description: Short-lived signed URL for the audio (MP3).
+        expiresAt:
+          type: string
+          format: date-time
+          description: When `audioUrl` stops working; request the briefing again for a fresh one.
+        recommendation:
+          type: string
+          enum: [proceed, caution, stop]
+
+    # ------------------------------------------------------------------- AI
+    AskResult:
+      type: object
+      required: [answer, citedNodeIds, toolCalls]
+      properties:
+        answer: { type: string }
+        citedNodeIds:
+          type: array
+          items: { type: string, format: uuid }
+        toolCalls:
+          type: array
+          description: The graph queries Gemini made, for transparency.
+          items:
+            type: object
+            required: [op, node]
+            properties:
+              op: { type: string }
+              node: { type: string }
+    VoiceSession:
+      type: object
+      required: [signedUrl, agentId, expiresAt, toolToken]
+      properties:
+        signedUrl:
+          type: string
+          format: uri
+          description: Signed WebSocket URL for the ElevenLabs conversational agent.
+        agentId: { type: string }
+        expiresAt: { type: string, format: date-time }
+        toolToken:
+          type: string
+          description: Project-scoped bearer token for `POST /voice/tools/graph-query`.
+        dynamicVariables:
+          type: object
+          description: Values to pass to the agent at session start (project name, run, plan summary).
+          additionalProperties: { type: string }
+
+    # ------------------------------------------------------------- Activity
+    ActivityEntry:
+      type: object
+      required: [id, action, createdAt]
+      properties:
+        id: { type: integer, format: int64 }
+        projectId: { type: [string, 'null'], format: uuid }
+        actor:
+          description: Null for system actions or deleted users.
+          oneOf:
+            - $ref: '#/components/schemas/UserSummary'
+            - type: 'null'
+        action:
+          type: string
+          pattern: '^[a-z_]+(\.[a-z_]+)+$'
+          examples: [member.role_changed]
+        targetType: { type: [string, 'null'] }
+        targetId: { type: [string, 'null'], format: uuid }
+        metadata:
+          type: object
+          description: Snapshot of relevant values (never secrets or plan values).
+          additionalProperties: true
+        createdAt: { type: string, format: date-time }
+    ActivityPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/ActivityEntry' }
